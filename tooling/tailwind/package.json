@@ -1,0 +1,28 @@
+{
+    "name": "@te-inscreve/tailwind-config",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "exports": {
+        "./theme": "./theme.css",
+        "./postcss-config": "./postcss-config.js"
+    },
+    "scripts": {
+        "clean": "git clean -xdf .cache .turbo node_modules",
+        "format": "prettier --check . --ignore-path ../../.gitignore",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@tailwindcss/postcss": "^4.3.3",
+        "postcss": "^8.5.6",
+        "tailwindcss": "^4.3.3"
+    },
+    "devDependencies": {
+        "@te-inscreve/prettier-config": "workspace:*",
+        "@te-inscreve/tsconfig": "workspace:*",
+        "@types/node": "^22.18.12",
+        "prettier": "^3.6.2",
+        "typescript": "~5.9.3"
+    },
+    "prettier": "@te-inscreve/prettier-config"
+}
