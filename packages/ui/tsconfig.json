@@ -1,0 +1,9 @@
+{
+    "extends": "@te-inscreve/tsconfig/base.json",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "lib": ["ES2022", "dom", "dom.iterable"]
+    },
+    "include": ["src", "eslint.config.ts"],
+    "exclude": ["node_modules"]
+}

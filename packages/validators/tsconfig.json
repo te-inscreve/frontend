@@ -1,0 +1,5 @@
+{
+    "extends": "@te-inscreve/tsconfig/compiled-package.json",
+    "include": ["src", "eslint.config.ts"],
+    "exclude": ["node_modules"]
+}

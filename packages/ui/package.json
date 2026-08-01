@@ -1,0 +1,41 @@
+{
+    "name": "@te-inscreve/ui",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts",
+        "./button": "./src/button.tsx",
+        "./input": "./src/input.tsx",
+        "./label": "./src/label.tsx"
+    },
+    "license": "MIT",
+    "scripts": {
+        "clean": "git clean -xdf .cache .turbo dist node_modules",
+        "format": "prettier --check . --ignore-path ../../.gitignore",
+        "lint": "eslint",
+        "typecheck": "tsc --noEmit",
+        "ui-add": "yarn dlx shadcn@latest add && prettier src --write --list-different"
+    },
+    "dependencies": {
+        "class-variance-authority": "^0.7.1",
+        "radix-ui": "^1.4.3",
+        "tailwind-merge": "^3.3.1"
+    },
+    "devDependencies": {
+        "@te-inscreve/eslint-config": "workspace:*",
+        "@te-inscreve/prettier-config": "workspace:*",
+        "@te-inscreve/tsconfig": "workspace:*",
+        "@types/react": "~19.2.0",
+        "eslint": "^9.38.0",
+        "prettier": "^3.6.2",
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "typescript": "~5.9.3"
+    },
+    "peerDependencies": {
+        "react": "19.2.8",
+        "react-dom": "19.2.8"
+    },
+    "prettier": "@te-inscreve/prettier-config"
+}

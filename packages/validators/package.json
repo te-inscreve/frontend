@@ -1,0 +1,33 @@
+{
+    "name": "@te-inscreve/validators",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./src/index.ts"
+        }
+    },
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc",
+        "clean": "git clean -xdf .cache .turbo dist node_modules",
+        "dev": "tsc",
+        "format": "prettier --check . --ignore-path ../../.gitignore",
+        "lint": "eslint",
+        "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    },
+    "dependencies": {
+        "zod": "^4.4.3"
+    },
+    "devDependencies": {
+        "@te-inscreve/eslint-config": "workspace:*",
+        "@te-inscreve/prettier-config": "workspace:*",
+        "@te-inscreve/tsconfig": "workspace:*",
+        "eslint": "^9.38.0",
+        "prettier": "^3.6.2",
+        "typescript": "~5.9.3"
+    },
+    "prettier": "@te-inscreve/prettier-config"
+}
