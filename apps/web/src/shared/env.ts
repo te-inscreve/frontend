@@ -1,0 +1,33 @@
+import { createEnv } from "@t3-oss/env-nextjs";
+import { vercel } from "@t3-oss/env-nextjs/presets-zod";
+import { z } from "zod/v4";
+
+import { authEnv } from "@te-inscreve/auth/env";
+import { restEnv } from "@te-inscreve/rest/env";
+
+export const env = createEnv({
+    extends: [authEnv(), restEnv(), vercel()],
+    shared: {
+        NODE_ENV: z
+            .enum(["development", "production", "test"])
+            .default("development"),
+    },
+    /**
+     * Server-side only. `API_URL` comes from `@te-inscreve/rest/env` — the
+     * backend is never called straight from the browser, always through tRPC.
+     */
+    server: {},
+    /**
+     * Client-side variables. Prefix them with `NEXT_PUBLIC_` to expose them.
+     */
+    client: {},
+    /**
+     * Destructure all variables from `process.env` to make sure they aren't
+     * tree-shaken away.
+     */
+    experimental__runtimeEnv: {
+        NODE_ENV: process.env.NODE_ENV,
+    },
+    skipValidation:
+        !!process.env.CI || process.env.npm_lifecycle_event === "lint",
+});

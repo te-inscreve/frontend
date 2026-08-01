@@ -1,0 +1,11 @@
+/*
+ * NativeWind needs Tailwind's layers imported individually — the bundled
+ * `@import "tailwindcss"` shortcut does not survive the native CSS pipeline.
+ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+@import "@te-inscreve/tailwind-config/theme";
