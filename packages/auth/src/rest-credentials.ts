@@ -182,6 +182,28 @@ export const restCredentials = (options: RestCredentialsOptions) => {
         return { user, token: parsed.token };
     };
 
+    /**
+     * Calls a backend auth route and returns its payload.
+     *
+     * `@te-inscreve/rest` reports failures as a `Result` rather than throwing, so
+     * the status has to be narrowed here — a `try/catch` would never fire and a
+     * rejected login would reach `establishSession` as `undefined`.
+     */
+    const requestAuth = async (
+        path: string,
+        body: unknown,
+        fallbackMessage: string,
+    ): Promise<unknown> => {
+        // `withToken(null)` so a stale bearer never rides along on a login.
+        const result = await options.restClient
+            .withToken(null)
+            .post<unknown>(path, body);
+
+        if (!result.ok) throw toApiError(result.error, fallbackMessage);
+
+        return result.data;
+    };
+
     return {
         id: "rest-credentials",
         endpoints: {
@@ -196,18 +218,14 @@ export const restCredentials = (options: RestCredentialsOptions) => {
                     }),
                 },
                 async (ctx) => {
-                    let data: unknown;
-                    try {
-                        // `withToken(null)` so a stale bearer never rides along on a login.
-                        ({ data } = await options.restClient
-                            .withToken(null)
-                            .post(signInPath, {
-                                email: ctx.body.email,
-                                password: ctx.body.password,
-                            }));
-                    } catch (error) {
-                        throw toApiError(error, "Invalid e-mail or password.");
-                    }
+                    const data = await requestAuth(
+                        signInPath,
+                        {
+                            email: ctx.body.email,
+                            password: ctx.body.password,
+                        },
+                        "Invalid e-mail or password.",
+                    );
                     return ctx.json(await establishSession(ctx, data));
                 },
             ),
@@ -224,21 +242,15 @@ export const restCredentials = (options: RestCredentialsOptions) => {
                     }),
                 },
                 async (ctx) => {
-                    let data: unknown;
-                    try {
-                        ({ data } = await options.restClient
-                            .withToken(null)
-                            .post(signUpPath, {
-                                name: ctx.body.name,
-                                email: ctx.body.email,
-                                password: ctx.body.password,
-                            }));
-                    } catch (error) {
-                        throw toApiError(
-                            error,
-                            "Could not create the account.",
-                        );
-                    }
+                    const data = await requestAuth(
+                        signUpPath,
+                        {
+                            name: ctx.body.name,
+                            email: ctx.body.email,
+                            password: ctx.body.password,
+                        },
+                        "Could not create the account.",
+                    );
                     return ctx.json(await establishSession(ctx, data));
                 },
             ),
