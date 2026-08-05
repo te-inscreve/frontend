@@ -40,8 +40,8 @@ export const eventoRouter = {
                 },
             });
 
+            // if id dont exist, return null instead of throwing
             if (!result.ok) {
-                // if id dont exist, return null instead of throwing
                 if (result.status === 404) return null;
                 throw result.error;
             }
