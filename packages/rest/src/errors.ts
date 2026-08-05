@@ -1,14 +1,8 @@
+import type { Result } from "./types/client";
 import type { ResponseError, ValidationError } from "./types/http";
 import { extractErrorMessage, toFieldErrors } from "./types/http";
 
-/**
- * Base class for every error this package throws.
- *
- * Prefer the {@link isRestError} guard over `instanceof`:
- * ```ts
- * catch (e) { if (isRestError(e)) console.error(e.status, e.message); }
- * ```
- */
+/** Base class for every error this package produces. */
 export abstract class RestError extends Error {
     /**
      * Brand that survives duplicate copies of this module.
@@ -16,12 +10,13 @@ export abstract class RestError extends Error {
      * Bundlers inline a workspace package into every chunk that needs it, so the
      * same logical class can exist as several distinct class objects at runtime —
      * and `instanceof` is `false` across that boundary. (Turbopack does exactly
-     * this: `HttpError` lands in three separate server chunks.) The guards below
-     * test this brand plus {@link kind}, which compare correctly regardless.
+     * this: `HttpError` lands in three separate server chunks.) The guards in
+     * `error-handling.ts` test this brand plus {@link kind}, which compare
+     * correctly regardless.
      */
     readonly __restError = true as const;
 
-    /** Discriminant for the guards — see {@link isHttpError}. */
+    /** Discriminant for the guards. */
     abstract readonly kind: "network" | "http" | "parse";
 
     /** HTTP status, or `null` when the request never got a response. */
@@ -105,7 +100,6 @@ export class HttpError extends RestError {
     }
 }
 
-/** 400 — malformed request or serializer validation failure. */
 export class BadRequestError extends HttpError {
     declare readonly data: ResponseError | ValidationError;
 
@@ -115,7 +109,6 @@ export class BadRequestError extends HttpError {
     }
 }
 
-/** 401 — not authenticated, or the token expired. */
 export class UnauthorizedError extends HttpError {
     constructor(opts: HttpErrorOpts) {
         super({ ...opts, status: 401 });
@@ -123,7 +116,6 @@ export class UnauthorizedError extends HttpError {
     }
 }
 
-/** 403 — authenticated but not allowed. */
 export class ForbiddenError extends HttpError {
     constructor(opts: HttpErrorOpts) {
         super({ ...opts, status: 403 });
@@ -131,7 +123,6 @@ export class ForbiddenError extends HttpError {
     }
 }
 
-/** 404 — resource does not exist. */
 export class NotFoundError extends HttpError {
     constructor(opts: HttpErrorOpts) {
         super({ ...opts, status: 404 });
@@ -139,7 +130,6 @@ export class NotFoundError extends HttpError {
     }
 }
 
-/** 406 — the API cannot answer in the requested representation. */
 export class NotAcceptableError extends HttpError {
     constructor(opts: HttpErrorOpts) {
         super({ ...opts, status: 406 });
@@ -147,7 +137,6 @@ export class NotAcceptableError extends HttpError {
     }
 }
 
-/** 409 — conflicts with existing state (duplicate, concurrent edit). */
 export class ConflictError extends HttpError {
     constructor(opts: HttpErrorOpts) {
         super({ ...opts, status: 409 });
@@ -155,7 +144,6 @@ export class ConflictError extends HttpError {
     }
 }
 
-/** 422 — well-formed but semantically invalid. */
 export class UnprocessableEntityError extends HttpError {
     declare readonly data: ResponseError | ValidationError;
 
@@ -238,102 +226,29 @@ export function httpErrorFor(opts: {
     return new HttpError({ ...rest, status });
 }
 
-/** Every concrete error this package can throw. */
+/** Every concrete error this package can produce. */
 export type AnyRestError = NetworkError | HttpError | ParseError;
 
-/**
- * Type guard for anything thrown by this package.
- *
- * Brand-based rather than `instanceof`, so it still works when a bundler has
- * duplicated this module across chunks — see {@link RestError.__restError}.
- */
-export const isRestError = (error: unknown): error is AnyRestError =>
-    typeof error === "object" &&
-    error !== null &&
-    (error as { __restError?: unknown }).__restError === true;
+/** Wraps a transport failure as the `Result` the public methods return. */
+export function networkFailure(
+    cause: unknown,
+    method: string,
+    url: string,
+    timedOut: boolean,
+): Result<never> {
+    const name = cause instanceof Error ? cause.name : "";
+    const aborted =
+        timedOut || name === "AbortError" || name === "TimeoutError";
+    const expired = timedOut || name === "TimeoutError";
 
-/** Type guard for a non-2xx response. */
-export const isHttpError = (error: unknown): error is HttpError =>
-    isRestError(error) && error.kind === "http";
-
-/** Type guard for a transport failure (the request never landed). */
-export const isNetworkError = (error: unknown): error is NetworkError =>
-    isRestError(error) && error.kind === "network";
-
-/** Type guard for an unparseable 2xx body. */
-export const isParseError = (error: unknown): error is ParseError =>
-    isRestError(error) && error.kind === "parse";
-
-/**
- * Every branch a caller must account for. All handlers are **required** — that
- * is the point: forgetting `unauthorized` is a compile error, not a bug you
- * find in production.
- */
-export interface HttpErrorHandlers<R> {
-    badRequest: (error: BadRequestError) => R;
-    unauthorized: (error: UnauthorizedError) => R;
-    forbidden: (error: ForbiddenError) => R;
-    notFound: (error: NotFoundError) => R;
-    notAcceptable: (error: NotAcceptableError) => R;
-    conflict: (error: ConflictError) => R;
-    unprocessable: (error: UnprocessableEntityError) => R;
-    tooManyRequests: (error: TooManyRequestsError) => R;
-    server: (error: ServerError) => R;
-    network: (error: NetworkError) => R;
-    /** Unnamed statuses, parse failures, and anything not thrown by this package. */
-    otherwise: (error: unknown) => R;
-}
-
-/**
- * Exhaustively handles an error from a `catch` block.
- *
- * ```ts
- * try {
- *   await client.post("/eventos", body);
- * } catch (error) {
- *   return matchHttpError(error, {
- *     unauthorized: () => redirect("/login"),
- *     badRequest: (e) => setFormErrors(e.fieldErrors),
- *     // ...omit one and TypeScript fails the build
- *   });
- * }
- * ```
- *
- * Dispatches on `kind` and `status` rather than `instanceof`, so it behaves
- * correctly even when a bundler has duplicated this module across chunks.
- */
-export function matchHttpError<R>(
-    error: unknown,
-    handlers: HttpErrorHandlers<R>,
-): R {
-    if (isNetworkError(error)) return handlers.network(error);
-
-    if (isHttpError(error)) {
-        // Casts, not `instanceof`: the status *is* the identity of these classes,
-        // and a duplicated module would break the prototype check.
-        switch (error.status) {
-            case 400:
-                return handlers.badRequest(error as BadRequestError);
-            case 401:
-                return handlers.unauthorized(error);
-            case 403:
-                return handlers.forbidden(error);
-            case 404:
-                return handlers.notFound(error);
-            case 406:
-                return handlers.notAcceptable(error);
-            case 409:
-                return handlers.conflict(error);
-            case 422:
-                return handlers.unprocessable(
-                    error as UnprocessableEntityError,
-                );
-            case 429:
-                return handlers.tooManyRequests(error as TooManyRequestsError);
-        }
-
-        if (error.status >= 500) return handlers.server(error);
-    }
-
-    return handlers.otherwise(error);
+    return {
+        ok: false,
+        status: null,
+        error: new NetworkError(
+            aborted
+                ? `${method} ${url} foi cancelada${expired ? " por tempo esgotado" : ""}`
+                : `Não foi possível alcançar ${method} ${url}`,
+            { url, method, cause },
+        ),
+    };
 }

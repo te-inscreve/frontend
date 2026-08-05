@@ -1,0 +1,15 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "./tsconfig.json",
+    // Only `src` — `env.ts` and `eslint.config.ts` live at the package root, and
+    // including them here would drag the inferred `rootDir` up with them, emitting
+    // `dist/src/index.d.ts` instead of the `dist/index.d.ts` that `exports` points
+    // at. They are still typechecked, by `tsconfig.json`.
+    "include": ["src"],
+    "compilerOptions": {
+        "rootDir": "src",
+        // Its own buildinfo: this config sees a different file set than
+        // `tsconfig.json`, and sharing one would thrash both incremental builds.
+        "tsBuildInfoFile": "${configDir}/.cache/tsbuildinfo.build.json"
+    }
+}

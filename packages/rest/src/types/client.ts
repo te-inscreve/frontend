@@ -36,56 +36,46 @@ export type Result<T> =
  * @see https://nextjs.org/docs/app/api-reference/functions/revalidateTag
  */
 export interface Client {
-    /**
-     * Performs a GET request to the API.
-     * @param url API URL with search params included (e.g., /users?name=John)
-     * @param init Request configuration
-     * @template T Type of the request response
-     */
+    /** `url` carries its own search params, e.g. `/users?name=John`. */
     get<T>(url: string, init?: CustomFetchProps): Promise<Result<T>>;
 
-    /**
-     * Performs a POST request to the API.
-     * @param body JSON-encoded, unless it is already a `FormData`/`Blob`/stream
-     */
+    /** `body` is JSON-encoded, unless it is already a `FormData`/`Blob`/stream. */
     post<T>(
         url: string,
         body?: unknown,
-        init?: Omit<CustomFetchProps, "body">,
+        init?: CustomFetchProps,
     ): Promise<Result<T>>;
 
-    /**
-     * Performs a PUT request to the API.
-     */
+    /** Full replacement; `body` is encoded as in {@link Client.post}. */
     put<T>(
         url: string,
         body?: unknown,
-        init?: Omit<CustomFetchProps, "body">,
+        init?: CustomFetchProps,
     ): Promise<Result<T>>;
 
-    /**
-     * Performs a PATCH request to the API.
-     */
+    /** Partial update; `body` is encoded as in {@link Client.post}. */
     patch<T>(
         url: string,
         body?: unknown,
-        init?: Omit<CustomFetchProps, "body">,
+        init?: CustomFetchProps,
     ): Promise<Result<T>>;
 
     /**
-     * Performs a DELETE request to the API.
-     *
      * Always resolves with a status on success — never `undefined`.
+     *
+     * Takes a `body` because DELETE is allowed to carry one (bulk deletes, a
+     * reason payload); most calls omit it.
      */
-    delete(url: string, init?: CustomFetchProps): Promise<Result<null>>;
+    delete(
+        url: string,
+        body?: unknown,
+        init?: CustomFetchProps,
+    ): Promise<Result<null>>;
 
-    /**
-     * Performs an OPTIONS request to the API.
-     */
-    options<T>(url: string, init?: CustomFetchProps): Promise<Result<T>>;
-
-    /**
-     * Downloads a binary payload. Accepts an absolute URL or a path.
-     */
-    getBlob(url: string, init?: CustomFetchProps): Promise<Result<Blob>>;
+    /** Reads the endpoint's allowed methods and DRF metadata. */
+    options<T>(
+        url: string,
+        body?: unknown,
+        init?: CustomFetchProps,
+    ): Promise<Result<T>>;
 }

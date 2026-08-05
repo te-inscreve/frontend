@@ -1,5 +1,8 @@
 /**
- * Everything `fetch` accepts except `method`, which each client helper sets.
+ * Everything `fetch` accepts except `method`, which each client helper sets,
+ * and `body`, which they take as their own parameter — `RequestInit["body"]` is
+ * `BodyInit | null` and so cannot express the plain object those helpers
+ * serialize for you. Omitting it here leaves exactly one way to send a body.
  *
  * Forwarded verbatim to `fetch`, so Next.js cache directives work:
  *
@@ -12,7 +15,7 @@
  * @see https://nextjs.org/docs/app/api-reference/functions/fetch
  * @see https://nextjs.org/docs/app/api-reference/functions/revalidateTag
  */
-export type CustomFetchProps = Omit<RequestInit, "method"> & {
+export type CustomFetchProps = Omit<RequestInit, "method" | "body"> & {
     /**
      * Next.js-only fetch extensions. Declared explicitly because the base
      * `RequestInit` type doesn't carry them outside a Next build, and this
@@ -72,27 +75,6 @@ export interface ResponseError {
  * without `drf-standardized-errors` still emit this shape.
  */
 export type ValidationError = Record<string, string[] | ValidationError[]>;
-
-/** Successful result of a request. */
-export interface ApiResponse<T> {
-    status: number;
-    data: T;
-}
-
-/**
- * Documents which body shape corresponds to which status.
- *
- * Kept as documentation of the API contract — deliberately *not* used to cast a
- * real `Response`, since a cast like that only asserts a shape the runtime has
- * not verified.
- */
-export type CustomResponse<T> =
-    | { status: 200 | 201 | 202 | 204; body: T }
-    | { status: 400 | 422; body: ResponseError | ValidationError }
-    | {
-          status: 401 | 403 | 404 | 406 | 409 | 429 | 500 | 502 | 503;
-          body: ResponseError;
-      };
 
 /** True when `status` is in the 2xx range. */
 export const isOk = (status: number) => status >= 200 && status < 300;

@@ -1,8 +1,15 @@
-import type { AnyRestError } from "./errors";
+import type { GetCsrfToken } from "./internal/request";
 import type { Client, Result } from "./types/client";
-import type { ApiResponse, CustomFetchProps } from "./types/http";
-import { httpErrorFor, isRestError, NetworkError, ParseError } from "./errors";
-import { isOk } from "./types/http";
+import type { CustomFetchProps } from "./types/http";
+import { networkFailure } from "./errors";
+import {
+    abortAfter,
+    BASE_HEADERS,
+    csrfHeader,
+    serializeBody,
+    toHeaderRecord,
+} from "./internal/request";
+import { toResult } from "./internal/response";
 
 export interface HttpClientOptions {
     /** e.g. `https://api.teinscreve.com` — a trailing slash is fine. */
@@ -24,8 +31,7 @@ export interface HttpClientOptions {
      * getCsrfToken: async () => (await cookies()).get("csrftoken")?.value ?? null
      * ```
      */
-    getCsrfToken?: () =>
-        string | null | undefined | Promise<string | null | undefined>;
+    getCsrfToken?: GetCsrfToken;
     /** Sent on every request. Merged with (and overridden by) per-call headers. */
     defaultHeaders?: Record<string, string>;
     /** Applied when a call doesn't set its own `timeout`, in milliseconds. */
@@ -33,72 +39,6 @@ export interface HttpClientOptions {
     /** Swap in a custom fetch (tests, tracing, retries). */
     fetch?: typeof globalThis.fetch;
 }
-
-/**
- * Sent on every request unless overridden. `Content-Type` is deliberately absent
- * — it is derived from the body, so a `FormData` upload keeps the multipart
- * boundary `fetch` generates for it.
- */
-const BASE_HEADERS: Record<string, string> = {
-    accept: "application/json",
-    "accept-language": "pt-br",
-};
-
-/** Methods Django expects a CSRF token on. */
-const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-
-/** Bodies `fetch` can send as-is; anything else is JSON-encoded. */
-type RawBody =
-    | string
-    | FormData
-    | Blob
-    | ArrayBuffer
-    | ArrayBufferView
-    | URLSearchParams
-    | ReadableStream;
-
-/**
- * `instanceof` against optional globals: `FormData` and `ReadableStream` are not
- * guaranteed to exist on every runtime this package targets.
- */
-const isRawBody = (value: unknown): value is RawBody =>
-    typeof value === "string" ||
-    value instanceof ArrayBuffer ||
-    ArrayBuffer.isView(value) ||
-    (typeof FormData !== "undefined" && value instanceof FormData) ||
-    (typeof Blob !== "undefined" && value instanceof Blob) ||
-    (typeof URLSearchParams !== "undefined" &&
-        value instanceof URLSearchParams) ||
-    (typeof ReadableStream !== "undefined" && value instanceof ReadableStream);
-
-const serializeBody = (
-    body: unknown,
-): { body?: RawBody; contentType?: string } => {
-    if (body === undefined || body === null) return {};
-    if (isRawBody(body)) return { body };
-    return { body: JSON.stringify(body), contentType: "application/json" };
-};
-
-/**
- * `AbortSignal.timeout`/`any` behind feature detection: React Native's type
- * definitions don't declare them, and older Hermes builds don't ship them.
- */
-const abortStatics = AbortSignal as unknown as {
-    timeout?: (ms: number) => AbortSignal;
-    any?: (signals: AbortSignal[]) => AbortSignal;
-};
-
-/** Normalizes any `fetch` header input to a lower-cased record. */
-const toHeaderRecord = (
-    headers: CustomFetchProps["headers"],
-): Record<string, string> => {
-    if (!headers) return {};
-    const record: Record<string, string> = {};
-    new Headers(headers).forEach((value, key) => {
-        record[key] = value;
-    });
-    return record;
-};
 
 /**
  * HTTP client for the "te inscreve" Django REST API.
@@ -111,11 +51,11 @@ const toHeaderRecord = (
  * propagates — a `Result` describes a request outcome, not a defect.
  */
 export class HttpClient implements Client {
-    protected readonly baseUrl: string;
+    private readonly baseUrl: string;
     /** Named `config` because `options` is a request method on {@link Client}. */
-    protected readonly config: HttpClientOptions;
-    protected readonly fetchImpl: typeof globalThis.fetch;
-    private headers: Record<string, string>;
+    private readonly config: HttpClientOptions;
+    private readonly headers: Record<string, string>;
+    private readonly fetchImpl: typeof globalThis.fetch;
 
     constructor(config: HttpClientOptions) {
         if (!config.baseUrl) {
@@ -131,36 +71,20 @@ export class HttpClient implements Client {
             config.fetch ?? ((...args) => globalThis.fetch(...args));
     }
 
-    public async get<T>(url: string, init?: CustomFetchProps) {
-        return this.toResult<T>(() =>
-            this.request<T>("GET", url, undefined, init),
-        );
+    public get<T>(url: string, init?: CustomFetchProps) {
+        return this.request<T>("GET", url, undefined, init);
     }
 
-    public async post<T>(
-        url: string,
-        body?: unknown,
-        init?: Omit<CustomFetchProps, "body">,
-    ) {
-        return this.toResult<T>(() => this.request<T>("POST", url, body, init));
+    public post<T>(url: string, body?: unknown, init?: CustomFetchProps) {
+        return this.request<T>("POST", url, body, init);
     }
 
-    public async put<T>(
-        url: string,
-        body?: unknown,
-        init?: Omit<CustomFetchProps, "body">,
-    ) {
-        return this.toResult<T>(() => this.request<T>("PUT", url, body, init));
+    public put<T>(url: string, body?: unknown, init?: CustomFetchProps) {
+        return this.request<T>("PUT", url, body, init);
     }
 
-    public async patch<T>(
-        url: string,
-        body?: unknown,
-        init?: Omit<CustomFetchProps, "body">,
-    ) {
-        return this.toResult<T>(() =>
-            this.request<T>("PATCH", url, body, init),
-        );
+    public patch<T>(url: string, body?: unknown, init?: CustomFetchProps) {
+        return this.request<T>("PATCH", url, body, init);
     }
 
     /**
@@ -169,283 +93,103 @@ export class HttpClient implements Client {
      */
     public async delete(
         url: string,
+        body?: unknown,
         init?: CustomFetchProps,
     ): Promise<Result<null>> {
-        return this.toResult<null>(async () => {
-            const { status } = await this.request<unknown>(
-                "DELETE",
-                url,
-                undefined,
-                init,
-            );
-            return { status, data: null };
-        });
+        const result = await this.request<unknown>("DELETE", url, body, init);
+        return result.ok
+            ? { ok: true, status: result.status, data: null }
+            : result;
     }
 
-    public async options<T>(url: string, init?: CustomFetchProps) {
-        return this.toResult<T>(() =>
-            this.request<T>("OPTIONS", url, undefined, init),
-        );
-    }
-
-    /** Downloads a binary payload (accepts an absolute URL or a path). */
-    public async getBlob(
-        url: string,
-        init?: CustomFetchProps,
-    ): Promise<Result<Blob>> {
-        return this.toResult<Blob>(() => this.requestBlob(url, init));
+    public options<T>(url: string, body?: unknown, init?: CustomFetchProps) {
+        return this.request<T>("OPTIONS", url, body, init);
     }
 
     /** Returns a copy of this client bound to a different bearer token. */
     public withToken(token: string | null): HttpClient {
-        return new HttpClient({
-            ...this.config,
-            token,
-            defaultHeaders: { ...this.headers },
-        });
+        return new HttpClient({ ...this.config, token });
     }
 
-    /** Returns a copy of this client with extra default headers. */
-    public withHeaders(headers: Record<string, string>): HttpClient {
-        return new HttpClient({
-            ...this.config,
-            defaultHeaders: { ...this.headers, ...toHeaderRecord(headers) },
-        });
+    /** Builds a full URL from a path.*/
+    private buildUrl(path: string) {
+        const [_path, _search] = path.split("?", 2);
+        return `${this.baseUrl}${_path?.endsWith("/") ? _path : `${_path}/`}${_search ? `?${_search}` : ""}`;
     }
 
     /**
-     * Merges into the default headers for subsequent requests.
+     * Merge the client config with per-call overrides and adding the CSRF token if needed.
      *
-     * Mutates shared state, so two in-flight requests can observe different
-     * headers — prefer {@link withHeaders}, which returns a new client.
+     * totally compatible with Next.js extra fetch options, including `next: { revalidate, tags }` and `cache`.
      */
-    public setHeaders(headers: Record<string, string>) {
-        this.headers = { ...this.headers, ...toHeaderRecord(headers) };
-    }
-
-    public getHeaders(headers: Record<string, string> = {}) {
-        return {
-            ...BASE_HEADERS,
-            ...this.headers,
-            ...toHeaderRecord(headers),
-        };
-    }
-
-    protected buildUrl(path: string) {
-        if (/^[a-z][a-z\d+\-.]*:\/\//i.test(path)) return path;
-        return `${this.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
-    }
-
-    /** Issues the request, converting transport failures into `NetworkError`. */
-    protected async send(
+    private async buildInit(
         method: string,
-        url: string,
         body: unknown,
-        init?: CustomFetchProps,
-    ): Promise<Response> {
+        init: CustomFetchProps | undefined,
+        signal: AbortSignal | undefined,
+    ): Promise<RequestInit> {
         const {
-            timeout,
-            signal,
+            timeout: _timeout,
+            signal: _signal,
             headers,
-            body: initBody,
             ...rest
         } = init ?? {};
 
-        const payload = serializeBody(body === undefined ? initBody : body);
-        const requestHeaders = this.getHeaders({
-            ...(payload.contentType
-                ? { "content-type": payload.contentType }
-                : {}),
-            ...(this.config.token
-                ? { authorization: `Bearer ${this.config.token}` }
-                : {}),
-            ...(await this.csrfHeader(method)),
-            ...toHeaderRecord(headers),
-        });
+        const payload = serializeBody(body);
 
-        // Cast because `next` and `cache` are Next.js extensions to `fetch`,
-        // absent from every stock `RequestInit` — the DOM lib's and Node's alike.
-        const requestInit = {
+        return {
             ...rest,
             method,
-            headers: requestHeaders,
+            headers: {
+                ...BASE_HEADERS,
+                ...this.headers,
+                ...(payload.contentType
+                    ? { "content-type": payload.contentType }
+                    : {}),
+                ...(this.config.token
+                    ? { authorization: `Bearer ${this.config.token}` }
+                    : {}),
+                ...(await csrfHeader(method, this.config.getCsrfToken)),
+                ...toHeaderRecord(headers),
+            },
             ...(payload.body !== undefined ? { body: payload.body } : {}),
-            ...(this.composeSignal(signal, timeout) ?? {}),
+            ...(signal ? { signal } : {}),
         } as RequestInit;
-
-        try {
-            return await this.fetchImpl(url, requestInit);
-        } catch (cause) {
-            const name = cause instanceof Error ? cause.name : "";
-            const aborted = name === "AbortError" || name === "TimeoutError";
-            throw new NetworkError(
-                aborted
-                    ? `${method} ${url} foi cancelada${name === "TimeoutError" ? " por tempo esgotado" : ""}`
-                    : `Não foi possível alcançar ${method} ${url}`,
-                { url, method, cause },
-            );
-        }
     }
 
-    protected async request<T>(
+    private async request<T>(
         method: string,
         path: string,
         body?: unknown,
         init?: CustomFetchProps,
-    ): Promise<ApiResponse<T>> {
-        const url = this.buildUrl(path);
-        const response = await this.send(method, url, body, init);
-        return this.responseHandler<T>(response, url, method);
-    }
-
-    /**
-     * Blob counterpart to {@link request}: bypasses {@link responseHandler} so the
-     * payload is never parsed as text/JSON. Throws like the other internals —
-     * {@link getBlob} converts it.
-     */
-    protected async requestBlob(
-        path: string,
-        init?: CustomFetchProps,
-    ): Promise<ApiResponse<Blob>> {
-        const url = this.buildUrl(path);
-        const response = await this.send("GET", url, undefined, init);
-
-        if (!isOk(response.status)) {
-            throw httpErrorFor({
-                status: response.status,
-                statusText: response.statusText,
-                url,
-                method: "GET",
-                data: await this.readBody(response, "GET").catch(() => null),
-                retryAfter: this.readRetryAfter(response),
-            });
-        }
-
-        return { status: response.status, data: await response.blob() };
-    }
-
-    protected async responseHandler<T>(
-        response: Response,
-        url: string,
-        method: string,
-    ): Promise<ApiResponse<T>> {
-        if (isOk(response.status)) {
-            try {
-                const data = await this.readBody(response, method);
-                return { status: response.status, data: data as T };
-            } catch (cause) {
-                throw new ParseError({
-                    message: `Não foi possível interpretar a resposta de ${method} ${url}`,
-                    status: response.status,
-                    url,
-                    method,
-                    cause,
-                });
-            }
-        }
-
-        throw httpErrorFor({
-            status: response.status,
-            statusText: response.statusText,
-            url,
-            method,
-            // An unreadable error body must not mask the status it came with.
-            data: await this.readBody(response, method).catch(() => null),
-            retryAfter: this.readRetryAfter(response),
-        });
-    }
-
-    /**
-     * Reads and parses the body.
-     *
-     * Returns `null` for empty responses rather than fabricating a payload — a
-     * synthesised error object typed as `T` would be a lie the caller cannot
-     * detect.
-     */
-    protected async readBody(
-        response: Response,
-        method: string,
-    ): Promise<unknown> {
-        if (method === "HEAD") return null;
-        if ([204, 205, 304].includes(response.status)) return null;
-        if (response.headers.get("content-length") === "0") return null;
-
-        const text = await response.text();
-        if (!text) return null;
-
-        const contentType = response.headers.get("content-type") ?? "";
-        if (contentType.includes("json")) return JSON.parse(text);
-
-        // No (or a non-JSON) content type: still try JSON, since DRF error handlers
-        // occasionally answer without one, but keep the raw text if it isn't.
-        try {
-            return JSON.parse(text);
-        } catch {
-            return text;
-        }
-    }
-
-    protected readRetryAfter(response: Response): number | null {
-        const header = response.headers.get("retry-after");
-        if (!header) return null;
-
-        const seconds = Number(header);
-        if (Number.isFinite(seconds)) return Math.max(0, Math.trunc(seconds));
-
-        // `Retry-After` may also be an HTTP date.
-        const date = Date.parse(header);
-        if (Number.isNaN(date)) return null;
-        return Math.max(0, Math.round((date - Date.now()) / 1000));
-    }
-
-    /** Builds the CSRF header for unsafe methods, when a token is available. */
-    private async csrfHeader(method: string): Promise<Record<string, string>> {
-        if (!this.config.getCsrfToken) return {};
-        if (!UNSAFE_METHODS.has(method.toUpperCase())) return {};
-
-        const token = await this.config.getCsrfToken();
-        // `X-CSRFToken` is Django's `CSRF_HEADER_NAME` default; override
-        // `CSRF_HEADER_NAME` on the backend if you need a different one.
-        return token ? { "x-csrftoken": token } : {};
-    }
-
-    /**
-     * Merges a caller's `signal` with the effective timeout, so whichever fires
-     * first aborts the request.
-     */
-    private composeSignal(
-        signal: CustomFetchProps["signal"],
-        timeout?: number,
-    ): { signal: AbortSignal } | undefined {
-        const ms = timeout ?? this.config.timeout;
-        if (ms === undefined || ms <= 0) return signal ? { signal } : undefined;
-
-        const timeoutSignal = abortStatics.timeout?.(ms);
-        if (!timeoutSignal) return signal ? { signal } : undefined;
-        if (!signal) return { signal: timeoutSignal };
-
-        // Fall back to the caller's signal where `any` is missing, rather than
-        // dropping their ability to cancel.
-        const composed = abortStatics.any?.([signal, timeoutSignal]);
-        return { signal: composed ?? signal };
-    }
-
-    /** Turns a throwing internal into the {@link Result} the public API returns. */
-    private async toResult<T>(
-        run: () => Promise<ApiResponse<T>>,
     ): Promise<Result<T>> {
+        const url = this.buildUrl(path);
+        const ms = init?.timeout ?? this.config.timeout;
+        const timeout = ms && ms > 0 ? abortAfter(ms, init?.signal) : null;
+
         try {
-            const { status, data } = await run();
-            return { ok: true, status, data };
-        } catch (error) {
-            // Anything not thrown by this package is a bug, not a request outcome.
-            if (!isRestError(error)) throw error;
-            const restError: AnyRestError = error;
-            return { ok: false, status: restError.status, error: restError };
+            const requestInit = await this.buildInit(
+                method,
+                body,
+                init,
+                timeout?.signal ?? init?.signal ?? undefined,
+            );
+
+            let response: Response;
+            try {
+                response = await this.fetchImpl(url, requestInit);
+            } catch (cause) {
+                return networkFailure(
+                    cause,
+                    method,
+                    url,
+                    timeout?.expired() ?? false,
+                );
+            }
+
+            return await toResult<T>(response, url, method);
+        } finally {
+            timeout?.done();
         }
     }
 }
-
-/** Convenience factory, for when you'd rather not write `new`. */
-export const createRestClient = (config: HttpClientOptions) =>
-    new HttpClient(config);

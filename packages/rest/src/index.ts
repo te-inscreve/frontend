@@ -1,8 +1,4 @@
-export {
-    createRestClient,
-    HttpClient,
-    type HttpClientOptions,
-} from "./http-client";
+export { HttpClient, type HttpClientOptions } from "./http-client";
 
 export {
     BadRequestError,
@@ -10,11 +6,6 @@ export {
     ForbiddenError,
     HttpError,
     httpErrorFor,
-    isHttpError,
-    isNetworkError,
-    isParseError,
-    isRestError,
-    matchHttpError,
     NetworkError,
     NotAcceptableError,
     NotFoundError,
@@ -25,9 +16,17 @@ export {
     UnauthorizedError,
     UnprocessableEntityError,
     type AnyRestError,
-    type HttpErrorHandlers,
     type HttpErrorOpts,
 } from "./errors";
+
+export {
+    isHttpError,
+    isNetworkError,
+    isParseError,
+    isRestError,
+    matchHttpError,
+    type HttpErrorHandlers,
+} from "./error-handling";
 
 export type { Client, Result } from "./types/client";
 
@@ -38,9 +37,7 @@ export {
     isValidationError,
     toFieldErrors,
     type ApiErrorDetail,
-    type ApiResponse,
     type CustomFetchProps,
-    type CustomResponse,
     type ResponseError,
     type ValidationError,
 } from "./types/http";
