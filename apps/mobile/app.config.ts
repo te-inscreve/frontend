@@ -9,6 +9,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     version: "0.1.0",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
+    icon: "./assets/icon.png",
     updates: {
         fallbackToCacheTimeout: 0,
     },
@@ -21,6 +22,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Edge-to-edge is always on in SDK 57, so there is no flag to set here.
     android: {
         package: "br.com.teinscreve.app",
+        adaptiveIcon: {
+            foregroundImage: "./assets/adaptive-icon.png",
+            backgroundColor: "#4B8B3B",
+        },
+    },
+    web: {
+        favicon: "./assets/favicon.png",
     },
     experiments: {
         tsconfigPaths: true,
