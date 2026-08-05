@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import { cn } from "@te-inscreve/ui";
 
-import { TRPCReactProvider } from "~/shared/trpc/react";
+import { TRPCReactProvider } from "~/shared/api/trpc/react";
 
 import "~/app/styles.css";
 

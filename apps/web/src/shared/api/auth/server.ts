@@ -6,8 +6,8 @@ import { nextCookies } from "better-auth/next-js";
 
 import { initAuth } from "@te-inscreve/auth";
 
-import { env } from "~/shared/env";
-import { restClient } from "~/shared/rest";
+import { httpClient } from "~/shared/api/http-client";
+import { env } from "~/shared/utils/env";
 
 const baseUrl =
     env.VERCEL_ENV === "production"
@@ -22,7 +22,7 @@ const baseUrl =
 export const auth = initAuth({
     baseUrl,
     secret: env.AUTH_SECRET,
-    restClient,
+    restClient: httpClient,
     // Lets the Expo app call this auth server over its custom scheme.
     trustedOrigins: ["te-inscreve://"],
     extraPlugins: [nextCookies()],

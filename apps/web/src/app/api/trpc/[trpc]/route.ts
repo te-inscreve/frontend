@@ -3,8 +3,8 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter, createTRPCContext } from "@te-inscreve/api";
 
-import { auth } from "~/shared/auth/server";
-import { restClient } from "~/shared/rest";
+import { auth } from "~/shared/api/auth/server";
+import { httpClient } from "~/shared/api/http-client";
 
 /**
  * CORS for the Expo app, which calls this endpoint cross-origin.
@@ -19,7 +19,7 @@ const setCorsHeaders = (res: Response) => {
     res.headers.set("Access-Control-Allow-Headers", "*");
 };
 
-export const OPTIONS = () => {
+const OPTIONS = () => {
     const response = new Response(null, { status: 204 });
     setCorsHeaders(response);
     return response;
@@ -33,7 +33,7 @@ const handler = async (req: NextRequest) => {
         createContext: () =>
             createTRPCContext({
                 auth,
-                restClient,
+                restClient: httpClient,
                 headers: req.headers,
             }),
         onError({ error, path }) {
@@ -45,4 +45,4 @@ const handler = async (req: NextRequest) => {
     return response;
 };
 
-export { handler as GET, handler as POST };
+export { handler as GET, OPTIONS, handler as POST };

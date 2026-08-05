@@ -13,7 +13,7 @@ import SuperJSON from "superjson";
 
 import type { AppRouter } from "@te-inscreve/api";
 
-import { env } from "~/shared/env";
+import { env } from "~/shared/utils/env";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
