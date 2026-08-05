@@ -1,4 +1,4 @@
-import { getSession } from "~/shared/auth/server";
+import { getSession } from "~/shared/api/auth/server";
 
 export default async function HomePage() {
     const session = await getSession();
