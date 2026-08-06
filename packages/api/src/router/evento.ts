@@ -2,9 +2,13 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import type { Evento } from "@te-inscreve/schemas";
+import { restEnv } from "@te-inscreve/rest/env";
 import { createEventoSchema } from "@te-inscreve/schemas";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
+
+/** Read lazily: at import time the env may not be populated yet. */
+const apiKey = () => restEnv().API_KEY;
 
 /**
  * Reference router — the pattern every domain router should follow.
@@ -23,9 +27,12 @@ import { protectedProcedure, publicProcedure } from "../trpc";
  */
 export const eventoRouter = {
     all: publicProcedure.query(async ({ ctx }) => {
-        const result = await ctx.rest.get<Evento[]>("/eventos", {
-            next: { revalidate: 30, tags: ["eventos"] },
-        });
+        const result = await ctx.rest.get<Evento[]>(
+            `/eventos.json?key=${apiKey()}`,
+            {
+                next: { revalidate: 30, tags: ["eventos"] },
+            },
+        );
         if (!result.ok) throw result.error;
         return result.data;
     }),
@@ -33,12 +40,15 @@ export const eventoRouter = {
     byId: publicProcedure
         .input(z.object({ id: z.number().int().positive() }))
         .query(async ({ ctx, input }) => {
-            const result = await ctx.rest.get<Evento>(`/eventos/${input.id}`, {
-                next: {
-                    revalidate: 30,
-                    tags: ["eventos", `evento-${input.id}`],
+            const result = await ctx.rest.get<Evento>(
+                `/eventos/${input.id}?key=${apiKey()}`,
+                {
+                    next: {
+                        revalidate: 30,
+                        tags: ["eventos", `evento-${input.id}`],
+                    },
                 },
-            });
+            );
 
             // if id dont exist, return null instead of throwing
             if (!result.ok) {
@@ -52,7 +62,10 @@ export const eventoRouter = {
     create: protectedProcedure
         .input(createEventoSchema)
         .mutation(async ({ ctx, input }) => {
-            const result = await ctx.rest.post<Evento>("/eventos", input);
+            const result = await ctx.rest.post<Evento>(
+                `/eventos?key=${apiKey()}`,
+                input,
+            );
             if (!result.ok) throw result.error;
             return result.data;
         }),
