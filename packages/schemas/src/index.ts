@@ -25,6 +25,7 @@ export type SignUpInput = z.infer<typeof signUpSchema>;
  */
 export const eventoSchema = z.object({
     id: z.number().int(),
+    slug: z.string(),
     nome: z.string(),
     dataInicio: z.string(),
     dataFim: z.string(),
