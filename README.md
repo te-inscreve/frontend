@@ -28,7 +28,7 @@ no Prisma, no Drizzle and no database connection anywhere in this repo.
 ```text
 Expo app  ─┐
            ├─→  Next.js  ─→  tRPC router  ─→  packages/rest  ─→  Django REST API
-Web app   ─┘   (/api/trpc)    (ctx.rest)      (Bearer JWT)
+Web app   ─┘   (/api/trpc)    (ctx.restClient)      (Bearer JWT)
                 (/api/auth)
 ```
 
@@ -52,7 +52,7 @@ identity, so better-auth runs in **stateless mode** (`packages/auth`): no
    the session can never outlive the token it carries.
 3. On every tRPC call, `createTRPCContext` decrypts the cookie, pulls the JWT out
    and hands back a REST client already bound to it — procedures just use
-   `ctx.rest` and the `Authorization: Bearer …` header is handled for them.
+   `ctx.restClient` and the `Authorization: Bearer …` header is handled for them.
 
 **Trade-off:** stateless sessions cannot be revoked server-side before they
 expire. To force a logout everywhere, the Django API has to reject the JWT itself
@@ -69,7 +69,7 @@ into the matching tRPC error:
 ```ts
 // packages/api/src/router/evento.ts — the reference router
 all: publicProcedure.query(async ({ ctx }) => {
-  const result = await ctx.rest.get<Evento[]>("/eventos", {
+  const result = await ctx.restClient.get<Evento[]>("/eventos", {
     // forwarded straight to fetch → Next.js caching works
     next: { revalidate: 30, tags: ["eventos"] },
   });
@@ -78,7 +78,7 @@ all: publicProcedure.query(async ({ ctx }) => {
 }),
 
 byId: publicProcedure.input(...).query(async ({ ctx, input }) => {
-  const result = await ctx.rest.get<Evento>(`/eventos/${input.id}`);
+  const result = await ctx.restClient.get<Evento>(`/eventos/${input.id}`);
   if (!result.ok) {
     if (result.status === 404) return null; // a 404 is not an error here
     throw result.error;

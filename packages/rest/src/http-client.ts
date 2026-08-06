@@ -117,10 +117,6 @@ export class HttpClient implements Client {
         return `${this.baseUrl}${_path?.endsWith("/") ? _path : `${_path}/`}${_search ? `?${_search}` : ""}`;
     }
 
-    public getBaseUrl() {
-        return this.baseUrl;
-    }
-
     /**
      * Merge the client config with per-call overrides and adding the CSRF token if needed.
      *

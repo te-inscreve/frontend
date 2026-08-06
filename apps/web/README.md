@@ -45,7 +45,7 @@ export type CreateInscricaoInput = z.infer<typeof createInscricaoSchema>;
 
 ### 2. Router — `packages/api/src/router/inscricao.ts`
 
-`ctx.rest` already carries the signed-in user's JWT. Calls never throw: narrow
+`ctx.restClient` already carries the signed-in user's JWT. Calls never throw: narrow
 on `.ok`, then re-throw `result.error` and the middleware in `trpc.ts` turns the
 status into the matching tRPC code.
 
@@ -59,7 +59,7 @@ import { protectedProcedure } from "../trpc";
 
 export const inscricaoRouter = {
     minhas: protectedProcedure.query(async ({ ctx }) => {
-        const result = await ctx.rest.get<Inscricao[]>("/inscricoes", {
+        const result = await ctx.restClient.get<Inscricao[]>("/inscricoes", {
             next: { revalidate: 30, tags: ["inscricoes"] },
         });
         if (!result.ok) throw result.error;
@@ -69,7 +69,7 @@ export const inscricaoRouter = {
     criar: protectedProcedure
         .input(createInscricaoSchema)
         .mutation(async ({ ctx, input }) => {
-            const result = await ctx.rest.post<Inscricao>("/inscricoes", input);
+            const result = await ctx.restClient.post<Inscricao>("/inscricoes", input);
             if (!result.ok) throw result.error;
             return result.data;
         }),

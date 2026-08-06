@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
-import { TRPCReactProvider } from "~/shared/api/trpc/react";
+import { TRPCReactProvider } from "~/shared/api/trpc/client";
 
 import "~/app/styles.css";
 

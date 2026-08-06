@@ -19,4 +19,7 @@ export const httpClient = new HttpClient({
     getCsrfToken: async () => (await cookies()).get("csrftoken")?.value ?? null,
     timeout: 15_000, // 15s
     fetch: fetch,
+    defaultHeaders: {
+        "X-API-KEY": env.API_KEY,
+    },
 });

@@ -1,6 +1,6 @@
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
-import type { AppRouter } from "./root";
+import type { AppRouter } from "./router/_app";
 
 /**
  * Inference helpers for input types
@@ -18,7 +18,7 @@ type RouterInputs = inferRouterInputs<AppRouter>;
  */
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
-export { type AppRouter, appRouter } from "./root";
-export { createTRPCContext, type TRPCContext } from "./trpc";
 export { ApiValidationError, toTRPCError } from "./rest-error";
+export { appRouter, type AppRouter } from "./router/_app";
+export { createTRPCServerContext, type TRPCContext } from "./trpc";
 export type { RouterInputs, RouterOutputs };

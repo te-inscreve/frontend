@@ -21,11 +21,11 @@ import { ApiValidationError, toTRPCError } from "./rest-error";
  * This section defines the "contexts" that are available in the backend API.
  *
  * There is no database here: every procedure talks to the backend REST API
- * through `ctx.rest`, which is already carrying the signed-in user's JWT.
+ * through `ctx.restClient`, which is already carrying the signed-in user's JWT.
  *
  * @see https://trpc.io/docs/server/context
  */
-const createTRPCContext = async (opts: {
+const createTRPCServerContext = async (opts: {
     headers: Headers;
     auth: Auth;
     restClient: HttpClient;
@@ -44,11 +44,11 @@ const createTRPCContext = async (opts: {
         session,
         token,
         /** REST client bound to the current user — pass it straight through. */
-        rest: opts.restClient.withToken(token),
+        restClient: opts.restClient.withToken(token),
     };
 };
 
-type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;
+type TRPCContext = Awaited<ReturnType<typeof createTRPCServerContext>>;
 
 /**
  * 2. INITIALIZATION
@@ -56,7 +56,7 @@ type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;
  * This is where the trpc api is initialized, connecting the context and
  * transformer
  */
-const t = initTRPC.context<typeof createTRPCContext>().create({
+const t = initTRPC.context<typeof createTRPCServerContext>().create({
     transformer: superjson,
     errorFormatter: ({ shape, error }) => ({
         ...shape,
@@ -106,6 +106,24 @@ const restErrorMiddleware = t.middleware(async ({ next }) => {
     }
 });
 
+const authenticatedMiddleware = t.middleware(({ ctx, next }) => {
+    if (!ctx.session?.user || !ctx.token) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    return next({
+        ctx: {
+            // infers `session` and `token` as non-nullable
+            session: { ...ctx.session, user: ctx.session.user },
+            token: ctx.token,
+        },
+    });
+});
+
+/** NOT IMPLEMENTED */
+const authorizedMiddleware = t.middleware(() => {
+    throw new TRPCError({ code: "NOT_IMPLEMENTED" });
+});
+
 /**
  * Public (unauthed) procedure
  *
@@ -124,25 +142,28 @@ const publicProcedure = t.procedure.use(restErrorMiddleware);
  *
  * @see https://trpc.io/docs/procedures
  */
-const protectedProcedure = t.procedure
+const authenticatedProcedure = t.procedure
     .use(restErrorMiddleware)
-    .use(({ ctx, next }) => {
-        if (!ctx.session?.user || !ctx.token) {
-            throw new TRPCError({ code: "UNAUTHORIZED" });
-        }
-        return next({
-            ctx: {
-                // infers `session` and `token` as non-nullable
-                session: { ...ctx.session, user: ctx.session.user },
-                token: ctx.token,
-            },
-        });
-    });
+    .use(authenticatedMiddleware);
+
+/**
+ * Authorized (staff) procedure
+ *
+ * If you want a query or mutation to ONLY be accessible to staff users, use
+ * this. It verifies the session is valid and guarantees `ctx.session.user` is
+ * not null — and that `ctx.token` holds the backend JWT.
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+const authorizedProcedure = t.procedure
+    .use(restErrorMiddleware)
+    .use(authorizedMiddleware);
 
 export {
-    createTRPCContext,
+    authenticatedProcedure,
+    authorizedProcedure,
     createTRPCRouter,
-    protectedProcedure,
+    createTRPCServerContext,
     publicProcedure,
     type TRPCContext,
 };

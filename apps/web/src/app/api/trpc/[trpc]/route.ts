@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-import { appRouter, createTRPCContext } from "@te-inscreve/api";
+import { appRouter, createTRPCServerContext } from "@te-inscreve/api";
 
 import { auth } from "~/shared/api/auth/server";
 import { httpClient } from "~/shared/api/http-client";
@@ -31,7 +31,7 @@ const handler = async (req: NextRequest) => {
         router: appRouter,
         req,
         createContext: () =>
-            createTRPCContext({
+            createTRPCServerContext({
                 auth,
                 restClient: httpClient,
                 headers: req.headers,
