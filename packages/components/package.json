@@ -6,9 +6,17 @@
     "exports": {
         ".": "./src/index.ts",
         "./shadcn.css": "./src/shadcn.css",
-        "./button": "./src/button.tsx",
-        "./input": "./src/input.tsx",
-        "./label": "./src/label.tsx"
+        "./utils": "./src/utils.ts",
+        "./components/*": "./src/components/*.tsx",
+        "./button": "./src/components/button.tsx",
+        "./card": "./src/components/card.tsx",
+        "./input": "./src/components/input.tsx",
+        "./label": "./src/components/label.tsx",
+        "./sheet": "./src/components/sheet.tsx",
+        "./tooltip": "./src/components/tooltip.tsx",
+        "./skeleton": "./src/components/skeleton.tsx",
+        "./separator": "./src/components/separator.tsx",
+        "./hooks": "./src/hooks/use-mobile.ts"
     },
     "license": "MIT",
     "scripts": {
@@ -20,6 +28,7 @@
     },
     "dependencies": {
         "class-variance-authority": "^0.7.1",
+        "lucide-react": "^1.29.0",
         "radix-ui": "^1.4.3",
         "tailwind-merge": "^3.3.1"
     },

@@ -1,6 +1,6 @@
 import type * as React from "react";
 
-import { cn } from "./index";
+import { cn } from "../index";
 
 export type InputProps = React.ComponentProps<"input">;
 

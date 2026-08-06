@@ -11,9 +11,10 @@
         "prefix": ""
     },
     "aliases": {
-        "components": "@te-inscreve/components",
-        "utils": "@te-inscreve/components",
-        "ui": "./src"
+        "components": "@te-inscreve/components/components",
+        "ui": "@te-inscreve/components/components",
+        "utils": "@te-inscreve/components/utils",
+        "hooks": "@te-inscreve/components/hooks"
     },
     "iconLibrary": "phosphor"
 }
