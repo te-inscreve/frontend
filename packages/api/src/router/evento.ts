@@ -1,8 +1,8 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
-import type { Evento } from "@te-inscreve/validators";
-import { createEventoSchema } from "@te-inscreve/validators";
+import type { Evento } from "@te-inscreve/schemas";
+import { createEventoSchema } from "@te-inscreve/schemas";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
 
@@ -18,7 +18,7 @@ import { protectedProcedure, publicProcedure } from "../trpc";
  * 3. `next: { revalidate, tags }` is forwarded to Next's fetch cache; call
  *    `revalidateTag("eventos")` to bust it.
  *
- * Types come from `@te-inscreve/validators`, the single source of truth for
+ * Types come from `@te-inscreve/schemas`, the single source of truth for
  * shapes crossing the REST boundary.
  */
 export const eventoRouter = {

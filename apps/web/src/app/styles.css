@@ -1,11 +1,21 @@
 @import "tailwindcss";
 @import "@te-inscreve/tailwind-config/theme";
+@import "@te-inscreve/components/shadcn.css";
 
-@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../../packages/components/src/**/*.{ts,tsx}";
+
+/* Tema escuro é opt-in por uma classe `dark` na raiz, em vez de seguir o
+ * `prefers-color-scheme` do sistema. Como nada aplica essa classe ainda, o app
+ * fica sempre claro. Quando o switch de tema existir, ele passa a alternar a
+ * classe — e a opção "sistema" volta lendo a media query no cliente. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
     * {
         border-color: var(--color-border);
+    }
+    :root {
+        color-scheme: light;
     }
     body {
         background-color: var(--color-background);

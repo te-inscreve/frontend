@@ -1,6 +1,6 @@
 # `types` export resolves to source instead of `dist`
 
-**Open in:** `@te-inscreve/api`, `@te-inscreve/validators`
+**Open in:** `@te-inscreve/api`, `@te-inscreve/schemas`
 **Fixed in:** `@te-inscreve/rest` (see [the fix](#the-fix))
 **Impact:** low today — no runtime effect. It removes a compile-time guarantee.
 
@@ -92,7 +92,7 @@ From `packages/api` today:
 ```text
 packages/auth/src/index.ts          ← by design, auth is a source-only package
 packages/rest/dist/index.d.ts       ← fixed
-packages/validators/src/index.ts    ← affected: claims a types path, falls back to source
+packages/schemas/src/index.ts       ← affected: claims a types path, falls back to source
 ```
 
 Any package that declares a `types` condition and still shows `src/` here is

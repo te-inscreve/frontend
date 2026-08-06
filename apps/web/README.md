@@ -13,8 +13,8 @@ this file explains _what to type_.
 | `~/shared/trpc/react` → `useTRPC`                          | Client       | `useQuery` / `useSuspenseQuery` / `useMutation` |
 | `~/shared/auth/server` → `getSession`                      | Server (RSC) | Read the session, gate a page                   |
 | `~/shared/auth/client` → `signIn`, `useSession`, `signOut` | Client       | Login forms, session in the UI                  |
-| `@te-inscreve/validators`                                  | Both         | Zod schemas + inferred types                    |
-| `@te-inscreve/ui`                                          | Both         | `Button`, `Input`, `Label`, `cn`                |
+| `@te-inscreve/schemas`                                     | Both         | Zod schemas + inferred types                    |
+| `@te-inscreve/components`                                  | Both         | `Button`, `Input`, `Label`, `cn`                |
 
 Never import `@te-inscreve/rest` from a page or component. The REST client is
 server-only and reaches the browser exclusively through tRPC.
@@ -27,7 +27,7 @@ those features.
 
 Four files, in this order. `evento` is the reference implementation — copy it.
 
-### 1. Schema — `packages/validators/src/index.ts`
+### 1. Schema — `packages/schemas/src/index.ts`
 
 The single source of truth for anything crossing the REST boundary.
 
@@ -52,8 +52,8 @@ status into the matching tRPC code.
 ```ts
 import type { TRPCRouterRecord } from "@trpc/server";
 
-import type { Inscricao } from "@te-inscreve/validators";
-import { createInscricaoSchema } from "@te-inscreve/validators";
+import type { Inscricao } from "@te-inscreve/schemas";
+import { createInscricaoSchema } from "@te-inscreve/schemas";
 
 import { protectedProcedure } from "../trpc";
 
@@ -305,7 +305,7 @@ backend routes configured in `src/shared/auth/server.ts` (`/auth/login` and
 `/auth/register` by default) and write the session cookie on success.
 
 Validate the form with `signInSchema` / `signUpSchema` from
-`@te-inscreve/validators` before calling.
+`@te-inscreve/schemas` before calling.
 
 ### Sign out
 

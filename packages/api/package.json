@@ -21,7 +21,7 @@
     "dependencies": {
         "@te-inscreve/auth": "workspace:*",
         "@te-inscreve/rest": "workspace:*",
-        "@te-inscreve/validators": "workspace:*",
+        "@te-inscreve/schemas": "workspace:*",
         "@trpc/server": "^11.18.0",
         "superjson": "^2.2.6",
         "zod": "^4.4.3"

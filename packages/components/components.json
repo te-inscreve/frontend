@@ -6,14 +6,14 @@
     "tailwind": {
         "config": "",
         "css": "../../tooling/tailwind/theme.css",
-        "baseColor": "zinc",
+        "baseColor": "neutral",
         "cssVariables": true,
         "prefix": ""
     },
     "aliases": {
-        "components": "@te-inscreve/ui",
-        "utils": "@te-inscreve/ui",
+        "components": "@te-inscreve/components",
+        "utils": "@te-inscreve/components",
         "ui": "./src"
     },
-    "iconLibrary": "lucide"
+    "iconLibrary": "phosphor"
 }

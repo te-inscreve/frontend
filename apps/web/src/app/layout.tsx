@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 
-import { cn } from "@te-inscreve/ui";
-
 import { TRPCReactProvider } from "~/shared/api/trpc/react";
 
 import "~/app/styles.css";
+
+import { cn } from "@te-inscreve/components";
 
 export const metadata: Metadata = {
     title: "te inscreve",
@@ -21,8 +21,6 @@ export const metadata: Metadata = {
                 type: "image/svg+xml",
             },
         ],
-
-        // Fica na raiz porque navegadores e crawlers antigos pedem /favicon.ico direto.
         shortcut: ["/favicon.ico?v=20260805"],
         apple: [
             {
@@ -38,10 +36,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-    themeColor: [
-        { media: "(prefers-color-scheme: light)", color: "white" },
-        { media: "(prefers-color-scheme: dark)", color: "black" },
-    ],
+    themeColor: "white",
 };
 
 export default function RootLayout(props: { children: React.ReactNode }) {

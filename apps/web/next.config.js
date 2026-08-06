@@ -12,13 +12,16 @@ const config = {
         "@te-inscreve/api",
         "@te-inscreve/auth",
         "@te-inscreve/rest",
-        "@te-inscreve/ui",
-        "@te-inscreve/validators",
+        "@te-inscreve/components",
+        "@te-inscreve/schemas",
     ],
 
     /** We already do linting and typechecking as separate tasks in CI */
     // typescript: { ignoreBuildErrors: true },
-    allowedDevOrigins: ['172.18.100.153']
+    allowedDevOrigins: ["172.18.100.153"],
+    experimental: {
+        optimizePackageImports: ["@phosphor-icons/react"],
+    },
 };
 
 export default config;
