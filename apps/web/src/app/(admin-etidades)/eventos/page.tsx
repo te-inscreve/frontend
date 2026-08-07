@@ -17,7 +17,7 @@ export default function EventosPage() {
         isError,
     } = useQuery(trpc.evento.getAll.queryOptions({ search: undefined }));
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <div className="flex min-h-screen flex-col gap-4 px-0 md:px-4 md:py-4">
             <h1 className="shimmer shimmer-once shimmer-color-primary-foreground text-primary text-4xl font-bold">
                 <ConfettiIcon className="mr-2 inline-flex" weight="duotone" />
                 Eventos
@@ -38,7 +38,7 @@ export default function EventosPage() {
                 </p>
             )}
 
-            <ul className="flex flex-col gap-2">
+            <ul className="grid grid-cols-1 gap-2 md:grid-cols-4">
                 {eventos?.map((evento) => (
                     <CardEvento key={evento.id} evento={evento} />
                 ))}
