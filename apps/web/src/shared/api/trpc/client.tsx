@@ -14,6 +14,7 @@ import SuperJSON from "superjson";
 import type { AppRouter } from "@te-inscreve/api";
 
 import { env } from "~/shared/utils/env";
+import { loggerLinkOptions } from "./logger";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -34,11 +35,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
     const [trpcClient] = useState(() =>
         createTRPCClient<AppRouter>({
             links: [
-                loggerLink({
-                    enabled: (op) =>
-                        env.NODE_ENV === "development" ||
-                        (op.direction === "down" && op.result instanceof Error),
-                }),
+                loggerLink(loggerLinkOptions),
                 httpBatchStreamLink({
                     transformer: SuperJSON,
                     url: getBaseUrl() + "/api/trpc",
