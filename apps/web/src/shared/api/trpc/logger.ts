@@ -85,8 +85,8 @@ const logFailure = (
  * best. Successful operations only leave a terse trace in development.
  */
 const trpcLogger: TRPCLoggerFn = (op) => {
-    const trace = `${op.type} #${op.id} '${op.path}'`;
-
+    // `enabled` below never sends outgoing operations here; this narrows the
+    // parameter to the completed ones, which are the only ones with a result.
     if (op.direction === "up") {
         return;
     }
@@ -101,8 +101,10 @@ const trpcLogger: TRPCLoggerFn = (op) => {
     }
 
     if (isDevelopment) {
-        console.debug(`<< tRPC ${trace} in (${op.elapsedMs}ms)`, op.result);
-        return;
+        console.debug(
+            `<< tRPC ${op.type} #${op.id} '${op.path}' in (${op.elapsedMs}ms)`,
+            op.result,
+        );
     }
 };
 
@@ -114,6 +116,6 @@ const trpcLogger: TRPCLoggerFn = (op) => {
 export const loggerLinkOptions: LoggerLinkOptions<AppRouter> = {
     logger: trpcLogger,
     enabled: (op) =>
-        isDevelopment ||
-        (op.direction === "down" && op.result instanceof TRPCClientError),
+        op.direction === "down" &&
+        (isDevelopment || op.result instanceof TRPCClientError),
 };
