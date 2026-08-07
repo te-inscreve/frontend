@@ -30,12 +30,12 @@ interface ItemNavegacao {
 const itens: ItemNavegacao[] = [
     {
         titulo: "Minha entidade",
-        href: "/minha-entidade",
+        href: "/admin/minha-entidade",
         icone: BuildingsIcon,
     },
     {
         titulo: "Eventos",
-        href: "/eventos",
+        href: "/admin/eventos",
         icone: CalendarDotsIcon,
     },
 ];
@@ -49,7 +49,7 @@ export function AdminEntidadesSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/minha-entidade">
+                            <Link href="/admin/minha-entidade">
                                 <Image
                                     src={gauchinho}
                                     alt="Gauchinho"

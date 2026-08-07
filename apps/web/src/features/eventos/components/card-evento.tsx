@@ -14,7 +14,7 @@ import {
 export function CardEvento({ evento }: { evento: Evento }) {
     return (
         <li>
-            <Link href={`/eventos/${evento.slug}`}>
+            <Link href={`/admin/eventos/${evento.slug}`}>
                 <Card className="w-100 cursor-pointer">
                     <CardHeader>
                         <CardTitle>{evento.nome}</CardTitle>
