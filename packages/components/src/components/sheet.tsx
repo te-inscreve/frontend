@@ -1,7 +1,7 @@
 "use client";
 
 import type * as React from "react";
-import { XIcon } from "lucide-react";
+import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 import { Dialog as SheetPrimitive } from "radix-ui";
 
 import { cn } from "@te-inscreve/components";

@@ -2,8 +2,8 @@
 
 import type { VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { SidebarIcon } from "@phosphor-icons/react/dist/ssr/Sidebar";
 import { cva } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
 import { Slot } from "radix-ui";
 
 import { Button } from "@te-inscreve/components/components/button";
@@ -288,7 +288,7 @@ function SidebarTrigger({
             }}
             {...props}
         >
-            <PanelLeftIcon />
+            <SidebarIcon />
             <span className="sr-only">Toggle Sidebar</span>
         </Button>
     );

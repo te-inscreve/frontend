@@ -27,8 +27,8 @@
         "ui-add": "yarn dlx shadcn@latest add && prettier src --write --list-different"
     },
     "dependencies": {
+        "@phosphor-icons/react": "^2.1.10",
         "class-variance-authority": "^0.7.1",
-        "lucide-react": "^1.29.0",
         "radix-ui": "^1.4.3",
         "tailwind-merge": "^3.3.1"
     },
