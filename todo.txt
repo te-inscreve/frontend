@@ -1,0 +1,18 @@
+- Lista de Eventos
+    - Lista geral com eventos publicados (vitrine)
+        - Mostrar os tres ultimos eventos a landing page e um botão de ver mais
+        - Adicionar tela publica de eventos publicados 
+    - Lista 'meus eventos' para administradores de entidade
+        - Diferenciar: eventos promovidos, eventos de participação futura ou passada.
+
+
+TO-DO:
+- SearchInput para listagem de meus eventos
+- Card de evento
+    - Definir quais dados irão aparecer
+- Tela de detalhe do evento
+    - Modalidades
+    - Categorias
+- Tela de login 
+    - No back adicionar dj-rest-auth e django-allauth para autenticação pot JWT
+    - No front criar tela de login e configurar auth
