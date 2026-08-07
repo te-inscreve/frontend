@@ -1,5 +1,6 @@
 "use client";
 
+import { BugIcon } from "@phosphor-icons/react/dist/ssr";
 import { ConfettiIcon } from "@phosphor-icons/react/dist/ssr/Confetti";
 import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
 import { useQuery } from "@tanstack/react-query";
@@ -9,9 +10,12 @@ import { useTRPC } from "~/shared/api/trpc/client";
 
 export default function EventosPage() {
     const trpc = useTRPC();
-    const { data: eventos, isLoading } = useQuery(
-        trpc.evento.getAll.queryOptions({ search: undefined }),
-    );
+    const {
+        data: eventos,
+        isLoading,
+        error,
+        isError,
+    } = useQuery(trpc.evento.getAll.queryOptions({ search: undefined }));
     return (
         <div className="flex min-h-screen flex-col items-center justify-center gap-4">
             <h1 className="shimmer shimmer-once shimmer-color-primary-foreground text-primary text-4xl font-bold">
@@ -27,6 +31,13 @@ export default function EventosPage() {
                     Carregando eventos...
                 </p>
             )}
+            {isError && (
+                <p className="text-destructive">
+                    <BugIcon className="mr-2 inline-flex" size={18} />
+                    {error.message}
+                </p>
+            )}
+
             <ul className="flex flex-col gap-2">
                 {eventos?.map((evento) => (
                     <CardEvento key={evento.id} evento={evento} />
