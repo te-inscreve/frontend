@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { nextCookies } from "better-auth/next-js";
+import { z } from "zod/v4";
 
 import { initAuth } from "@te-inscreve/auth";
 
@@ -19,6 +20,23 @@ const baseUrl =
             // eslint-disable-next-line no-restricted-properties
             `http://localhost:${process.env.PORT ?? 3000}`;
 
+/**
+ * What `dj-rest-auth` answers on `/auth/login/` when `REST_AUTH.USE_JWT` is on:
+ * its `JWTSerializer` names the JWT `access`, and the nested user comes from
+ * `UserDetailsSerializer`, which exposes the primary key as `pk` — neither
+ * matches the `{ token, user: { id } }` shape `@te-inscreve/auth` expects.
+ */
+const djangoAuthResponseSchema = z.object({
+    access: z.string().min(1),
+    user: z.object({
+        pk: z.number(),
+        username: z.string(),
+        email: z.string(),
+        firstName: z.string().nullish(),
+        lastName: z.string().nullish(),
+    }),
+});
+
 export const auth = initAuth({
     baseUrl,
     secret: env.AUTH_SECRET,
@@ -26,6 +44,27 @@ export const auth = initAuth({
     // Lets the Expo app call this auth server over its custom scheme.
     trustedOrigins: ["te-inscreve://"],
     extraPlugins: [nextCookies()],
+    restCredentials: {
+        // Translates the Django payload at the boundary, so the rest of the
+        // monorepo only ever sees better-auth's session/user shape.
+        parseAuthResponse: (raw) => {
+            const { access, user } = djangoAuthResponseSchema.parse(raw);
+
+            return {
+                token: access,
+                user: {
+                    id: String(user.pk),
+                    email: user.email,
+                    // The API has no single `name` column; `username` is the
+                    // fallback for accounts that never filled the name in.
+                    name:
+                        [user.firstName, user.lastName]
+                            .filter(Boolean)
+                            .join(" ") || user.username,
+                },
+            };
+        },
+    },
 });
 
 export const getSession = cache(async () =>
