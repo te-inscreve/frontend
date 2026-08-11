@@ -10,16 +10,6 @@ import { initAuth } from "@te-inscreve/auth";
 import { httpClient } from "~/shared/api/http-client";
 import { env } from "~/shared/utils/env";
 
-const baseUrl =
-    env.VERCEL_ENV === "production"
-        ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
-        : env.VERCEL_ENV === "preview"
-          ? `https://${env.VERCEL_URL}`
-          : // PORT is injected by the dev server, so it isn't part of the validated
-            // env schema.
-            // eslint-disable-next-line no-restricted-properties
-            `http://localhost:${process.env.PORT ?? 3000}`;
-
 /**
  * What `dj-rest-auth` answers on `/auth/login/` when `REST_AUTH.USE_JWT` is on:
  * its `JWTSerializer` names the JWT `access`, and the nested user comes from
@@ -38,7 +28,9 @@ const djangoAuthResponseSchema = z.object({
 });
 
 export const auth = initAuth({
-    baseUrl,
+    baseUrl: {
+        allowedHosts: ["localhost:*", ...(env.ALLOWED_ORIGINS as string[])],
+    },
     secret: env.AUTH_SECRET,
     restClient: httpClient,
     // Lets the Expo app call this auth server over its custom scheme.

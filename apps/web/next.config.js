@@ -18,7 +18,7 @@ const config = {
 
     /** We already do linting and typechecking as separate tasks in CI */
     // typescript: { ignoreBuildErrors: true },
-    allowedDevOrigins: ["172.18.100.153"],
+    allowedDevOrigins: process.env.ALLOWED_ORIGINS?.split(",") ?? [],
     experimental: {
         optimizePackageImports: ["@phosphor-icons/react"],
     },

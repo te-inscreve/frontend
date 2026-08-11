@@ -16,7 +16,12 @@ export const env = createEnv({
      * Server-side only. `API_URL` comes from `@te-inscreve/rest/env` — the
      * backend is never called straight from the browser, always through tRPC.
      */
-    server: {},
+    server: {
+        ALLOWED_ORIGINS: z
+            .string()
+            .optional()
+            .transform((val) => val?.split(",") ?? []),
+    },
     /**
      * Client-side variables. Prefix them with `NEXT_PUBLIC_` to expose them.
      */

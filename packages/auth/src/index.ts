@@ -9,7 +9,7 @@ import { restCredentials } from "./rest-credentials";
 
 export interface InitAuthOptions {
     /** Where this auth server is reachable, e.g. `http://localhost:3000`. */
-    baseUrl: string;
+    baseUrl: BetterAuthOptions["baseURL"];
     /** Signs & encrypts the session cookie. See `AUTH_SECRET`. */
     secret: string | undefined;
     /** REST client used to authenticate against the backend. */
@@ -17,7 +17,7 @@ export interface InitAuthOptions {
     /** Custom paths / payload mapping for the backend auth routes. */
     restCredentials?: Omit<RestCredentialsOptions, "restClient">;
     /** Extra origins allowed to call this auth server (e.g. the Expo scheme). */
-    trustedOrigins?: string[];
+    trustedOrigins?: BetterAuthOptions["trustedOrigins"];
     /**
      * Framework plugins such as `nextCookies()`.
      *
