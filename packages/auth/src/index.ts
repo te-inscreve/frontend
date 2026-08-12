@@ -45,7 +45,7 @@ export interface InitAuthOptions {
  * JWT itself for that.
  */
 export function initAuth(options: InitAuthOptions) {
-    const config = {
+    return betterAuth({
         // No `database`: better-auth stays stateless and never touches storage.
         baseURL: options.baseUrl,
         secret: options.secret,
@@ -74,9 +74,7 @@ export function initAuth(options: InitAuthOptions) {
                 console.error("[auth] API error", error);
             },
         },
-    } satisfies BetterAuthOptions;
-
-    return betterAuth(config);
+    });
 }
 
 export type Auth = ReturnType<typeof initAuth>;
