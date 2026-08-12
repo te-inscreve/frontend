@@ -6,6 +6,8 @@ import "~/app/styles.css";
 
 import { cn } from "@te-inscreve/components";
 
+import { IconProvider } from "~/shared/ui/icon-provider";
+
 export const metadata: Metadata = {
     title: "te inscreve",
     description: "Inscrições e avaliações de eventos",
@@ -47,7 +49,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
                     "bg-background min-h-screen font-sans antialiased",
                 )}
             >
-                <TRPCReactProvider>{props.children}</TRPCReactProvider>
+                <TRPCReactProvider>
+                    <IconProvider>{props.children}</IconProvider>
+                </TRPCReactProvider>
             </body>
         </html>
     );
