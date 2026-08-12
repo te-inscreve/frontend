@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 
 import { signIn } from "~/shared/api/auth/client";
 
@@ -10,7 +10,16 @@ import { signIn } from "~/shared/api/auth/client";
  * inglês nas falhas de credencial, então a tradução acontece aqui, na borda
  * da UI.
  */
-function mensagemDeErro(error: { status: number; message?: string }): string {
+function mensagemDeErro(error: unknown): string {
+    if (
+        typeof error !== "object" ||
+        error === null ||
+        !("status" in error) ||
+        typeof error.status !== "number"
+    ) {
+        return "Não foi possível entrar. Tente novamente mais tarde.";
+    }
+
     // O plugin de auth colapsa 403/404 em 401 de propósito, mas cobrimos os
     // três para não vazar um erro cru caso isso mude.
     if ([401, 403, 404].includes(error.status)) {
@@ -20,7 +29,11 @@ function mensagemDeErro(error: { status: number; message?: string }): string {
         return "Muitas tentativas. Aguarde um instante e tente de novo.";
     }
     // Erros de validação chegam com mensagem do backend, segura de exibir.
-    if (error.status === 400 && error.message) {
+    if (
+        error.status === 400 &&
+        "message" in error &&
+        typeof error.message === "string"
+    ) {
         return error.message;
     }
     return "Não foi possível entrar. Tente novamente mais tarde.";
@@ -28,26 +41,34 @@ function mensagemDeErro(error: { status: number; message?: string }): string {
 
 export function useSignIn() {
     const router = useRouter();
-    const [erro, setErro] = useState<string | null>(null);
-    const [enviando, setEnviando] = useState(false);
+    const mutation = useMutation({
+        mutationFn: async ({
+            email,
+            senha,
+        }: {
+            email: string;
+            senha: string;
+        }) => {
+            const { error } = await signIn.rest({ email, password: senha });
 
-    async function entrar(email: string, senha: string) {
-        setErro(null);
-        setEnviando(true);
+            if (error) {
+                throw new Error(error.message, { cause: error });
+            }
+        },
+        onSuccess: () => {
+            router.push("/");
+            router.refresh();
+        },
+    });
 
-        const { error } = await signIn.rest({ email, password: senha });
-
-        if (error) {
-            setErro(mensagemDeErro(error));
-            setEnviando(false);
-            return;
-        }
-
-        // `refresh` para os layouts de servidor (ex.: header da vitrine)
-        // relerem a sessão recém-criada.
-        router.push("/");
-        router.refresh();
+    function entrar(email: string, senha: string) {
+        mutation.mutate({ email, senha });
     }
 
-    return { entrar, erro, enviando };
+    return {
+        entrar,
+        erro: mutation.error ? mensagemDeErro(mutation.error) : null,
+        enviando: mutation.isPending,
+        ...mutation,
+    };
 }

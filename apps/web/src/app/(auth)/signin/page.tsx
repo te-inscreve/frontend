@@ -35,7 +35,7 @@ export default function SignInPage() {
                         priority
                         className="md:hidden"
                     />
-                    <h2 className="text-3xl font-semibold">Login</h2>
+                    <h2 className="text-3xl font-semibold">Entrar</h2>
                     <div className="w-full max-w-xs">
                         <SignInForm />
                     </div>

@@ -1,26 +1,33 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
+import { useForm } from "react-hook-form";
 
 import { Button, Input, Label } from "@te-inscreve/components";
 
+import type { SignInFormValues } from "../lib/signin-schema";
+import { signInFormSchema } from "../lib/signin-schema";
 import { useSignIn } from "../lib/use-signin";
 
 export function SignInForm() {
     const { entrar, erro, enviando } = useSignIn();
-    const [email, setEmail] = useState("");
-    const [senha, setSenha] = useState("");
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<SignInFormValues>({
+        resolver: zodResolver(signInFormSchema),
+        defaultValues: { email: "", senha: "" },
+    });
 
     return (
         <form
             className="flex w-full flex-col gap-4"
-            onSubmit={(event) => {
-                event.preventDefault();
-                void entrar(email, senha);
-            }}
+            noValidate
+            onSubmit={handleSubmit(({ email, senha }) => entrar(email, senha))}
         >
             <div className="flex flex-col gap-1.5">
                 <Label htmlFor="email">E-mail</Label>
@@ -29,10 +36,15 @@ export function SignInForm() {
                     type="email"
                     autoComplete="email"
                     placeholder="voce@exemplo.com"
-                    required
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email && "email-erro"}
+                    {...register("email")}
                 />
+                {errors.email && (
+                    <p id="email-erro" className="text-destructive text-sm">
+                        {errors.email.message}
+                    </p>
+                )}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -42,10 +54,15 @@ export function SignInForm() {
                     type="password"
                     autoComplete="current-password"
                     placeholder="••••••••"
-                    required
-                    value={senha}
-                    onChange={(event) => setSenha(event.target.value)}
+                    aria-invalid={!!errors.senha}
+                    aria-describedby={errors.senha && "senha-erro"}
+                    {...register("senha")}
                 />
+                {errors.senha && (
+                    <p id="senha-erro" className="text-destructive text-sm">
+                        {errors.senha.message}
+                    </p>
+                )}
             </div>
 
             {erro && (
