@@ -16,6 +16,7 @@
         "./tooltip": "./src/components/tooltip.tsx",
         "./skeleton": "./src/components/skeleton.tsx",
         "./separator": "./src/components/separator.tsx",
+        "./dropdown-menu": "./src/components/dropdown-menu.tsx",
         "./hooks": "./src/hooks/use-mobile.ts"
     },
     "license": "MIT",
