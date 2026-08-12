@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { UserIcon } from "@phosphor-icons/react/dist/ssr/User";
 
 import {
     SidebarInset,
@@ -7,6 +6,7 @@ import {
     SidebarTrigger,
 } from "@te-inscreve/components/components/sidebar";
 
+import { UserDropdown } from "~/features/usuarios/components/user-dropdown";
 import { AdminEntidadesSidebar } from "~/shared/ui/admin-entidades-sidebar";
 import { IconProvider } from "~/shared/ui/icon-provider";
 
@@ -33,9 +33,7 @@ export default async function AdminEntidadesLayout({
                     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
                         <SidebarTrigger className="-ml-1" />
 
-                        <div className="bg-muted ml-auto flex h-8 w-8 items-center justify-center rounded-full">
-                            <UserIcon size={18} weight="regular" />
-                        </div>
+                        <UserDropdown />
                     </header>
                     {children}
                 </SidebarInset>
