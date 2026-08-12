@@ -7,7 +7,7 @@ import {
 } from "@te-inscreve/components/components/sidebar";
 
 import { UserDropdown } from "~/features/usuarios/components/user-dropdown";
-import { AdminEntidadesSidebar } from "~/shared/ui/admin-entidades-sidebar";
+import { AdminSidebar } from "~/shared/ui/admin-sidebar";
 import { IconProvider } from "~/shared/ui/icon-provider";
 
 // Espelha o `SIDEBAR_COOKIE_NAME` do componente de sidebar. A constante de lá
@@ -28,7 +28,7 @@ export default async function AdminEntidadesLayout({
     return (
         <IconProvider>
             <SidebarProvider defaultOpen={defaultOpen}>
-                <AdminEntidadesSidebar />
+                <AdminSidebar />
                 <SidebarInset className="bg-background relative min-h-screen">
                     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
                         <SidebarTrigger className="-ml-1" />

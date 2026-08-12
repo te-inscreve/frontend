@@ -1,6 +1,7 @@
 import { use } from "react";
 import { headers } from "next/headers";
 import Link from "next/link";
+import { GearIcon } from "@phosphor-icons/react/dist/ssr/Gear";
 import { SignOutIcon } from "@phosphor-icons/react/dist/ssr/SignOut";
 import { UserIcon } from "@phosphor-icons/react/dist/ssr/User";
 
@@ -49,6 +50,12 @@ export function UserDropdown() {
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                    <Link href="/configuracoes">
+                        <GearIcon size={16} />
+                        Configurações
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild variant="destructive">
                     <Link href="/signout">
                         <SignOutIcon size={16} />
                         Sair
