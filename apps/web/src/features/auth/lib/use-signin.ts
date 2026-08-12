@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
 import { signIn } from "~/shared/api/auth/client";
@@ -40,6 +40,7 @@ function mensagemDeErro(error: unknown): string {
 }
 
 export function useSignIn() {
+    const searchParams = useSearchParams();
     const router = useRouter();
     const mutation = useMutation({
         mutationFn: async ({
@@ -56,7 +57,7 @@ export function useSignIn() {
             }
         },
         onSuccess: () => {
-            router.push("/");
+            router.push(searchParams.get("next") ?? "/");
             router.refresh();
         },
     });
