@@ -19,6 +19,18 @@ const config = {
     /** We already do linting and typechecking as separate tasks in CI */
     // typescript: { ignoreBuildErrors: true },
     allowedDevOrigins: process.env.ALLOWED_ORIGINS?.split(",") ?? [],
+    images: {
+        dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
+        remotePatterns: process.env.IMAGE_PROVIDERS?.split(",").filter(pattern => !!pattern)?.map((pattern) => {
+            const url = new URL(pattern);
+            return {
+                protocol: url.protocol.includes("https") ? "https" : "http",
+                hostname: url.hostname,
+                port: url.port,
+                pathname: '/**',
+            };
+        }) ?? [],
+    },
     experimental: {
         optimizePackageImports: ["@phosphor-icons/react"],
     },

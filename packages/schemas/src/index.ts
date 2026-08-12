@@ -27,8 +27,17 @@ export const eventoSchema = z.object({
     id: z.number().int(),
     slug: z.string(),
     nome: z.string(),
+    descricao: z.string(),
     dataInicio: z.string(),
     dataFim: z.string(),
+    dataInicioInscricao: z.string(),
+    dataFimInscricao: z.string(),
+    unico: z.boolean(),
+    local: z.string(),
+    promotor: z.unknown().optional(),
+    logo: z.string().optional(),
+    cartaz: z.string().optional(),
+    regulamento: z.string().optional(),
 });
 export type Evento = z.infer<typeof eventoSchema>;
 
