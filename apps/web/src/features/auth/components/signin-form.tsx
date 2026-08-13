@@ -4,9 +4,16 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
-import { Button, Input, Label } from "@te-inscreve/components";
+import {
+    Button,
+    Field,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+    Input,
+} from "@te-inscreve/components";
 
 import type { SignInFormValues } from "../lib/signin-schema";
 import { signInFormSchema } from "../lib/signin-schema";
@@ -14,11 +21,7 @@ import { useSignIn } from "../lib/use-signin";
 
 export function SignInForm() {
     const { entrar, erro, enviando } = useSignIn();
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<SignInFormValues>({
+    const form = useForm<SignInFormValues>({
         resolver: zodResolver(signInFormSchema),
         defaultValues: { email: "", senha: "" },
     });
@@ -27,43 +30,53 @@ export function SignInForm() {
         <form
             className="flex w-full flex-col gap-4"
             noValidate
-            onSubmit={handleSubmit(({ email, senha }) => entrar(email, senha))}
+            onSubmit={form.handleSubmit(({ email, senha }) =>
+                entrar(email, senha),
+            )}
         >
-            <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="voce@exemplo.com"
-                    aria-invalid={!!errors.email}
-                    aria-describedby={errors.email && "email-erro"}
-                    {...register("email")}
+            <FieldGroup>
+                <Controller
+                    name="email"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="email">E-mail</FieldLabel>
+                            <Input
+                                {...field}
+                                id="email"
+                                type="email"
+                                autoComplete="email"
+                                placeholder="voce@exemplo.com"
+                                aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                                <FieldError errors={[fieldState.error]} />
+                            )}
+                        </Field>
+                    )}
                 />
-                {errors.email && (
-                    <p id="email-erro" className="text-destructive text-sm">
-                        {errors.email.message}
-                    </p>
-                )}
-            </div>
 
-            <div className="flex flex-col gap-1.5">
-                <Label htmlFor="senha">Senha</Label>
-                <Input
-                    id="senha"
-                    type="password"
-                    autoComplete="current-password"
-                    placeholder="••••••••"
-                    aria-invalid={!!errors.senha}
-                    aria-describedby={errors.senha && "senha-erro"}
-                    {...register("senha")}
+                <Controller
+                    name="senha"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="senha">Senha</FieldLabel>
+                            <Input
+                                {...field}
+                                id="senha"
+                                type="password"
+                                autoComplete="current-password"
+                                placeholder="••••••••"
+                                aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                                <FieldError errors={[fieldState.error]} />
+                            )}
+                        </Field>
+                    )}
                 />
-                {errors.senha && (
-                    <p id="senha-erro" className="text-destructive text-sm">
-                        {errors.senha.message}
-                    </p>
-                )}
-            </div>
+            </FieldGroup>
 
             {erro && (
                 <p role="alert" className="text-destructive text-sm">

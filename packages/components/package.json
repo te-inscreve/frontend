@@ -11,6 +11,7 @@
         "./button": "./src/components/button.tsx",
         "./card": "./src/components/card.tsx",
         "./input": "./src/components/input.tsx",
+        "./field": "./src/components/field.tsx",
         "./label": "./src/components/label.tsx",
         "./sheet": "./src/components/sheet.tsx",
         "./tooltip": "./src/components/tooltip.tsx",
