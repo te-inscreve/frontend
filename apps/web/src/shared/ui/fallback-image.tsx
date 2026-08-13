@@ -4,6 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { ImageBrokenIcon } from "@phosphor-icons/react/dist/ssr";
 
+import { cn } from "@te-inscreve/components/utils";
+
 type ImageProps = React.ComponentProps<typeof Image>;
 
 type FallbackImageProps = Omit<ImageProps, "src"> & {
@@ -27,10 +29,15 @@ export function FallbackImage({
     const invalidImage = !src || error;
 
     return invalidImage ? (
-        <div className="bg-muted flex h-full w-full items-center justify-center rounded-lg">
-            <ImageBrokenIcon className="text-muted-foreground h-12 w-12" />
-            <p className="text-muted-foreground text-center text-sm">
-                {fallbackMessage ?? "Imagem não disponível"}
+        <div
+            className={cn(
+                "bg-muted flex flex-col items-center justify-center gap-0.5",
+                props.className,
+            )}
+        >
+            <ImageBrokenIcon className="text-muted-foreground" size={56} />
+            <p className="text-muted-foreground text-center text-xl font-bold">
+                {fallbackMessage ?? "Sem Capa"}
             </p>
         </div>
     ) : (

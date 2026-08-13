@@ -27,7 +27,10 @@ export function AdminSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/admin/minha-entidade">
+                            <Link
+                                href="/admin/minha-entidade"
+                                className="flex items-center gap-2"
+                            >
                                 <Image
                                     src={gauchinho}
                                     alt="Gauchinho"
@@ -36,8 +39,8 @@ export function AdminSidebar() {
                                     className="rounded-md"
                                 />
 
-                                <span className="truncate font-semibold">
-                                    Te inscreve
+                                <span className="text-primary truncate text-xl font-bold">
+                                    Te Inscreve
                                 </span>
                             </Link>
                         </SidebarMenuButton>

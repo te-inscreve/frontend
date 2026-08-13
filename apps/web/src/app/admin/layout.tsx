@@ -29,13 +29,15 @@ export default async function AdminEntidadesLayout({
         <IconProvider>
             <SidebarProvider defaultOpen={defaultOpen}>
                 <AdminSidebar />
-                <SidebarInset className="bg-background relative min-h-screen">
+                <SidebarInset className="bg-background relative h-svh min-h-0 overflow-hidden">
                     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
                         <SidebarTrigger className="-ml-1" />
 
                         <UserDropdown />
                     </header>
-                    {children}
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                        {children}
+                    </div>
                 </SidebarInset>
             </SidebarProvider>
         </IconProvider>

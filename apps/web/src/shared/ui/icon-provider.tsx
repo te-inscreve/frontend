@@ -7,7 +7,7 @@ export function IconProvider(props: { children: React.ReactNode }) {
         <IconContext.Provider
             value={{
                 color: "currentColor",
-                size: 32,
+                size: 18,
                 weight: "regular",
                 mirrored: false,
             }}
