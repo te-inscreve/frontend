@@ -1,5 +1,9 @@
 import { use } from "react";
 import { ConfettiIcon } from "@phosphor-icons/react/dist/ssr/Confetti";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
+
+import { Button, Input } from "@te-inscreve/components";
 
 import { ListaEventos } from "~/features/eventos/components/lista-eventos";
 import { HydrateClient, prefetch, trpc } from "~/shared/api/trpc/server";
@@ -18,11 +22,36 @@ export default function EventosPage({
     void prefetch(trpc.evento.getAll.queryOptions({ search }));
 
     return (
-        <div className="flex min-h-screen flex-col gap-4 px-0 md:px-4 md:py-4">
-            <h1 className="shimmer shimmer-once shimmer-color-primary-foreground text-primary text-4xl font-bold">
-                <ConfettiIcon className="mr-2 inline-flex" weight="duotone" />
-                Meus Eventos
-            </h1>
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 className="shimmer shimmer-once shimmer-color-primary-foreground text-primary flex items-center gap-2 text-3xl font-bold tracking-tight md:text-4xl">
+                        <ConfettiIcon size={32} weight="duotone" />
+                        Meus Eventos
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-sm md:text-base">
+                        Gerencie e acompanhe os eventos da sua entidade.
+                    </p>
+                </div>
+
+                <Button className="w-full sm:w-auto">
+                    <PlusIcon />
+                    Novo evento
+                </Button>
+            </div>
+
+            <div className="relative w-full sm:max-w-sm">
+                <MagnifyingGlassIcon
+                    aria-hidden="true"
+                    className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                />
+                <Input
+                    aria-label="Buscar eventos"
+                    className="h-10 pl-9"
+                    placeholder="Buscar eventos"
+                    type="search"
+                />
+            </div>
 
             <HydrateClient>
                 <ListaEventos />

@@ -49,14 +49,14 @@ const formatSameMonth = (start: Date, end: Date) => {
     const dayEnd = format(end, "d");
     const rest = format(end, "'de' MMMM 'de' yyyy", { locale: ptBR });
 
-    return `${dayStart} à ${dayEnd} ${capitalize(rest)}`;
+    return `${dayStart} – ${dayEnd} ${capitalize(rest)}`;
 };
 
 const formatSameYear = (start: Date, end: Date) => {
     const startStr = format(start, "d 'de' MMMM", { locale: ptBR });
     const endStr = format(end, "d 'de' MMMM", { locale: ptBR });
 
-    return `${capitalize(startStr)} à ${capitalize(
+    return `${capitalize(startStr)} – ${capitalize(
         endStr,
     )} de ${format(end, "yyyy")}`;
 };
@@ -69,5 +69,5 @@ const formatDifferentYears = (start: Date, end: Date) => {
         locale: ptBR,
     });
 
-    return `${capitalize(startStr)} à ${capitalize(endStr)}`;
+    return `${capitalize(startStr)} – ${capitalize(endStr)}`;
 };

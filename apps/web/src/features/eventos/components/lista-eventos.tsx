@@ -9,18 +9,23 @@ import { CardEvento } from "./card-evento";
 export function ListaEventos() {
     const { eventos, isLoading, isError, error } = useListaEventos();
     return (
-        <ul className="grid grid-cols-1 gap-2 md:grid-cols-4">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {isLoading && (
-                <p className="shimmer">
+                <li className="text-muted-foreground col-span-full flex items-center gap-2 py-12 text-sm">
                     <SpinnerIcon className="mr-2 inline-flex animate-spin" />
                     Carregando eventos...
-                </p>
+                </li>
             )}
             {isError && (
-                <p className="text-destructive">
+                <li className="text-destructive col-span-full flex items-center gap-2 py-12 text-sm">
                     <BugIcon className="mr-2 inline-flex" size={18} />
                     {error.message}
-                </p>
+                </li>
+            )}
+            {!isLoading && !isError && eventos.length === 0 && (
+                <li className="text-muted-foreground col-span-full rounded-xl border border-dashed py-12 text-center text-sm">
+                    Nenhum evento encontrado.
+                </li>
             )}
             {eventos.map((evento) => (
                 <CardEvento key={evento.id} evento={evento} />

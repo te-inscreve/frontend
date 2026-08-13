@@ -31,13 +31,26 @@ export function FallbackImage({
     return invalidImage ? (
         <div
             className={cn(
-                "bg-muted flex flex-col items-center justify-center gap-0.5",
+                "bg-muted relative flex flex-col items-center justify-center overflow-hidden border-b",
                 props.className,
             )}
         >
-            <ImageBrokenIcon className="text-muted-foreground" size={56} />
-            <p className="text-muted-foreground text-center text-xl font-bold">
-                {fallbackMessage ?? "Sem Capa"}
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                    backgroundImage:
+                        "radial-gradient(rgb(0 0 0 / 0.1) 1px, transparent 1px)",
+                    backgroundSize: "16px 16px",
+                }}
+            />
+            <ImageBrokenIcon
+                className="text-muted-foreground relative z-10"
+                weight="light"
+                size={48}
+            />
+            <p className="text-muted-foreground relative z-10 text-center text-lg font-medium">
+                {fallbackMessage ?? "Sem Cartaz"}
             </p>
         </div>
     ) : (

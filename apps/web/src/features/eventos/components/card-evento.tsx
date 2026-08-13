@@ -35,37 +35,50 @@ export function CardEvento({ evento }: { evento: Evento }) {
     }, [evento.dataInicio, evento.dataFim, formatDateRange]);
 
     return (
-        <Link href={`/admin/eventos/${evento.slug}`}>
-            <Card className="cursor-pointer gap-4 py-0 shadow-none">
-                <FallbackImage
-                    src={evento.cartaz}
-                    alt={evento.nome}
-                    width={450}
-                    height={450}
-                    className="h-64 w-full rounded-t-xl object-cover"
-                />
-                <CardContent className="flex flex-col gap-1 px-4!">
-                    <CardTitle className="mb-2!">{evento.nome}</CardTitle>
-                    <p className="text-muted-foreground flex items-center gap-2 text-sm">
-                        <CalendarDotsIcon />
-                        {dataFormatada}
-                    </p>
-                    <p className="text-muted-foreground flex items-center gap-2 text-sm">
-                        <MapPinIcon />
-                        {evento.local}
-                    </p>
-                    <p className="text-muted-foreground flex items-center gap-2 text-sm">
-                        <BuildingsIcon />
-                        {evento.promotor.nome}
-                    </p>
-                </CardContent>
-                <CardFooter className="flex items-center justify-between p-4 pt-0">
-                    <p className="text-muted-foreground text-sm">Encerrado</p>
-                    <p className="text-muted-foreground text-sm">
-                        {timeAgoString}
-                    </p>
-                </CardFooter>
-            </Card>
-        </Link>
+        <li>
+            <Link
+                className="block h-full"
+                href={`/admin/eventos/${evento.slug}`}
+            >
+                <Card className="h-full gap-0 overflow-hidden py-0 shadow-sm transition-shadow hover:shadow-md">
+                    <FallbackImage
+                        src={evento.cartaz}
+                        alt={evento.nome}
+                        width={450}
+                        height={450}
+                        className="aspect-4/3 w-full rounded-none object-cover"
+                    />
+                    <CardContent className="flex flex-1 flex-col gap-2 p-4">
+                        <CardTitle className="line-clamp-2 text-lg leading-tight">
+                            {evento.nome}
+                        </CardTitle>
+                        <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                            <CalendarDotsIcon />
+                            {dataFormatada}
+                        </p>
+                        <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                            <MapPinIcon />
+                            <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                                {evento.local}
+                            </span>
+                        </p>
+                        <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                            <BuildingsIcon />
+                            <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                                {evento.promotor.nome}
+                            </span>
+                        </p>
+                    </CardContent>
+                    <CardFooter className="flex items-center justify-between px-4 pt-0 pb-4">
+                        <p className="text-muted-foreground text-sm">
+                            Encerrado
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                            {timeAgoString}
+                        </p>
+                    </CardFooter>
+                </Card>
+            </Link>
+        </li>
     );
 }
