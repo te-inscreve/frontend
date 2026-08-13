@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import { publicEntidadeSchema } from "./entidade";
+
 /**
  * Schemas shared between the tRPC layer and both front-ends.
  *
@@ -34,7 +36,7 @@ export const eventoSchema = z.object({
     dataFimInscricao: z.string(),
     unico: z.boolean(),
     local: z.string(),
-    promotor: z.unknown().optional(),
+    promotor: publicEntidadeSchema,
     logo: z.string().optional(),
     cartaz: z.string().optional(),
     regulamento: z.string().optional(),
