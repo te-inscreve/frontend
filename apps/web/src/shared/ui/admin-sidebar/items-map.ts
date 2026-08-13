@@ -36,9 +36,24 @@ const getItensMap = (): ItensMap[] => [
                 icone: "buildings",
                 subItens: [
                     {
-                        titulo: "Editar",
-                        href: "/admin/minha-entidade/editar",
-                        icone: "buildings",
+                        titulo: "Artistas",
+                        href: "/admin/minha-entidade/artistas",
+                        icone: "mask",
+                    },
+                    {
+                        titulo: "Grupos de Artistas",
+                        href: "/admin/minha-entidade/grupos",
+                        icone: "group",
+                    },
+                    {
+                        titulo: "Inscrições",
+                        href: "/admin/minha-entidade/inscricoes",
+                        icone: "ticket",
+                    },
+                    {
+                        titulo: "Sala de Troféus",
+                        href: "/admin/minha-entidade/trofeus",
+                        icone: "trophy",
                     },
                 ],
             },
