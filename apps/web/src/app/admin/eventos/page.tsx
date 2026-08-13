@@ -4,6 +4,11 @@ import { ConfettiIcon } from "@phosphor-icons/react/dist/ssr/Confetti";
 import { ListaEventos } from "~/features/eventos/components/lista-eventos";
 import { HydrateClient, prefetch, trpc } from "~/shared/api/trpc/server";
 
+export const metadata = {
+    title: "Meus Eventos | Te Inscreve",
+    description: "Lista de eventos do usuário",
+};
+
 export default function EventosPage({
     params,
 }: {
