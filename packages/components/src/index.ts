@@ -42,6 +42,13 @@ export {
     PopoverTrigger,
 } from "./components/popover";
 export { Switch } from "./components/switch";
+export {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+    tabsListVariants,
+} from "./components/tabs";
 export { Textarea } from "./components/textarea";
 
 export * from "./components/sidebar";
