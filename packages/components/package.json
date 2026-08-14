@@ -8,11 +8,16 @@
         "./shadcn.css": "./src/shadcn.css",
         "./utils": "./src/utils.ts",
         "./components/*": "./src/components/*.tsx",
+        "./badge": "./src/components/badge.tsx",
         "./button": "./src/components/button.tsx",
+        "./calendar": "./src/components/calendar.tsx",
         "./card": "./src/components/card.tsx",
         "./input": "./src/components/input.tsx",
         "./field": "./src/components/field.tsx",
         "./label": "./src/components/label.tsx",
+        "./popover": "./src/components/popover.tsx",
+        "./switch": "./src/components/switch.tsx",
+        "./textarea": "./src/components/textarea.tsx",
         "./sheet": "./src/components/sheet.tsx",
         "./tooltip": "./src/components/tooltip.tsx",
         "./skeleton": "./src/components/skeleton.tsx",
@@ -31,7 +36,9 @@
     "dependencies": {
         "@phosphor-icons/react": "^2.1.10",
         "class-variance-authority": "^0.7.1",
+        "date-fns": "^4.4.0",
         "radix-ui": "^1.4.3",
+        "react-day-picker": "^10.0.1",
         "tailwind-merge": "^3.3.1"
     },
     "devDependencies": {

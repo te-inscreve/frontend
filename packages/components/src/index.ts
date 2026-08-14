@@ -1,6 +1,8 @@
 export { cn } from "./utils";
 
+export { Badge, badgeVariants } from "./components/badge";
 export { Button, buttonVariants } from "./components/button";
+export { Calendar, CalendarDayButton } from "./components/calendar";
 export {
     Card,
     CardAction,
@@ -30,6 +32,17 @@ export {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "./components/dropdown-menu";
+export {
+    Popover,
+    PopoverAnchor,
+    PopoverContent,
+    PopoverDescription,
+    PopoverHeader,
+    PopoverTitle,
+    PopoverTrigger,
+} from "./components/popover";
+export { Switch } from "./components/switch";
+export { Textarea } from "./components/textarea";
 
 export * from "./components/sidebar";
 
