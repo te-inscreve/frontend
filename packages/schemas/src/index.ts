@@ -1,7 +1,5 @@
 import { z } from "zod/v4";
 
-import { publicEntidadeSchema } from "./entidade";
-
 /**
  * Schemas shared between the tRPC layer and both front-ends.
  *
@@ -21,27 +19,5 @@ export const signUpSchema = signInSchema.extend({
 });
 export type SignUpInput = z.infer<typeof signUpSchema>;
 
-/**
- * Reference domain schema. Mirrors what the REST API returns for an evento —
- * adjust the fields to match the real payload.
- */
-export const eventoSchema = z.object({
-    id: z.number().int(),
-    slug: z.string(),
-    nome: z.string(),
-    descricao: z.string(),
-    dataInicio: z.string(),
-    dataFim: z.string(),
-    dataInicioInscricao: z.string(),
-    dataFimInscricao: z.string(),
-    unico: z.boolean(),
-    local: z.string(),
-    promotor: publicEntidadeSchema,
-    logo: z.string().optional(),
-    cartaz: z.string().optional(),
-    regulamento: z.string().optional(),
-});
-export type Evento = z.infer<typeof eventoSchema>;
-
-export const createEventoSchema = eventoSchema.omit({ id: true });
-export type CreateEventoInput = z.infer<typeof createEventoSchema>;
+export type { Evento, CreateEventoInput } from "./evento";
+export { eventoSchema, createEventoSchema } from "./evento";
