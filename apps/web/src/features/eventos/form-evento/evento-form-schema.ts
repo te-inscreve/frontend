@@ -50,6 +50,42 @@ export const eventoFormDefaults: EventoFormValues = {
 };
 
 /**
+ * Converte o modelo de edição validado para o multipart consumido pela rota
+ * tRPC. Manter a conversão junto do schema evita que o componente replique o
+ * contrato das datas ou esqueça algum arquivo ao enviar o formulário.
+ */
+export function eventoFormData(valores: EventoFormValues): FormData {
+    const dados = eventoFormSchema.parse(valores);
+    const inicioEvento = dados.periodoEvento.from;
+    const fimEvento = dados.periodoEvento.to;
+    const inicioInscricoes = dados.periodoInscricoes.from;
+    const fimInscricoes = dados.periodoInscricoes.to;
+
+    // As refinements acima garantem os quatro valores. O guard mantém essa
+    // invariável explícita para o TypeScript e protege chamadas fora do RHF.
+    if (!inicioEvento || !fimEvento || !inicioInscricoes || !fimInscricoes) {
+        throw new Error("Os períodos do evento ainda estão incompletos.");
+    }
+
+    const formData = new FormData();
+    formData.set("nome", dados.nome);
+    formData.set("descricao", dados.descricao);
+    formData.set("local", dados.local);
+    formData.set("unico", String(dados.unico));
+    formData.set("publicado", String(dados.publicado));
+    formData.set("dataInicio", inicioEvento.toISOString());
+    formData.set("dataFim", fimEvento.toISOString());
+    formData.set("dataInicioInscricoes", inicioInscricoes.toISOString());
+    formData.set("dataFimInscricoes", fimInscricoes.toISOString());
+
+    if (dados.logo) formData.set("logo", dados.logo);
+    if (dados.cartaz) formData.set("cartaz", dados.cartaz);
+    if (dados.regulamento) formData.set("regulamento", dados.regulamento);
+
+    return formData;
+}
+
+/**
  * Inscrições que fecham depois do evento começar. É um aviso, não um erro: há
  * eventos que aceitam inscrição no local, então o organizador decide.
  */

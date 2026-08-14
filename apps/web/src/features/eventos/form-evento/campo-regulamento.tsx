@@ -9,12 +9,14 @@ interface CampoRegulamentoProps {
     id: string;
     file: File | null;
     onChange: (file: File | null) => void;
+    invalido?: boolean;
 }
 
 export function CampoRegulamento({
     id,
     file,
     onChange,
+    invalido,
 }: CampoRegulamentoProps) {
     const [arrastando, setArrastando] = useState(false);
 
@@ -44,6 +46,7 @@ export function CampoRegulamento({
                 id={id}
                 type="file"
                 accept="application/pdf"
+                aria-invalid={invalido}
                 className="sr-only"
                 onChange={(evento) => receber(evento.target.files?.[0])}
             />

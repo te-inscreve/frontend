@@ -1,13 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
-import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight";
-import { FloppyDiskIcon } from "@phosphor-icons/react/dist/ssr/FloppyDisk";
+import { CalendarDotsIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { MapPinIcon } from "@phosphor-icons/react/dist/ssr/MapPin";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 
 import {
@@ -32,12 +33,15 @@ import {
 } from "@te-inscreve/components";
 
 import type { EventoFormValues } from "./evento-form-schema";
+import { FormEventoSaveIcon } from "~/features/eventos/form-evento/form-evento-save-icon";
+import { useTRPC } from "~/shared/api/trpc/client";
 import { useObjectUrl } from "~/shared/utils/use-object-url";
 import { CampoImagem } from "./campo-imagem";
 import { CampoPeriodo } from "./campo-periodo";
 import { CampoRegulamento } from "./campo-regulamento";
 import { ChecklistEvento } from "./checklist-evento";
 import {
+    eventoFormData,
     eventoFormDefaults,
     eventoFormSchema,
     inscricoesFechamDepoisDoInicio,
@@ -45,11 +49,44 @@ import {
 import { PreviewEvento } from "./preview-evento";
 
 export function FormEvento() {
+    const router = useRouter();
+    const queryClient = useQueryClient();
+    const trpc = useTRPC();
+    const [salvamento, setSalvamento] = useState<
+        "idle" | "loading" | "success"
+    >("idle");
     const form = useForm<EventoFormValues>({
         resolver: zodResolver(eventoFormSchema),
         defaultValues: eventoFormDefaults,
         mode: "onTouched",
     });
+    const criarEvento = useMutation(
+        trpc.evento.create.mutationOptions({
+            onSuccess: async () => {
+                setSalvamento("success");
+                await queryClient.invalidateQueries(
+                    trpc.evento.getAll.queryFilter(),
+                );
+                router.push("/admin/eventos");
+                router.refresh();
+            },
+            onError: (error) => {
+                setSalvamento("idle");
+
+                for (const [campo, mensagens] of Object.entries(
+                    error.data?.fieldErrors ?? {},
+                )) {
+                    const campoDoFormulario = campoEventoForm(campo);
+                    if (!campoDoFormulario || !mensagens.length) continue;
+
+                    form.setError(campoDoFormulario, {
+                        type: "server",
+                        message: mensagens.join(" "),
+                    });
+                }
+            },
+        }),
+    );
 
     // A prévia e o checklist acompanham a digitação, então o formulário inteiro
     // re-renderiza a cada tecla — é o preço de ter o cartaz atualizando ao vivo.
@@ -84,11 +121,9 @@ export function FormEvento() {
         valores.periodoInscricoes,
     );
 
-    // TODO: ligar em `trpc.evento.create`. O endpoint atual recebe JSON com
-    // logo/cartaz/regulamento como URL, então antes é preciso decidir onde os
-    // três arquivos sobem.
-    const salvar = (_valores: EventoFormValues) => {
-        void _valores;
+    const salvar = (valoresValidos: EventoFormValues) => {
+        setSalvamento("loading");
+        criarEvento.mutate(eventoFormData(valoresValidos));
     };
 
     return (
@@ -451,8 +486,11 @@ export function FormEvento() {
                                 <Controller
                                     name="logo"
                                     control={form.control}
-                                    render={({ field }) => (
-                                        <Field className="w-auto">
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            className="w-auto"
+                                            data-invalid={fieldState.invalid}
+                                        >
                                             <FieldLabel htmlFor="logo">
                                                 Logo
                                             </FieldLabel>
@@ -465,10 +503,16 @@ export function FormEvento() {
                                                 placeholder="Logo"
                                                 previewUrl={logoUrl}
                                                 onChange={field.onChange}
+                                                invalido={fieldState.invalid}
                                             />
                                             <p className="text-muted-foreground max-w-30 text-xs">
                                                 PNG quadrado, fundo transparente
                                             </p>
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
                                         </Field>
                                     )}
                                 />
@@ -476,8 +520,11 @@ export function FormEvento() {
                                 <Controller
                                     name="cartaz"
                                     control={form.control}
-                                    render={({ field }) => (
-                                        <Field className="w-auto">
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            className="w-auto"
+                                            data-invalid={fieldState.invalid}
+                                        >
                                             <FieldLabel htmlFor="cartaz">
                                                 Capa do evento
                                             </FieldLabel>
@@ -490,11 +537,17 @@ export function FormEvento() {
                                                 placeholder="Cartaz"
                                                 previewUrl={cartazUrl}
                                                 onChange={field.onChange}
+                                                invalido={fieldState.invalid}
                                             />
                                             <p className="text-muted-foreground max-w-35 text-xs">
                                                 Usado na pré-visualização ao
                                                 lado
                                             </p>
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
                                         </Field>
                                     )}
                                 />
@@ -502,8 +555,11 @@ export function FormEvento() {
                                 <Controller
                                     name="regulamento"
                                     control={form.control}
-                                    render={({ field }) => (
-                                        <Field className="min-w-55 flex-1">
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            className="min-w-55 flex-1"
+                                            data-invalid={fieldState.invalid}
+                                        >
                                             <FieldLabel htmlFor="regulamento">
                                                 Regulamento (PDF)
                                             </FieldLabel>
@@ -511,7 +567,13 @@ export function FormEvento() {
                                                 id="regulamento"
                                                 file={field.value}
                                                 onChange={field.onChange}
+                                                invalido={fieldState.invalid}
                                             />
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
                                         </Field>
                                     )}
                                 />
@@ -532,12 +594,53 @@ export function FormEvento() {
                         publicado={valores.publicado}
                     />
                     <ChecklistEvento valores={valores} />
-                    <Button type="submit" size="lg">
-                        <FloppyDiskIcon weight="bold" />
+                    {criarEvento.error && (
+                        <p role="alert" className="text-destructive text-sm">
+                            Não foi possível salvar o evento. Revise os dados e
+                            tente novamente.
+                        </p>
+                    )}
+                    <Button
+                        type="submit"
+                        size="lg"
+                        disabled={salvamento === "loading"}
+                    >
+                        <FormEventoSaveIcon
+                            current={
+                                salvamento === "idle"
+                                    ? "floppy-disk"
+                                    : salvamento === "loading"
+                                      ? "spinner-gap"
+                                      : "check"
+                            }
+                        />
                         Salvar
                     </Button>
                 </aside>
             </div>
         </form>
     );
+}
+
+function campoEventoForm(campoApi: string): keyof EventoFormValues | null {
+    const campos: Record<string, keyof EventoFormValues> = {
+        nome: "nome",
+        descricao: "descricao",
+        local: "local",
+        unico: "unico",
+        publicado: "publicado",
+        dataInicio: "periodoEvento",
+        dataFim: "periodoEvento",
+        data_inicio: "periodoEvento",
+        data_fim: "periodoEvento",
+        dataInicioInscricoes: "periodoInscricoes",
+        dataFimInscricoes: "periodoInscricoes",
+        data_inicio_inscricoes: "periodoInscricoes",
+        data_fim_inscricoes: "periodoInscricoes",
+        logo: "logo",
+        cartaz: "cartaz",
+        regulamento: "regulamento",
+    };
+
+    return campos[campoApi] ?? null;
 }

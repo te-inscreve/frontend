@@ -15,6 +15,7 @@ interface CampoImagemProps {
     /** Como a imagem preenche o quadro: logo cabe inteira, cartaz preenche. */
     ajuste: "contain" | "cover";
     placeholder: string;
+    invalido?: boolean;
     className?: string;
 }
 
@@ -26,6 +27,7 @@ export function CampoImagem({
     formato,
     ajuste,
     placeholder,
+    invalido,
     className,
 }: CampoImagemProps) {
     const [arrastando, setArrastando] = useState(false);
@@ -59,6 +61,7 @@ export function CampoImagem({
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
                 aria-label={label}
+                aria-invalid={invalido}
                 className="sr-only"
                 onChange={(evento) => receber(evento.target.files?.[0])}
             />
