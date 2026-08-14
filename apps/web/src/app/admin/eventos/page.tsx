@@ -1,11 +1,12 @@
 import { use } from "react";
+import Link from "next/link";
 import { ConfettiIcon } from "@phosphor-icons/react/dist/ssr/Confetti";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
 
 import { Button, Input } from "@te-inscreve/components";
 
-import { ListaEventos } from "~/features/eventos/components/lista-eventos";
+import { ListaEventos } from "~/features/eventos/lista-eventos/lista-eventos";
 import { HydrateClient, prefetch, trpc } from "~/shared/api/trpc/server";
 
 export const metadata = {
@@ -34,9 +35,11 @@ export default function EventosPage({
                     </p>
                 </div>
 
-                <Button className="w-full sm:w-auto">
-                    <PlusIcon />
-                    Novo evento
+                <Button asChild className="w-full sm:w-auto">
+                    <Link href="/admin/eventos/criar">
+                        <PlusIcon />
+                        Novo evento
+                    </Link>
                 </Button>
             </div>
 
@@ -47,7 +50,7 @@ export default function EventosPage({
                 />
                 <Input
                     aria-label="Buscar eventos"
-                    className="h-10 pl-9"
+                    className="bg-card h-10 pl-9"
                     placeholder="Buscar eventos"
                     type="search"
                 />
