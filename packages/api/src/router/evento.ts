@@ -2,7 +2,6 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import type { Evento } from "@te-inscreve/schemas";
-import { createEventoSchema } from "@te-inscreve/schemas";
 
 import { authenticatedProcedure, publicProcedure } from "../trpc";
 
@@ -52,7 +51,7 @@ export const eventoRouter = {
         }),
 
     create: authenticatedProcedure
-        .input(createEventoSchema)
+        .input(z.instanceof(FormData))
         .mutation(async ({ ctx, input }) => {
             const result = await ctx.restClient.post<Evento>(`/eventos`, input);
             if (!result.ok) throw result.error;
