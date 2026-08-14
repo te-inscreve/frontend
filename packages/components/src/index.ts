@@ -50,6 +50,12 @@ export {
     tabsListVariants,
 } from "./components/tabs";
 export { Textarea } from "./components/textarea";
+export {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "./components/tooltip";
 
 export * from "./components/sidebar";
 
