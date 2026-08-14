@@ -4341,7 +4341,6 @@ __metadata:
     "@te-inscreve/tsconfig": "workspace:*"
     "@types/react": "npm:~19.2.0"
     class-variance-authority: "npm:^0.7.1"
-    date-fns: "npm:^4.4.0"
     eslint: "npm:^9.38.0"
     prettier: "npm:^3.6.2"
     radix-ui: "npm:^1.4.3"
