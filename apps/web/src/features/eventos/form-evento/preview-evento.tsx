@@ -3,20 +3,14 @@
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { MapPinIcon } from "@phosphor-icons/react/dist/ssr/MapPin";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
+import { useWatch } from "react-hook-form";
 
 import { Badge, CardHeader } from "@te-inscreve/components";
+import { useFormContext } from "@te-inscreve/components/components/field";
 
-import type { Periodo } from "./evento-form-schema";
+import type { EventoFormValues, Periodo } from "./evento-form-schema";
 import { useDateRangeFormatter } from "~/shared/utils/format-date";
-
-interface PreviewEventoProps {
-    nome: string;
-    local: string;
-    cartazUrl: string | null;
-    periodoEvento: Periodo;
-    periodoInscricoes: Periodo;
-    publicado: boolean;
-}
+import { useObjectUrl } from "~/shared/utils/use-object-url";
 
 /**
  * Espelha o `CardEvento` da listagem pública para o organizador ver o cartaz do
@@ -24,14 +18,12 @@ interface PreviewEventoProps {
  * ainda são rascunho: o evento não tem `slug` para linkar nem `promotor`, e o
  * cartaz é um blob local.
  */
-export function PreviewEvento({
-    nome,
-    local,
-    cartazUrl,
-    periodoEvento,
-    periodoInscricoes,
-    publicado,
-}: PreviewEventoProps) {
+export function PreviewEvento() {
+    const { control } = useFormContext<EventoFormValues>();
+    const valores = useWatch({ control }) as EventoFormValues;
+    const cartazUrl = useObjectUrl(valores.cartaz);
+    const { nome, local, periodoEvento, periodoInscricoes, publicado } =
+        valores;
     const { formatDateRange } = useDateRangeFormatter();
 
     const formatar = ({ from, to }: Periodo, vazio: string) =>

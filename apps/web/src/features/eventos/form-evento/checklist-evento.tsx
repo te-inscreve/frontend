@@ -2,6 +2,7 @@
 
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 import { CircleDashedIcon } from "@phosphor-icons/react/dist/ssr/CircleDashed";
+import { useWatch } from "react-hook-form";
 
 import {
     Card,
@@ -9,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@te-inscreve/components";
+import { useFormContext } from "@te-inscreve/components/components/field";
 
 import type { EventoFormValues } from "./evento-form-schema";
 
@@ -36,7 +38,9 @@ function pendencias(valores: EventoFormValues) {
     ];
 }
 
-export function ChecklistEvento({ valores }: { valores: EventoFormValues }) {
+export function ChecklistEvento() {
+    const { control } = useFormContext<EventoFormValues>();
+    const valores = useWatch({ control }) as EventoFormValues;
     const itens = pendencias(valores);
     const concluidos = itens.filter((item) => item.pronto).length;
 

@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+import type { FieldErrors } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { CalendarDotsIcon, FilesIcon, InfoIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
@@ -18,9 +20,9 @@ import {
 } from "@te-inscreve/components";
 import { FormProvider } from "@te-inscreve/components/components/field";
 
+import type { EventoFormValues } from "./evento-form-schema";
 import { FormEventoSaveIcon } from "~/features/eventos/form-evento/form-evento-save-icon";
 import { GoBackButton } from "~/shared/ui/back-btn";
-import { useObjectUrl } from "~/shared/utils/use-object-url";
 import { ChecklistEvento } from "./checklist-evento";
 import { CartazField } from "./fields/cartaz-field";
 import { DescricaoField } from "./fields/descricao-field";
@@ -44,32 +46,11 @@ export function FormEvento() {
         },
     });
 
-    // A prévia e o checklist acompanham a digitação, então o formulário inteiro
-    // re-renderiza a cada tecla — é o preço de ter o cartaz atualizando ao vivo.
-    // O React Compiler avisa que não consegue memoizar `watch()`; aqui tanto
-    // faz, já que o objetivo é justamente re-renderizar. A alternativa,
-    // `useWatch`, devolve um tipo parcial e exigiria um cast.
-    const valores = form.watch();
     const erros = form.formState.errors;
-    const cartazUrl = useObjectUrl(valores.cartaz);
 
-    const abaGeralInvalida = [
-        erros.nome,
-        erros.descricao,
-        erros.local,
-        erros.unico,
-    ].some(Boolean);
-    const abaDatasInvalida = [
-        erros.periodoEvento,
-        erros.periodoInscricoes,
-    ].some(Boolean);
-    const abaArquivosInvalida = [
-        erros.logo,
-        erros.cartaz,
-        erros.regulamento,
-    ].some(Boolean);
-    const estiloAbaInvalida =
-        "text-destructive data-[state=active]:text-destructive dark:data-[state=active]:text-destructive";
+    const abaGeralInvalida = abaTemErro("geral", erros);
+    const abaDatasInvalida = abaTemErro("datas", erros);
+    const abaArquivosInvalida = abaTemErro("arquivos", erros);
 
     return (
         <FormProvider {...form}>
@@ -93,60 +74,27 @@ export function FormEvento() {
                 <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-4 py-6 md:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
                     <Tabs defaultValue="geral" className="min-w-0">
                         <TabsList className="grid w-full grid-cols-3 sm:w-80">
-                            <TabsTrigger
+                            <EventoTabTrigger
                                 value="geral"
-                                aria-invalid={abaGeralInvalida}
-                                className={
-                                    abaGeralInvalida
-                                        ? estiloAbaInvalida
-                                        : undefined
-                                }
+                                icon={<InfoIcon />}
+                                invalida={abaGeralInvalida}
                             >
-                                <InfoIcon />
                                 Geral
-                                {abaGeralInvalida && (
-                                    <WarningCircleIcon
-                                        aria-hidden="true"
-                                        weight="fill"
-                                    />
-                                )}
-                            </TabsTrigger>
-                            <TabsTrigger
+                            </EventoTabTrigger>
+                            <EventoTabTrigger
                                 value="datas"
-                                aria-invalid={abaDatasInvalida}
-                                className={
-                                    abaDatasInvalida
-                                        ? estiloAbaInvalida
-                                        : undefined
-                                }
+                                icon={<CalendarDotsIcon />}
+                                invalida={abaDatasInvalida}
                             >
-                                <CalendarDotsIcon />
                                 Datas
-                                {abaDatasInvalida && (
-                                    <WarningCircleIcon
-                                        aria-hidden="true"
-                                        weight="fill"
-                                    />
-                                )}
-                            </TabsTrigger>
-                            <TabsTrigger
+                            </EventoTabTrigger>
+                            <EventoTabTrigger
                                 value="arquivos"
-                                aria-invalid={abaArquivosInvalida}
-                                className={
-                                    abaArquivosInvalida
-                                        ? estiloAbaInvalida
-                                        : undefined
-                                }
+                                icon={<FilesIcon />}
+                                invalida={abaArquivosInvalida}
                             >
-                                <FilesIcon />
                                 Arquivos
-                                {abaArquivosInvalida && (
-                                    <WarningCircleIcon
-                                        aria-hidden="true"
-                                        weight="fill"
-                                    />
-                                )}
-                            </TabsTrigger>
+                            </EventoTabTrigger>
                         </TabsList>
 
                         <TabsContent
@@ -214,15 +162,8 @@ export function FormEvento() {
                     {/* `top-40` deixa a coluna parar logo abaixo da barra fixa,
                     que mede 141px a partir do breakpoint `lg`. */}
                     <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-40">
-                        <PreviewEvento
-                            nome={valores.nome}
-                            local={valores.local}
-                            cartazUrl={cartazUrl}
-                            periodoEvento={valores.periodoEvento}
-                            periodoInscricoes={valores.periodoInscricoes}
-                            publicado={valores.publicado}
-                        />
-                        <ChecklistEvento valores={valores} />
+                        <PreviewEvento />
+                        <ChecklistEvento />
                         {erro && (
                             <p
                                 role="alert"
@@ -252,5 +193,55 @@ export function FormEvento() {
                 </div>
             </form>
         </FormProvider>
+    );
+}
+
+const camposPorAba = {
+    geral: ["nome", "descricao", "local", "unico"],
+    datas: ["periodoEvento", "periodoInscricoes"],
+    arquivos: ["logo", "cartaz", "regulamento"],
+} as const satisfies Record<string, readonly (keyof EventoFormValues)[]>;
+
+type AbaEvento = keyof typeof camposPorAba;
+
+function abaTemErro(aba: AbaEvento, erros: FieldErrors<EventoFormValues>) {
+    return camposPorAba[aba].some((campo) => Boolean(erros[campo]));
+}
+
+function EventoTabTrigger({
+    value,
+    icon,
+    invalida,
+    children,
+}: {
+    value: AbaEvento;
+    icon: ReactNode;
+    invalida: boolean;
+    children: ReactNode;
+}) {
+    const descricaoErroId = `${value}-tab-error`;
+
+    return (
+        <TabsTrigger
+            value={value}
+            data-invalid={invalida}
+            aria-describedby={invalida ? descricaoErroId : undefined}
+            className={
+                invalida
+                    ? "text-destructive data-[state=active]:text-destructive dark:data-[state=active]:text-destructive"
+                    : undefined
+            }
+        >
+            {icon}
+            {children}
+            {invalida && (
+                <>
+                    <WarningCircleIcon aria-hidden="true" weight="fill" />
+                    <span id={descricaoErroId} className="sr-only">
+                        Esta aba contém erros
+                    </span>
+                </>
+            )}
+        </TabsTrigger>
     );
 }
