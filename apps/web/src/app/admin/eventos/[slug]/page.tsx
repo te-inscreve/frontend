@@ -1,7 +1,7 @@
 import { use } from "react";
 import { ConfettiIcon } from "@phosphor-icons/react/dist/ssr/Confetti";
 
-import { GobackButton } from "~/shared/ui/back-btn";
+import { GoBackButton } from "~/shared/ui/back-btn";
 
 export default function EventoDetailPage({
     params,
@@ -11,7 +11,7 @@ export default function EventoDetailPage({
     const { slug } = use(params);
     return (
         <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-            <GobackButton href="/admin/eventos" />
+            <GoBackButton href="/admin/eventos" />
             <h1 className="shimmer shimmer-once shimmer-color-primary-foreground text-primary text-4xl font-bold">
                 <ConfettiIcon className="mr-2 inline-flex" weight="duotone" />
                 Evento Detail {slug}

@@ -39,6 +39,7 @@
         "class-variance-authority": "^0.7.1",
         "radix-ui": "^1.4.3",
         "react-day-picker": "^10.0.1",
+        "react-hook-form": "^7.85.0",
         "tailwind-merge": "^3.3.1"
     },
     "devDependencies": {

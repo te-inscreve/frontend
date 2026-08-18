@@ -39,9 +39,12 @@ export function AdminSidebar() {
                                     className="rounded-md"
                                 />
 
-                                <span className="text-primary truncate text-xl font-bold">
-                                    Te Inscreve
-                                </span>
+                                <div className="truncate text-xl font-bold">
+                                    Te{` `}
+                                    <span className="text-primary">
+                                        Inscreve
+                                    </span>
+                                </div>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

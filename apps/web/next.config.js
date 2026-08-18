@@ -16,6 +16,15 @@ const config = {
         "@te-inscreve/schemas",
     ],
 
+    webpack: (webpackConfig) => {
+        webpackConfig.module.rules.unshift({
+            test: /\.svg$/i,
+            type: "asset/source",
+        });
+
+        return webpackConfig;
+    },
+
     /** We already do linting and typechecking as separate tasks in CI */
     // typescript: { ignoreBuildErrors: true },
     allowedDevOrigins: process.env.ALLOWED_ORIGINS?.split(",") ?? [],
@@ -33,6 +42,14 @@ const config = {
     },
     experimental: {
         optimizePackageImports: ["@phosphor-icons/react"],
+    },
+    turbopack: {
+        rules: {
+            "*.svg": {
+                loaders: ["raw-loader"],
+                as: "*.js",
+            },
+        },
     },
 };
 

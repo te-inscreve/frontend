@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ImageBrokenIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { cn } from "@te-inscreve/components/utils";
 
@@ -44,11 +43,7 @@ export function FallbackImage({
                     backgroundSize: "16px 16px",
                 }}
             />
-            <ImageBrokenIcon
-                className="text-muted-foreground relative z-10"
-                weight="light"
-                size={48}
-            />
+
             <p className="text-muted-foreground relative z-10 text-center text-lg font-medium">
                 {fallbackMessage ?? "Sem Cartaz"}
             </p>
