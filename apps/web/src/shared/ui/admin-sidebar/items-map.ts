@@ -38,7 +38,7 @@ const getItensMap = (): ItensMap[] => [
                     {
                         titulo: "Integrantes",
                         href: "/admin/minha-entidade/integrantes",
-                        icone: "person",
+                        icone: "user",
                     },
                     {
                         titulo: "Grupos",
