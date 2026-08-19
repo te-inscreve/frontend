@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/dist/client/link";
 import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
 import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
 
-import { useListaEventos } from "../lib/use-lista-eventos";
-import { CardEvento } from "./card-evento";
+import { CardEvento } from "../shared/card-evento";
+import { useListaEventos } from "./use-lista-eventos";
 
 export function ListaEventos() {
     const { eventos, isLoading, isError, error } = useListaEventos();
@@ -28,7 +29,14 @@ export function ListaEventos() {
                 </li>
             )}
             {eventos.map((evento) => (
-                <CardEvento key={evento.id} evento={evento} />
+                <li key={evento.id}>
+                    <Link
+                        className="block h-full"
+                        href={`/admin/eventos/${evento.slug}`}
+                    >
+                        <CardEvento evento={evento} />
+                    </Link>
+                </li>
             ))}
         </ul>
     );

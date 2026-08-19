@@ -6,7 +6,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import {
     createTRPCClient,
     httpBatchStreamLink,
+    httpLink,
+    isNonJsonSerializable,
     loggerLink,
+    splitLink,
 } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import SuperJSON from "superjson";
@@ -36,14 +39,19 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         createTRPCClient<AppRouter>({
             links: [
                 loggerLink(loggerLinkOptions),
-                httpBatchStreamLink({
-                    transformer: SuperJSON,
-                    url: getBaseUrl() + "/api/trpc",
-                    headers() {
-                        const headers = new Headers();
-                        headers.set("x-trpc-source", "nextjs-react");
-                        return headers;
-                    },
+                splitLink({
+                    condition: (operation) =>
+                        isNonJsonSerializable(operation.input),
+                    true: httpLink({
+                        transformer: SuperJSON,
+                        url: getBaseUrl() + "/api/trpc",
+                        headers: trpcHeaders,
+                    }),
+                    false: httpBatchStreamLink({
+                        transformer: SuperJSON,
+                        url: getBaseUrl() + "/api/trpc",
+                        headers: trpcHeaders,
+                    }),
                 }),
             ],
         }),
@@ -56,6 +64,12 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             </TRPCProvider>
         </QueryClientProvider>
     );
+}
+
+function trpcHeaders() {
+    const headers = new Headers();
+    headers.set("x-trpc-source", "nextjs-react");
+    return headers;
 }
 
 const getBaseUrl = () => {

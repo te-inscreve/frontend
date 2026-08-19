@@ -47,9 +47,11 @@ const formatSameDay = (date: Date) => {
 const formatSameMonth = (start: Date, end: Date) => {
     const dayStart = format(start, "d");
     const dayEnd = format(end, "d");
+    // Sem `capitalize`: aqui o trecho começa na preposição, e maiúscula nela
+    // sairia "10 – 15 De agosto de 2026".
     const rest = format(end, "'de' MMMM 'de' yyyy", { locale: ptBR });
 
-    return `${dayStart} – ${dayEnd} ${capitalize(rest)}`;
+    return `${dayStart} – ${dayEnd} ${rest}`;
 };
 
 const formatSameYear = (start: Date, end: Date) => {

@@ -15,6 +15,11 @@
     --accent-foreground: oklch(0.3 0.07 140);
     --destructive: oklch(0.55 0.2 25);
     --destructive-foreground: oklch(0.985 0.01 25);
+    /* Âmbar de atenção: avisos que pedem revisão, mas não bloqueiam a ação.
+     * Vem dos detalhes dourados descritos em `docs/DESIGN.md`, e fica entre o
+     * verde de confirmação e o vermelho de erro. */
+    --warning: oklch(0.76 0.145 80);
+    --warning-foreground: oklch(0.28 0.05 80);
     --border: oklch(0.91 0.008 80);
     --input: oklch(0.91 0.008 80);
     --ring: oklch(0.5751 0.1317 139.6817);
@@ -69,6 +74,8 @@
         --accent-foreground: oklch(0.6747 0.1028 139.6817);
         --destructive: oklch(0.3958 0.1331 25.723);
         --destructive-foreground: oklch(1 0 0);
+        --warning: oklch(0.8 0.13 80);
+        --warning-foreground: oklch(0.2 0.03 80);
         --border: oklch(0.2941 0.0175 310.1142);
         --input: oklch(0.2551 0.0142 310.7968);
         --ring: oklch(0.6747 0.1028 139.6817);
@@ -126,6 +133,8 @@
     --color-accent-foreground: var(--accent-foreground);
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
