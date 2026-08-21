@@ -41,6 +41,7 @@ export {
     PopoverTitle,
     PopoverTrigger,
 } from "./components/popover";
+export { Separator } from "./components/separator";
 export { Switch } from "./components/switch";
 export {
     Tabs,
