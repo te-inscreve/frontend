@@ -11,10 +11,14 @@ import { httpClient } from "~/shared/api/http-client";
 import { env } from "~/shared/utils/env";
 
 /**
- * What `dj-rest-auth` answers on `/auth/login/` when `REST_AUTH.USE_JWT` is on:
- * its `JWTSerializer` names the JWT `access`, and the nested user comes from
- * `UserDetailsSerializer`, which exposes the primary key as `pk` — neither
- * matches the `{ token, user: { id } }` shape `@te-inscreve/auth` expects.
+ * What `dj-rest-auth` answers on `/auth/login/` and `/auth/registration/` when
+ * `REST_AUTH.USE_JWT` is on: its `JWTSerializer` names the JWT `access`, and
+ * the nested user comes from `UserDetailsSerializer`, which exposes the primary
+ * key as `pk` — neither matches the `{ token, user: { id } }` shape
+ * `@te-inscreve/auth` expects.
+ *
+ * The `refresh` token that rides along is intentionally dropped: the session
+ * cookie carries the access token only, so the session ends when it expires.
  */
 const djangoAuthResponseSchema = z.object({
     access: z.string().min(1),

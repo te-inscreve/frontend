@@ -64,7 +64,7 @@ export function FormEvento() {
                         <h1 className="text-3xl font-extrabold tracking-tight">
                             Criar evento
                         </h1>
-                        <p className="text-muted-foreground my-1.5 max-w-lg text-sm">
+                        <p className="text-muted-foreground my-1.5 w-full text-sm">
                             Preencha as informações abaixo. Você pode salvar
                             como rascunho e publicar quando estiver pronto.
                         </p>
@@ -72,8 +72,11 @@ export function FormEvento() {
                 </div>
 
                 <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-4 py-6 md:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-                    <Tabs defaultValue="geral" className="min-w-0">
-                        <TabsList className="grid w-full grid-cols-3 sm:w-80">
+                    <Tabs defaultValue="geral" className="w-full shrink-0 grow">
+                        <TabsList
+                            className="grid w-full grid-cols-3 sm:w-80"
+                            variant={"line"}
+                        >
                             <EventoTabTrigger
                                 value="geral"
                                 icon={<InfoIcon />}

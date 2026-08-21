@@ -1,4 +1,3 @@
-import { use } from "react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { GearIcon } from "@phosphor-icons/react/dist/ssr/Gear";
@@ -16,15 +15,21 @@ import {
 } from "@te-inscreve/components";
 
 import { auth } from "~/shared/api/auth/server";
+import { getPerfil } from "../lib/get-perfil";
+import { AvatarUsuario } from "./avatar-usuario";
 
-export function UserDropdown() {
-    const _headers = use(headers());
-    const session = use(
-        auth.api.getSession({
-            headers: _headers,
-        }),
-    );
+export async function UserDropdown() {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
     if (!session) return null;
+
+    // A foto é enfeite: se `/profile` falhar, o topbar continua de pé com o
+    // ícone genérico em vez de derrubar a página inteira.
+    const perfil = await getPerfil().catch((erro: unknown) => {
+        console.error("[perfil] não foi possível carregar a foto", erro);
+        return null;
+    });
 
     return (
         <DropdownMenu>
@@ -34,7 +39,12 @@ export function UserDropdown() {
                     size="sm"
                     className="ml-auto rounded-full hover:cursor-pointer"
                 >
-                    <UserIcon size={18} weight="regular" />
+                    <AvatarUsuario
+                        photo={perfil?.photo}
+                        nome={session.user.name}
+                        size={24}
+                        alt=""
+                    />
                     <span className="text-sm font-medium">
                         {session.user.name}
                     </span>
