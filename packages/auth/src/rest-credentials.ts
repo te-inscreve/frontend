@@ -3,7 +3,7 @@ import { APIError, createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 import { z } from "zod/v4";
 
-import type { HttpClient } from "@te-inscreve/rest";
+import type { HttpClient, HttpError } from "@te-inscreve/rest";
 import { matchHttpError } from "@te-inscreve/rest";
 
 /**
@@ -39,7 +39,7 @@ export interface RestCredentialsOptions {
     paths?: {
         /** @default "/auth/login" */
         signIn?: string;
-        /** @default "/auth/register" */
+        /** @default "/auth/registration" */
         signUp?: string;
     };
     /**
@@ -80,6 +80,25 @@ function readJwtExpiry(token: string): Date | null {
 }
 
 /**
+ * Body for a rejection the user can fix, carrying the backend's per-field
+ * detail so a form can bind each message to its own input.
+ *
+ * `fieldErrors` is keyed by the *backend's* field names (`email`, `cpf`, …)
+ * with non-field errors under `""`. Translating those keys to whatever the
+ * form calls its inputs is the UI's job — this layer doesn't know them.
+ *
+ * The key is omitted when the body carried no field detail, so the client can
+ * branch on its presence instead of on an empty object.
+ */
+function validationBody(error: HttpError) {
+    const fieldErrors = error.fieldErrors;
+
+    return Object.keys(fieldErrors).length > 0
+        ? { message: error.message, fieldErrors }
+        : { message: error.message };
+}
+
+/**
  * Maps a failed auth call onto a status the client can act on, without echoing
  * internal details for errors the user can't do anything about.
  *
@@ -103,12 +122,11 @@ function toApiError(error: unknown, fallbackMessage: string): APIError {
         unauthorized,
         forbidden: unauthorized,
         notFound: unauthorized,
-        // Validation problems are safe to relay verbatim.
-        badRequest: (e) => new APIError("BAD_REQUEST", { message: e.message }),
-        unprocessable: (e) =>
-            new APIError("BAD_REQUEST", { message: e.message }),
+        // Validation problems are safe to relay verbatim, field detail included.
+        badRequest: (e) => new APIError("BAD_REQUEST", validationBody(e)),
+        unprocessable: (e) => new APIError("BAD_REQUEST", validationBody(e)),
         // Sign-up against an existing account.
-        conflict: (e) => new APIError("CONFLICT", { message: e.message }),
+        conflict: (e) => new APIError("CONFLICT", validationBody(e)),
         tooManyRequests: (e) =>
             new APIError("TOO_MANY_REQUESTS", { message: e.message }),
         server: internal,
@@ -129,7 +147,7 @@ function toApiError(error: unknown, fallbackMessage: string): APIError {
  */
 export const restCredentials = (options: RestCredentialsOptions) => {
     const signInPath = options.paths?.signIn ?? "/auth/login";
-    const signUpPath = options.paths?.signUp ?? "/auth/register";
+    const signUpPath = options.paths?.signUp ?? "/auth/registration";
     const sessionMaxAge = options.sessionMaxAge ?? 60 * 60 * 24 * 7;
     const parseAuthResponse =
         options.parseAuthResponse ??
@@ -230,24 +248,36 @@ export const restCredentials = (options: RestCredentialsOptions) => {
                 },
             ),
 
-            /** `POST /api/auth/sign-up/rest` → `authClient.signUp.rest(...)` */
+            /**
+             * `POST /api/auth/sign-up/rest` → `authClient.signUp.rest(...)`
+             *
+             * The body mirrors the backend's registration serializer field for
+             * field — including `passwordVerification`, which the API checks
+             * itself. Validation is *not* re-done here: the fields are relayed
+             * as-is so a rule change on the backend surfaces as its own 400
+             * instead of being rejected by a stale copy of the rule.
+             */
             signUpRest: createAuthEndpoint(
                 "/sign-up/rest",
                 {
                     method: "POST",
                     body: z.object({
-                        name: z.string(),
                         email: z.string(),
+                        fullName: z.string(),
+                        cpf: z.string(),
                         password: z.string(),
+                        passwordVerification: z.string(),
                     }),
                 },
                 async (ctx) => {
                     const data = await requestAuth(
                         signUpPath,
                         {
-                            name: ctx.body.name,
                             email: ctx.body.email,
+                            fullName: ctx.body.fullName,
+                            cpf: ctx.body.cpf,
                             password: ctx.body.password,
+                            passwordVerification: ctx.body.passwordVerification,
                         },
                         "Could not create the account.",
                     );

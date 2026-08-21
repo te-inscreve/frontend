@@ -10,7 +10,13 @@ import type { RestCredentialsPlugin } from "./rest-credentials";
  *
  * ```ts
  * await authClient.signIn.rest({ email, password });
- * await authClient.signUp.rest({ name, email, password });
+ * await authClient.signUp.rest({
+ *     email,
+ *     fullName,
+ *     cpf,
+ *     password,
+ *     passwordVerification,
+ * });
  * ```
  */
 export const restCredentialsClient = () => {
