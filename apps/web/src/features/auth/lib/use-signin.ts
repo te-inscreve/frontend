@@ -10,7 +10,11 @@ import { signIn } from "~/shared/api/auth/client";
  * inglês nas falhas de credencial, então a tradução acontece aqui, na borda
  * da UI.
  */
-function mensagemDeErro(error: unknown): string {
+function mensagemDeErro(erro: unknown): string {
+    // O `mutationFn` embrulha a falha do better-auth num `Error` para o React
+    // Query; o `status` fica na causa.
+    const error = erro instanceof Error && erro.cause ? erro.cause : erro;
+
     if (
         typeof error !== "object" ||
         error === null ||
