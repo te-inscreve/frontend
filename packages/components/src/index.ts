@@ -12,6 +12,11 @@ export {
     CardHeader,
     CardTitle,
 } from "./components/card";
+export {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "./components/collapsible";
 export { Input, type InputProps } from "./components/input";
 export { Field, FieldError, FieldGroup, FieldLabel } from "./components/field";
 export { Label } from "./components/label";

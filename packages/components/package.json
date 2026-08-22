@@ -12,6 +12,7 @@
         "./button": "./src/components/button.tsx",
         "./calendar": "./src/components/calendar.tsx",
         "./card": "./src/components/card.tsx",
+        "./collapsible": "./src/components/collapsible.tsx",
         "./input": "./src/components/input.tsx",
         "./field": "./src/components/field.tsx",
         "./label": "./src/components/label.tsx",

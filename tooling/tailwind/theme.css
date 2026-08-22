@@ -177,6 +177,57 @@
     --tracking-widest: calc(var(--tracking-normal) + 0.1em);
 }
 
+/* No Tailwind v4 os keyframes só chegam ao CSS final quando algum utilitário
+ * `--animate-*` os referencia, por isso os dois moram no mesmo bloco. A altura
+ * do collapsible vem da variável que o Radix mede e injeta no elemento. */
+@theme {
+    --animate-collapsible-down: collapsible-down 200ms ease-out;
+    --animate-collapsible-up: collapsible-up 150ms ease-out;
+    --animate-shake: shake 500ms ease-in-out;
+
+    @keyframes collapsible-down {
+        from {
+            height: 0;
+            opacity: 0;
+        }
+        to {
+            height: var(--radix-collapsible-content-height);
+            opacity: 1;
+        }
+    }
+
+    @keyframes collapsible-up {
+        from {
+            height: var(--radix-collapsible-content-height);
+            opacity: 1;
+        }
+        to {
+            height: 0;
+            opacity: 0;
+        }
+    }
+
+    @keyframes shake {
+        10%,
+        90% {
+            transform: translateX(-1px);
+        }
+        20%,
+        80% {
+            transform: translateX(2px);
+        }
+        30%,
+        50%,
+        70% {
+            transform: translateX(-4px);
+        }
+        40%,
+        60% {
+            transform: translateX(4px);
+        }
+    }
+}
+
 .dark {
     --sidebar: hsl(240 5.9% 10%);
     --sidebar-foreground: hsl(240 4.8% 95.9%);
