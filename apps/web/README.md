@@ -361,6 +361,9 @@ cannot validate the JWT.
   you use the client directly, not just in procedures.
 - **Sessions cannot be revoked.** The cookie _is_ the session store. A logout
   everywhere requires the Django API to reject the JWT.
+- **Access tokens refresh on session reads.** The Django refresh token stays in
+  an encrypted, HTTP-only cookie and is rotated when the access token has one
+  minute or less remaining.
 - **Rotating `AUTH_SECRET` logs everyone out.** Same reason.
 - **`env` is validated.** Add a variable to `src/shared/env.ts` (or the package
   `env.ts` it belongs to) and to `.env.example`, or it will not exist at runtime.

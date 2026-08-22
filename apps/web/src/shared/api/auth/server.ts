@@ -17,11 +17,12 @@ import { env } from "~/shared/utils/env";
  * key as `pk` — neither matches the `{ token, user: { id } }` shape
  * `@te-inscreve/auth` expects.
  *
- * The `refresh` token that rides along is intentionally dropped: the session
- * cookie carries the access token only, so the session ends when it expires.
+ * The `refresh` token is mapped separately so the auth plugin can keep it in an
+ * encrypted, HTTP-only cookie and rotate the access token before it expires.
  */
 const djangoAuthResponseSchema = z.object({
     access: z.string().min(1),
+    refresh: z.string().min(1),
     user: z.object({
         pk: z.number(),
         username: z.string(),
@@ -33,7 +34,7 @@ const djangoAuthResponseSchema = z.object({
 
 export const auth = initAuth({
     baseUrl: {
-        allowedHosts: ["localhost:*", ...(env.ALLOWED_ORIGINS as string[])],
+        allowedHosts: ["localhost:*", ...env.ALLOWED_ORIGINS],
     },
     secret: env.AUTH_SECRET,
     restClient: httpClient,
@@ -44,10 +45,12 @@ export const auth = initAuth({
         // Translates the Django payload at the boundary, so the rest of the
         // monorepo only ever sees better-auth's session/user shape.
         parseAuthResponse: (raw) => {
-            const { access, user } = djangoAuthResponseSchema.parse(raw);
+            const { access, refresh, user } =
+                djangoAuthResponseSchema.parse(raw);
 
             return {
                 token: access,
+                refreshToken: refresh,
                 user: {
                     id: String(user.pk),
                     email: user.email,
