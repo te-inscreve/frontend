@@ -7,7 +7,6 @@ import { CalendarDotsIcon, FilesIcon, InfoIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 
 import {
-    Button,
     Card,
     CardContent,
     CardDescription,
@@ -21,7 +20,6 @@ import {
 import { FormProvider } from "@te-inscreve/components/components/field";
 
 import type { EventoFormValues } from "./evento-form-schema";
-import { FormEventoSaveIcon } from "~/features/eventos/form-evento/form-evento-save-icon";
 import { GoBackButton } from "~/shared/ui/back-btn";
 import { ChecklistEvento } from "./checklist-evento";
 import { CartazField } from "./fields/cartaz-field";
@@ -166,7 +164,7 @@ export function FormEvento() {
                     que mede 141px a partir do breakpoint `lg`. */}
                     <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-40">
                         <PreviewEvento />
-                        <ChecklistEvento />
+                        <ChecklistEvento salvamento={salvamento} />
                         {erro && (
                             <p
                                 role="alert"
@@ -176,22 +174,6 @@ export function FormEvento() {
                                 dados e tente novamente.
                             </p>
                         )}
-                        <Button
-                            type="submit"
-                            size="lg"
-                            disabled={salvamento === "loading"}
-                        >
-                            <FormEventoSaveIcon
-                                current={
-                                    salvamento === "idle"
-                                        ? "floppy-disk"
-                                        : salvamento === "loading"
-                                          ? "spinner-gap"
-                                          : "check"
-                                }
-                            />
-                            Salvar
-                        </Button>
                     </aside>
                 </div>
             </form>
