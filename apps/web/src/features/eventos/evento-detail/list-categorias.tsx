@@ -1,14 +1,26 @@
-import type { DetalheEvento } from "~/app/admin/eventos/[slug]/mock";
+import type { Modalidade } from "@te-inscreve/schemas";
+
+import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { HorizontalScrollList } from "~/shared/ui/horizontal-scroll-list";
 import { CardCategoria } from "./card-categoria";
 
-type Modalidade = DetalheEvento["modalidades"][number];
-
 interface Props {
+    eventoId: number;
     modalidade: Modalidade;
 }
 
-export function ListCategorias({ modalidade }: Props) {
+/**
+ * Categorias da modalidade aberta. Busca aqui dentro, atrás do `<Suspense>` do
+ * `DetalheEvento`, para o cabeçalho e as abas irem para o stream sem esperar.
+ */
+export async function ListCategorias({ eventoId, modalidade }: Props) {
+    const categorias = await getQueryClient().fetchQuery(
+        trpc.categoria.getAll.queryOptions({
+            eventoId,
+            modalidadeId: modalidade.id,
+        }),
+    );
+
     return (
         <HorizontalScrollList
             label={`Categorias de ${modalidade.nome}`}
@@ -19,8 +31,8 @@ export function ListCategorias({ modalidade }: Props) {
                 </p>
             }
         >
-            {modalidade.categorias.map((categoria) => (
-                <CardCategoria key={categoria.nome} categoria={categoria} />
+            {categorias.map((categoria) => (
+                <CardCategoria key={categoria.id} categoria={categoria} />
             ))}
         </HorizontalScrollList>
     );

@@ -40,5 +40,11 @@ export { cpfSchema, isValidCpf } from "./cpf";
 export type { Evento, CreateEventoInput } from "./evento";
 export { eventoSchema, createEventoSchema } from "./evento";
 
+export type { Modalidade } from "./modalidade";
+export { modalidadeSchema } from "./modalidade";
+
+export type { Categoria } from "./categoria";
+export { categoriaSchema } from "./categoria";
+
 export type { Perfil } from "./perfil";
 export { perfilSchema } from "./perfil";

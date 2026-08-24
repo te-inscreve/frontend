@@ -1,11 +1,10 @@
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 
+import type { Categoria } from "@te-inscreve/schemas";
 import { Badge } from "@te-inscreve/components";
 
-import type { DetalheEvento } from "~/app/admin/eventos/[slug]/mock";
-
 interface Props {
-    categoria: DetalheEvento["modalidades"][number]["categorias"][number];
+    categoria: Categoria;
 }
 
 export function CardCategoria({ categoria }: Props) {
@@ -21,7 +20,11 @@ export function CardCategoria({ categoria }: Props) {
             <p className="flex items-center">
                 <TicketIcon className="mr-2 inline-flex" />
                 <span className="text-sm font-medium">
-                    {2} / {categoria.maxInscricoes} Inscrições realizadas
+                    {/* O total de inscritos ainda não vem da API. `maxInscricoes`
+                        nulo é categoria sem teto, não zero. */}
+                    {categoria.maxInscricoes === null
+                        ? "Inscrições sem limite"
+                        : `${2} / ${categoria.maxInscricoes} Inscrições realizadas`}
                 </span>
             </p>
         </div>

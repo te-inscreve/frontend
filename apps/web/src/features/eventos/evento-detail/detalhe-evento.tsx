@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { MapPinIcon } from "@phosphor-icons/react/dist/ssr/MapPin";
@@ -9,13 +11,15 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 
-import { detalheEvento } from "~/app/admin/eventos/[slug]/mock";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { formatDateRange } from "~/shared/utils/format-date";
 import { ListCategorias } from "./list-categorias";
+import { ListCategoriasSkeleton } from "./list-categorias-skeleton";
 
 interface Props {
     id: number;
+    /** Aba escolhida na URL. Ausente na primeira visita à página. */
+    modalidadeAtiva?: number;
 }
 
 /**
@@ -26,26 +30,28 @@ interface Props {
  * O `fetchQuery` reaproveita o `prefetch` disparado pela página: o query client
  * é `cache`ado por request, então aqui só se aguarda a promise já em voo.
  */
-export async function DetalheEvento({ id }: Props) {
-    const evento = await getQueryClient().fetchQuery(
+export async function DetalheEvento({ id, modalidadeAtiva }: Props) {
+    const queryClient = getQueryClient();
+
+    const evento = await queryClient.fetchQuery(
         trpc.evento.getById.queryOptions({ id }),
     );
 
     if (!evento) notFound();
+
+    const modalidades = await queryClient.fetchQuery(
+        trpc.modalidade.getAll.queryOptions({ eventoId: id }),
+    );
 
     const periodo = formatDateRange(
         new Date(evento.dataInicio),
         new Date(evento.dataFim),
     );
 
-    // As modalidades ainda não vêm do backend, então seguem vindo do mock.
-    // `value` de cada aba é string, então o padrão também precisa ser — e fica
-    // indefinido quando não há modalidade nenhuma para selecionar.
-    const primeiraModalidade = detalheEvento.modalidades[0]?.id;
-    const modalidadePadrao =
-        primeiraModalidade === undefined
-            ? undefined
-            : String(primeiraModalidade);
+    // Buscar em vez de confiar no parâmetro: um `?modalidade=` de link antigo
+    // aponta para modalidade que já não existe, e aí a primeira aba vale.
+    const ativa =
+        modalidades.find(({ id }) => id === modalidadeAtiva) ?? modalidades[0];
 
     return (
         <>
@@ -67,27 +73,56 @@ export async function DetalheEvento({ id }: Props) {
             </header>
 
             <h3 className="text-xl font-bold">Modalidades e categorias</h3>
-            <Tabs defaultValue={modalidadePadrao}>
-                <TabsList variant="line">
-                    {detalheEvento.modalidades.map((modalidade) => (
-                        <TabsTrigger
-                            key={modalidade.id}
-                            value={String(modalidade.id)}
-                        >
-                            {modalidade.nome}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-                {detalheEvento.modalidades.map((modalidade) => (
+
+            {ativa === undefined ? (
+                <p className="text-muted-foreground rounded-md border border-dashed p-6 text-sm">
+                    Este evento ainda não tem modalidades. Crie a primeira para
+                    montar as categorias.
+                </p>
+            ) : (
+                // Controlado pela URL e sem `onValueChange`: quem troca a aba é
+                // a navegação dos links abaixo, não o estado do Radix.
+                <Tabs value={String(ativa.id)} activationMode="manual">
+                    <TabsList variant="line">
+                        {modalidades.map((modalidade) => (
+                            <TabsTrigger
+                                key={modalidade.id}
+                                value={String(modalidade.id)}
+                                asChild
+                            >
+                                {/* `replace` porque as abas não são etapas: o
+                                    voltar do navegador deve sair da página, e
+                                    não desfazer aba por aba. `scroll={false}`
+                                    mantém a lista no lugar ao trocar. */}
+                                <Link
+                                    replace
+                                    scroll={false}
+                                    href={`/admin/eventos/${id}?modalidade=${modalidade.id}`}
+                                >
+                                    {modalidade.nome}
+                                </Link>
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+
+                    {/* Só a aba ativa é montada — as categorias das outras nem
+                        chegam a ser buscadas. */}
                     <TabsContent
-                        key={modalidade.id}
-                        value={String(modalidade.id)}
+                        value={String(ativa.id)}
                         className="mt-4 w-full"
                     >
-                        <ListCategorias modalidade={modalidade} />
+                        {/* `key` na fronteira: sem ela o React reaproveita o
+                            conteúdo da aba anterior e a troca fica parada até a
+                            resposta chegar, em vez de mostrar o esqueleto. */}
+                        <Suspense
+                            key={ativa.id}
+                            fallback={<ListCategoriasSkeleton />}
+                        >
+                            <ListCategorias eventoId={id} modalidade={ativa} />
+                        </Suspense>
                     </TabsContent>
-                ))}
-            </Tabs>
+                </Tabs>
+            )}
         </>
     );
 }
