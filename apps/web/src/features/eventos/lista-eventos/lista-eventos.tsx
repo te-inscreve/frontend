@@ -32,7 +32,7 @@ export function ListaEventos() {
                 <li key={evento.id}>
                     <Link
                         className="block h-full"
-                        href={`/admin/eventos/${evento.slug}`}
+                        href={`/admin/eventos/${evento.id}`}
                     >
                         <CardEvento evento={evento} />
                     </Link>

@@ -1,63 +1,34 @@
-import { use } from "react";
-import { ConfettiIcon } from "@phosphor-icons/react/dist/ssr/Confetti";
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
 
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "@te-inscreve/components";
-
-import { ListCategorias } from "~/features/eventos/evento-detail/list-categorias";
+import { DetalheEvento } from "~/features/eventos/evento-detail/detalhe-evento";
+import { DetalheEventoSkeleton } from "~/features/eventos/evento-detail/detalhe-evento-skeleton";
+import { prefetch, trpc } from "~/shared/api/trpc/server";
 import { GoBackButton } from "~/shared/ui/back-btn";
-import { detalheEvento } from "./mock";
 
-export default function EventoDetailPage({
+export default async function EventoDetailPage({
     params,
 }: {
     params: Promise<{ slug: string }>;
 }) {
-    const { slug } = use(params);
-    // `value` de cada aba é string, então o padrão também precisa ser — e fica
-    // indefinido quando não há modalidade nenhuma para selecionar.
-    const primeiraModalidade = detalheEvento.modalidades[0]?.id;
-    const modalidadePadrao =
-        primeiraModalidade === undefined
-            ? undefined
-            : String(primeiraModalidade);
+    const { slug } = await params;
+    const id = Number(slug);
+
+    // A lista linka por `id`, então uma URL com qualquer outra coisa não
+    // corresponde a evento nenhum — e `getById` só aceita inteiro positivo.
+    if (!Number.isInteger(id) || id <= 0) notFound();
+
+    // Dispara a busca antes da fronteira de Suspense: o shell abaixo já sai no
+    // stream enquanto o request corre, e `DetalheEvento` só aguarda a promise.
+    void prefetch(trpc.evento.getById.queryOptions({ id }));
+
     return (
         <div className="flex min-h-screen flex-col gap-4 px-4 py-6 md:px-6 md:py-8">
             <GoBackButton href="/admin/eventos" />
-            <h1 className="shimmer shimmer-once shimmer-color-primary-foreground text-primary text-4xl font-bold">
-                <ConfettiIcon className="mr-2 inline-flex" weight="duotone" />
-                Evento Detail {slug}
-            </h1>
-            <p className="text-muted-foreground">
-                Página de detalhes do evento do admin entidades.
-            </p>
 
-            <h3 className="text-xl font-bold">Modalidades e categorias</h3>
-            <Tabs defaultValue={modalidadePadrao}>
-                <TabsList variant="line">
-                    {detalheEvento.modalidades.map((modalidade) => (
-                        <TabsTrigger
-                            key={modalidade.id}
-                            value={String(modalidade.id)}
-                        >
-                            {modalidade.nome}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-                {detalheEvento.modalidades.map((modalidade) => (
-                    <TabsContent
-                        key={modalidade.id}
-                        value={String(modalidade.id)}
-                        className="mt-4 w-full"
-                    >
-                        <ListCategorias modalidade={modalidade} />
-                    </TabsContent>
-                ))}
-            </Tabs>
+            <Suspense fallback={<DetalheEventoSkeleton />}>
+                <DetalheEvento id={id} />
+            </Suspense>
         </div>
     );
 }

@@ -28,7 +28,7 @@ export const eventoRouter = {
             return result.data;
         }),
 
-    byId: publicProcedure
+    getById: publicProcedure
         .input(z.object({ id: z.number().int().positive() }))
         .query(async ({ ctx, input }) => {
             const result = await ctx.restClient.get<Evento>(

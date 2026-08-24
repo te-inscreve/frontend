@@ -37,9 +37,8 @@ import { useFormEvento } from "./use-form-evento";
 export function FormEvento() {
     const router = useRouter();
     const { form, salvamento, salvar, erro } = useFormEvento({
-        onSucess: () => {
-            // router.push(`/admin/eventos/${evento.slug}`);
-            router.push(`/admin/eventos/`);
+        onSucess: (evento) => {
+            router.push(`/admin/eventos/${evento.id}`);
             router.refresh();
         },
     });
