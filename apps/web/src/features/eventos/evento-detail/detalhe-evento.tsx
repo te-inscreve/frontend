@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { MapPinIcon } from "@phosphor-icons/react/dist/ssr/MapPin";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
 
 import {
+    Button,
     Tabs,
     TabsContent,
     TabsList,
@@ -72,7 +74,18 @@ export async function DetalheEvento({ id, modalidadeAtiva }: Props) {
                 </div>
             </header>
 
-            <h3 className="text-xl font-bold">Modalidades e categorias</h3>
+            {/* O botão fica no cabeçalho da seção, e não no estado vazio:
+                assim ele está no mesmo lugar com ou sem modalidade. */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-xl font-bold">Modalidades e categorias</h3>
+
+                <Button asChild>
+                    <Link href={`/admin/eventos/${id}/criar-modalidade`}>
+                        <PlusIcon aria-hidden="true" />
+                        Criar modalidade
+                    </Link>
+                </Button>
+            </div>
 
             {ativa === undefined ? (
                 <p className="text-muted-foreground rounded-md border border-dashed p-6 text-sm">
