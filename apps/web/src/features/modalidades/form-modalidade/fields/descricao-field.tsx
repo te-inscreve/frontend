@@ -1,0 +1,35 @@
+"use client";
+
+import { useController, useFormContext } from "react-hook-form";
+
+import {
+    Field,
+    FieldError,
+    FieldLabel,
+    Textarea,
+} from "@te-inscreve/components";
+
+import type { ModalidadeFormValues } from "../modalidade-form-schema";
+
+export function DescricaoField() {
+    const { control } = useFormContext<ModalidadeFormValues>();
+    const { field, fieldState } = useController({
+        name: "descricao",
+        control,
+    });
+
+    return (
+        <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor="descricao">Descrição</FieldLabel>
+            <Textarea
+                {...field}
+                id="descricao"
+                rows={4}
+                className="min-h-22"
+                placeholder="Explique como a modalidade funciona e o que ela avalia."
+                aria-invalid={fieldState.invalid}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+    );
+}
