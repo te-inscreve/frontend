@@ -2,8 +2,9 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import type { Categoria } from "@te-inscreve/schemas";
+import { formCategoriaSchema } from "@te-inscreve/schemas";
 
-import { publicProcedure } from "../trpc";
+import { authenticatedProcedure, publicProcedure } from "../trpc";
 
 export const categoriaRouter = {
     /**
@@ -31,6 +32,29 @@ export const categoriaRouter = {
                         ],
                     },
                 },
+            );
+            if (!result.ok) throw result.error;
+            return result.data;
+        }),
+
+    /**
+     * Cria uma categoria numa modalidade que já existe.
+     *
+     * Os dois ids ficam fora do corpo porque o recurso é aninhado: eles são o
+     * caminho, e o backend valida a cadeia inteira antes de gravar.
+     */
+    create: authenticatedProcedure
+        .input(
+            z.object({
+                eventoId: z.number().int().positive(),
+                modalidadeId: z.number().int().positive(),
+                categoria: formCategoriaSchema,
+            }),
+        )
+        .mutation(async ({ ctx, input }) => {
+            const result = await ctx.restClient.post<Categoria>(
+                `/eventos/${input.eventoId}/modalidades/${input.modalidadeId}/categorias`,
+                input.categoria,
             );
             if (!result.ok) throw result.error;
             return result.data;

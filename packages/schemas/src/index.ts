@@ -37,14 +37,20 @@ export type SignUpInput = z.infer<typeof signUpSchema>;
 
 export { cpfSchema, isValidCpf } from "./cpf";
 
-export type { Evento, CreateEventoInput } from "./evento";
-export { eventoSchema, createEventoSchema } from "./evento";
+export { createEventoSchema, eventoSchema } from "./evento";
+export type { CreateEventoInput, Evento } from "./evento";
 
-export type { Modalidade } from "./modalidade";
-export { modalidadeSchema } from "./modalidade";
+export {
+    formModalidadeSchema as createModalidadeSchema,
+    modalidadeSchema,
+} from "./modalidade";
+export type {
+    FormModalidade as CreateModalidade,
+    Modalidade,
+} from "./modalidade";
 
-export type { Categoria } from "./categoria";
-export { categoriaSchema } from "./categoria";
+export { categoriaSchema, formCategoriaSchema } from "./categoria";
+export type { Categoria, FormCategoria } from "./categoria";
 
-export type { Perfil } from "./perfil";
 export { perfilSchema } from "./perfil";
+export type { Perfil } from "./perfil";

@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import { formCategoriaSchema } from "./categoria";
+
 /**
  * Modalidade de um evento — a representação plana que `ModalidadeSerializer`
  * devolve. `evento` vem como o id do pai, não como o objeto.
@@ -19,4 +21,14 @@ export const modalidadeSchema = z.object({
     maxInscritosPorGrupo: z.number().int().nullable(),
     maxInscricoesEntidadePorCategoria: z.number().int().nullable(),
 });
+
+export const formModalidadeSchema = modalidadeSchema
+    .omit({
+        id: true,
+    })
+    .extend({
+        categorias: z.array(formCategoriaSchema),
+    });
+
 export type Modalidade = z.infer<typeof modalidadeSchema>;
+export type FormModalidade = z.infer<typeof formModalidadeSchema>;

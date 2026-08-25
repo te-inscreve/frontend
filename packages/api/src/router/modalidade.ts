@@ -2,8 +2,9 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import type { Modalidade } from "@te-inscreve/schemas";
+import { createModalidadeSchema } from "@te-inscreve/schemas";
 
-import { publicProcedure } from "../trpc";
+import { authenticatedProcedure, publicProcedure } from "../trpc";
 
 export const modalidadeRouter = {
     /**
@@ -27,6 +28,21 @@ export const modalidadeRouter = {
                         ],
                     },
                 },
+            );
+            if (!result.ok) throw result.error;
+            return result.data;
+        }),
+    /**
+     * Cria a modalidade com as categorias dela na mesma requisição — o
+     * backend aceita o aninhamento, então o organizador não precisa salvar a
+     * modalidade antes de cadastrar as categorias.
+     */
+    create: authenticatedProcedure
+        .input(createModalidadeSchema)
+        .mutation(async ({ ctx, input }) => {
+            const result = await ctx.restClient.post<Modalidade>(
+                `/eventos/${input.evento}/modalidades`,
+                input,
             );
             if (!result.ok) throw result.error;
             return result.data;
