@@ -46,15 +46,23 @@ export type { CreateEventoInput, Evento, EventoPreview } from "./evento";
 
 export {
     formModalidadeSchema as createModalidadeSchema,
+    modalidadeDetalheSchema,
+    modalidadePreviewSchema,
     modalidadeSchema,
 } from "./modalidade";
 export type {
     FormModalidade as CreateModalidade,
     Modalidade,
+    ModalidadeDetalhe,
+    ModalidadePreview,
 } from "./modalidade";
 
-export { categoriaSchema, formCategoriaSchema } from "./categoria";
-export type { Categoria, FormCategoria } from "./categoria";
+export {
+    categoriaAninhadaSchema,
+    categoriaSchema,
+    formCategoriaSchema,
+} from "./categoria";
+export type { Categoria, CategoriaAninhada, FormCategoria } from "./categoria";
 
 export { perfilSchema } from "./perfil";
 export type { Perfil } from "./perfil";

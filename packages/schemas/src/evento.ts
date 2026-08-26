@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
 import { publicEntidadeSchema } from "./entidade";
+import { modalidadePreviewSchema } from "./modalidade";
 
 /**
  * Reference domain schema. Mirrors what the REST API returns for an evento —
@@ -18,6 +19,11 @@ export const eventoSchema = z.object({
     unico: z.boolean(),
     local: z.string(),
     promotor: publicEntidadeSchema,
+    /**
+     * As modalidades do evento, só com id e nome. O detalhe de cada uma
+     * (regras e categorias) vem de `modalidade.getById`, quando a aba abre.
+     */
+    modalidades: z.array(modalidadePreviewSchema),
     logo: z.string().optional(),
     cartaz: z.string().optional(),
     regulamento: z.string().optional(),
@@ -40,6 +46,7 @@ export const createEventoSchema = eventoSchema.omit({
     id: true,
     // slug: true,
     promotor: true,
+    modalidades: true,
 });
 
 export const eventoPreviewSchema = eventoSchema.pick({

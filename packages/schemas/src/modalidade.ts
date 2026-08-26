@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { formCategoriaSchema } from "./categoria";
+import { categoriaAninhadaSchema, formCategoriaSchema } from "./categoria";
 
 /**
  * Modalidade de um evento — a representação plana que `ModalidadeSerializer`
@@ -22,6 +22,23 @@ export const modalidadeSchema = z.object({
     maxInscricoesEntidadePorCategoria: z.number().int().nullable(),
 });
 
+/**
+ * O par id/nome que o evento traz na lista `modalidades`. É o bastante para
+ * montar as abas — o resto só chega quando a aba abre e o detalhe é buscado.
+ */
+export const modalidadePreviewSchema = modalidadeSchema.pick({
+    id: true,
+    nome: true,
+});
+
+/**
+ * Detalhe de uma modalidade: os campos dela mais as categorias aninhadas, que
+ * vêm na mesma resposta e dispensam uma segunda requisição.
+ */
+export const modalidadeDetalheSchema = modalidadeSchema.extend({
+    categorias: z.array(categoriaAninhadaSchema),
+});
+
 export const formModalidadeSchema = modalidadeSchema
     .omit({
         id: true,
@@ -31,4 +48,6 @@ export const formModalidadeSchema = modalidadeSchema
     });
 
 export type Modalidade = z.infer<typeof modalidadeSchema>;
+export type ModalidadePreview = z.infer<typeof modalidadePreviewSchema>;
+export type ModalidadeDetalhe = z.infer<typeof modalidadeDetalheSchema>;
 export type FormModalidade = z.infer<typeof formModalidadeSchema>;

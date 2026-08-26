@@ -17,6 +17,16 @@ export const categoriaSchema = z.object({
 });
 
 /**
+ * Categoria como ela chega aninhada no detalhe da modalidade: sem `id` e sem
+ * `modalidade`, porque os dois são redundantes ali — a modalidade é o objeto
+ * que a contém.
+ */
+export const categoriaAninhadaSchema = categoriaSchema.omit({
+    id: true,
+    modalidade: true,
+});
+
+/**
  * Categoria em criação. Sai do mesmo schema sem os campos que o organizador
  * não informa: o `id` e a `modalidade` — que, num cadastro aninhado, ainda não
  * existe quando a categoria é preenchida — e `avaliadores`, que o backend
@@ -29,4 +39,5 @@ export const formCategoriaSchema = categoriaSchema.omit({
 });
 
 export type Categoria = z.infer<typeof categoriaSchema>;
+export type CategoriaAninhada = z.infer<typeof categoriaAninhadaSchema>;
 export type FormCategoria = z.infer<typeof formCategoriaSchema>;
