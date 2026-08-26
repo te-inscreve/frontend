@@ -3,7 +3,9 @@
 import type { FieldPath, FieldValues } from "react-hook-form";
 import { useController, useFormContext } from "react-hook-form";
 
-import { Field, FieldError, FieldLabel, Input } from "@te-inscreve/components";
+import { Field, FieldError, FieldLabel } from "@te-inscreve/components";
+
+import { NumberInput } from "~/shared/ui/number-input";
 
 interface Props<T extends FieldValues> {
     name: FieldPath<T>;
@@ -16,10 +18,9 @@ interface Props<T extends FieldValues> {
 }
 
 /**
- * Input numérico ligado ao formulário do contexto. O `<input type="number">`
- * sempre devolve string, e é aqui que ela vira o que o schema espera: `null`
- * quando o campo é opcional e está vazio, `NaN` quando é obrigatório e está
- * vazio — que o Zod recusa com a mensagem do campo.
+ * Contador numérico ligado ao formulário do contexto. O valor vazio vira
+ * `null` quando o campo é opcional e `NaN` quando é obrigatório — que o Zod
+ * recusa com a mensagem do campo.
  *
  * O tipo do formulário vem por argumento explícito (`<CampoNumero<Valores>`),
  * já que `name` sozinho não permite inferi-lo — sem isso os caminhos de campo
@@ -36,9 +37,10 @@ export function CampoNumero<T extends FieldValues>({
     const { control } = useFormContext<T>();
     const { field, fieldState } = useController({ name, control });
 
-    const valor: unknown = field.value;
-    const texto =
-        typeof valor === "number" && !Number.isNaN(valor) ? String(valor) : "";
+    const valor =
+        typeof field.value === "number" && !Number.isNaN(field.value)
+            ? field.value
+            : null;
 
     return (
         <Field data-invalid={fieldState.invalid}>
@@ -50,23 +52,15 @@ export function CampoNumero<T extends FieldValues>({
                     </span>
                 )}
             </FieldLabel>
-            <Input
+            <NumberInput
                 {...field}
                 id={name}
-                value={texto}
-                onChange={(evento) => {
-                    const bruto = evento.target.value;
-                    if (bruto === "") {
-                        field.onChange(opcional ? null : Number.NaN);
-                        return;
-                    }
-                    field.onChange(Number(bruto));
-                }}
-                type="number"
-                inputMode="numeric"
+                value={valor}
+                onChange={(novoValor) =>
+                    field.onChange(novoValor ?? (opcional ? null : Number.NaN))
+                }
                 min={min}
                 step={1}
-                className="h-10"
                 placeholder={placeholder}
                 aria-invalid={fieldState.invalid}
                 aria-describedby={ajuda ? `${name}-ajuda` : undefined}
