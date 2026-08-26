@@ -32,7 +32,10 @@ export function CampoTexto<T extends FieldValues>({
                 {...field}
                 value={typeof valor === "string" ? valor : ""}
                 id={name}
-                className="h-10"
+                // `bg-card` e não o transparente do `Input`: nos cartões e
+                // nas faixas de categoria o campo precisa se destacar do
+                // fundo em vez de sumir nele.
+                className="bg-card h-10"
                 placeholder={placeholder}
                 aria-invalid={fieldState.invalid}
             />

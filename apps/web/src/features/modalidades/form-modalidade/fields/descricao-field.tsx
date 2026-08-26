@@ -25,7 +25,7 @@ export function DescricaoField() {
                 {...field}
                 id="descricao"
                 rows={4}
-                className="min-h-22"
+                className="bg-card dark:bg-card min-h-22"
                 placeholder="Explique como a modalidade funciona e o que ela avalia."
                 aria-invalid={fieldState.invalid}
             />

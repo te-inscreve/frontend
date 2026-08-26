@@ -68,7 +68,7 @@ export const NumberInput = forwardRef(function NumberInput(
     return (
         <div
             className={cn(
-                "border-input bg-background focus-within:border-ring focus-within:ring-ring/50 data-[invalid=true]:border-destructive data-[invalid=true]:ring-destructive/20 dark:data-[invalid=true]:ring-destructive/40 flex h-10 w-full items-center overflow-hidden rounded-md border shadow-xs transition-[color,box-shadow] focus-within:ring-[3px]",
+                "border-input bg-card focus-within:border-ring focus-within:ring-ring/50 data-[invalid=true]:border-destructive data-[invalid=true]:ring-destructive/20 dark:data-[invalid=true]:ring-destructive/40 flex h-10 w-full items-center overflow-hidden rounded-md border shadow-xs transition-[color,box-shadow] focus-within:ring-[3px]",
                 className,
             )}
             data-invalid={dataInvalid ?? ariaInvalid}
