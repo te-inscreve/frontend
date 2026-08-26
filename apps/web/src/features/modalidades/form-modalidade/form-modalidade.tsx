@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { TicketIcon, TrophyIcon } from "@phosphor-icons/react";
 import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr/Info";
 import { StackIcon } from "@phosphor-icons/react/dist/ssr/Stack";
@@ -131,20 +132,33 @@ export function FormModalidade({ eventoId }: Props) {
                                         placeholder="Ex.: Dança de salão"
                                     />
                                     <DescricaoField />
-                                    <CampoNumero<ModalidadeFormValues>
-                                        name="maxPosicaoPremiada"
-                                        label="Posições premiadas"
-                                        placeholder="Ex.: 3"
-                                        ajuda="Até que colocação a modalidade premia. Use 0 para não premiar."
-                                    />
-                                    <CampoNumero<ModalidadeFormValues>
-                                        name="maxInscricoesEntidadePorCategoria"
-                                        label="Limite de inscrições por entidade em cada categoria"
-                                        opcional
-                                        min={1}
-                                        placeholder="Sem limite"
-                                        ajuda="Deixe vazio para não limitar quantas inscrições uma entidade faz por categoria."
-                                    />
+                                    <div className="flex flex-col flex-nowrap gap-3 md:flex-row">
+                                        <CampoNumero<ModalidadeFormValues>
+                                            name="maxPosicaoPremiada"
+                                            label={
+                                                <div className="flex items-center gap-1">
+                                                    <TrophyIcon />
+                                                    Posições premiadas
+                                                </div>
+                                            }
+                                            placeholder="Sem premiação"
+                                            ajuda="Até que colocação a modalidade premia. Use 0 para não premiar."
+                                        />
+                                        <CampoNumero<ModalidadeFormValues>
+                                            name="maxInscricoesEntidadePorCategoria"
+                                            label={
+                                                <div className="flex items-center gap-1">
+                                                    <TicketIcon />
+                                                    Limite de inscrições por
+                                                    entidade
+                                                </div>
+                                            }
+                                            opcional
+                                            min={1}
+                                            placeholder="Sem limite"
+                                            ajuda="Deixe vazio para não limitar quantas inscrições uma entidade faz por categoria."
+                                        />
+                                    </div>
                                     <PlanilhaAbertaField />
                                     <IsGrupoField />
                                 </CardContent>

@@ -9,7 +9,7 @@ import { NumberInput } from "~/shared/ui/number-input";
 
 interface Props<T extends FieldValues> {
     name: FieldPath<T>;
-    label: string;
+    label: React.ReactNode;
     /** Campo que aceita ficar vazio — o vazio vira `null`, não zero. */
     opcional?: boolean;
     ajuda?: string;
@@ -44,10 +44,10 @@ export function CampoNumero<T extends FieldValues>({
 
     return (
         <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={name}>
+            <FieldLabel htmlFor={name} className="flex">
                 {label}
                 {opcional && (
-                    <span className="text-muted-foreground text-xs font-normal">
+                    <span className="text-muted-foreground ml-2 text-xs font-normal">
                         (opcional)
                     </span>
                 )}
