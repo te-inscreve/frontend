@@ -45,8 +45,10 @@ export function useFormCategoria({ eventoId, modalidadeId, onSuccess }: Props) {
         trpc.categoria.create.mutationOptions({
             onSuccess: async (categoria) => {
                 setSalvamento("success");
+                // O detalhe da modalidade é quem carrega as categorias na
+                // página do evento — é ele que ficou velho, não a lista solta.
                 await queryClient.invalidateQueries(
-                    trpc.categoria.getAll.queryFilter({
+                    trpc.modalidade.getById.queryFilter({
                         eventoId,
                         modalidadeId,
                     }),

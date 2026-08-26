@@ -43,8 +43,10 @@ export function useFormModalidade({ eventoId, onSuccess }: Props) {
         trpc.modalidade.create.mutationOptions({
             onSuccess: async (modalidade) => {
                 setSalvamento("success");
+                // As abas saem de `evento.getById`, que agora traz as
+                // modalidades — invalidar a lista solta não mudaria a página.
                 await queryClient.invalidateQueries(
-                    trpc.modalidade.getAll.queryFilter({ eventoId }),
+                    trpc.evento.getById.queryFilter({ id: eventoId }),
                 );
                 onSuccess?.(modalidade);
             },
