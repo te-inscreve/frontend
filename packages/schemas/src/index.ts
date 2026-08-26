@@ -37,8 +37,12 @@ export type SignUpInput = z.infer<typeof signUpSchema>;
 
 export { cpfSchema, isValidCpf } from "./cpf";
 
-export { createEventoSchema, eventoSchema } from "./evento";
-export type { CreateEventoInput, Evento } from "./evento";
+export {
+    createEventoSchema,
+    eventoPreviewSchema,
+    eventoSchema,
+} from "./evento";
+export type { CreateEventoInput, Evento, EventoPreview } from "./evento";
 
 export {
     formModalidadeSchema as createModalidadeSchema,

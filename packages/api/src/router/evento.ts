@@ -1,7 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
-import type { Evento } from "@te-inscreve/schemas";
+import type { Evento, EventoPreview } from "@te-inscreve/schemas";
 
 import { authenticatedProcedure, publicProcedure } from "../trpc";
 
@@ -21,9 +21,12 @@ export const eventoRouter = {
                 .optional(),
         )
         .query(async ({ ctx }) => {
-            const result = await ctx.restClient.get<Evento[]>(`/eventos`, {
-                next: { revalidate: 30, tags: ["eventos"] },
-            });
+            const result = await ctx.restClient.get<EventoPreview[]>(
+                `/eventos`,
+                {
+                    next: { revalidate: 30, tags: ["eventos"] },
+                },
+            );
             if (!result.ok) throw result.error;
             return result.data;
         }),
