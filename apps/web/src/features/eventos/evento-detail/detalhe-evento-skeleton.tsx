@@ -1,5 +1,7 @@
 import { Skeleton } from "@te-inscreve/components/components/skeleton";
 
+import { DetalheModalidadeSkeleton } from "./detalhe-modalidade-skeleton";
+
 /**
  * Espelha o layout de `DetalheEvento` para que a troca do fallback pelo
  * conteúdo real não empurre nada na página.
@@ -21,12 +23,11 @@ export function DetalheEventoSkeleton() {
             <div className="mt-4 flex gap-6 border-b pb-3">
                 <Skeleton className="h-5 w-40" />
                 <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-5 w-36" />
             </div>
 
-            <div className="mt-4 flex gap-4 overflow-hidden">
-                {[0, 1, 2].map((i) => (
-                    <Skeleton key={i} className="h-32 w-100 shrink-0" />
-                ))}
+            <div className="mt-4">
+                <DetalheModalidadeSkeleton />
             </div>
         </div>
     );

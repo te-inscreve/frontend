@@ -37,14 +37,15 @@ export default async function EventoDetailPage({
 
     // Dispara as buscas antes da fronteira de Suspense: o shell abaixo já sai no
     // stream enquanto os requests correm, e `DetalheEvento` só aguarda as promises.
+    // O evento já traz `modalidades` com id e nome, que é tudo o que as abas
+    // precisam — não há mais uma busca separada para listá-las.
     void prefetch(trpc.evento.getById.queryOptions({ id }));
-    void prefetch(trpc.modalidade.getAll.queryOptions({ eventoId: id }));
 
-    // As categorias só entram aqui quando a aba veio na URL. Sem o parâmetro, a
-    // ativa é a primeira modalidade — e qual é ela só se sabe depois da lista.
+    // O detalhe da modalidade só entra aqui quando a aba veio na URL. Sem o
+    // parâmetro, a ativa é a primeira — e qual é ela só se sabe com o evento.
     if (modalidadeAtiva !== undefined) {
         void prefetch(
-            trpc.categoria.getAll.queryOptions({
+            trpc.modalidade.getById.queryOptions({
                 eventoId: id,
                 modalidadeId: modalidadeAtiva,
             }),
