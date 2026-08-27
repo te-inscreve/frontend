@@ -140,10 +140,11 @@ export function FormModalidade({ eventoId }: Props) {
                                             name="maxPosicaoPremiada"
                                             label={
                                                 <div className="flex items-center gap-1">
-                                                    <TrophyIcon />
+                                                    <TrophyIcon size={16} />
                                                     Posições premiadas
                                                 </div>
                                             }
+                                            opcional
                                             placeholder="Sem premiação"
                                             ajuda="Até que colocação a modalidade premia. Use 0 para não premiar."
                                         />
@@ -151,15 +152,14 @@ export function FormModalidade({ eventoId }: Props) {
                                             name="maxInscricoesEntidadePorCategoria"
                                             label={
                                                 <div className="flex items-center gap-1">
-                                                    <TicketIcon />
-                                                    Limite de inscrições por
-                                                    entidade
+                                                    <TicketIcon size={16} />
+                                                    Inscrições por entidade
                                                 </div>
                                             }
                                             opcional
                                             min={1}
-                                            placeholder="Sem limite"
-                                            ajuda="Deixe vazio para não limitar quantas inscrições uma entidade faz por categoria."
+                                            placeholder="Quantidade ilimitada"
+                                            ajuda="Deixe vazio para não limitar as inscrições de uma entidade."
                                         />
                                     </div>
                                     <PlanilhaAbertaField />
