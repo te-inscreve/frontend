@@ -1,6 +1,7 @@
 import { Suspense, use } from "react";
 import { notFound } from "next/navigation";
 
+import { AcoesEvento } from "~/features/eventos/evento-detail/acoes-evento";
 import { DetalheEvento } from "~/features/eventos/evento-detail/detalhe-evento";
 import { DetalheEventoSkeleton } from "~/features/eventos/evento-detail/detalhe-evento-skeleton";
 import { prefetch, trpc } from "~/shared/api/trpc/server";
@@ -32,7 +33,10 @@ export default function EventoDetailPage({
 
     return (
         <div className="flex min-h-screen flex-col gap-4 px-4 py-6 md:px-6 md:py-8">
-            <GoBackButton href="/admin/eventos" />
+            <div className="flex items-start justify-between gap-3">
+                <GoBackButton href="/admin/eventos" />
+                <AcoesEvento eventoId={idEvento} />
+            </div>
 
             <Suspense fallback={<DetalheEventoSkeleton />}>
                 <DetalheEvento id={idEvento} modalidadeAtiva={idModalidade} />

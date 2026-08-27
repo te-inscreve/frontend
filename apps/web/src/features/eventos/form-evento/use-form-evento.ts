@@ -1,11 +1,13 @@
 "use client";
 
+import type { TRPCClientErrorLike } from "@trpc/client";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-import { Evento } from "@te-inscreve/schemas";
+import type { AppRouter } from "@te-inscreve/api";
+import type { Evento } from "@te-inscreve/schemas";
 
 import type { EventoFormValues } from "./evento-form-schema";
 import { useTRPC } from "~/shared/api/trpc/client";
@@ -13,13 +15,16 @@ import {
     eventoFormData,
     eventoFormDefaults,
     eventoFormSchema,
+    eventoFormValues,
 } from "./evento-form-schema";
 
 interface Props {
+    /** Evento em edição. Ausente quando o formulário está criando um novo. */
+    evento?: Evento;
     onSucess?: (evento: Evento) => void;
 }
 
-export function useFormEvento({ onSucess }: Props) {
+export function useFormEvento({ evento, onSucess }: Props) {
     const queryClient = useQueryClient();
     const trpc = useTRPC();
     const [salvamento, setSalvamento] = useState<
@@ -27,46 +32,60 @@ export function useFormEvento({ onSucess }: Props) {
     >("idle");
     const form = useForm<EventoFormValues>({
         resolver: zodResolver(eventoFormSchema),
-        defaultValues: eventoFormDefaults,
+        defaultValues: evento ? eventoFormValues(evento) : eventoFormDefaults,
         mode: "onTouched",
     });
-    const criarEvento = useMutation(
-        trpc.evento.create.mutationOptions({
-            onSuccess: async (evento) => {
-                setSalvamento("success");
+
+    // As duas rotas recebem o mesmo multipart e devolvem o mesmo evento, então
+    // criar e editar dividem o tratamento de sucesso e de erro por inteiro.
+    const opcoes = {
+        onSuccess: async (salvo: Evento) => {
+            setSalvamento("success");
+            await queryClient.invalidateQueries(
+                trpc.evento.getAll.queryFilter(),
+            );
+
+            if (evento) {
                 await queryClient.invalidateQueries(
-                    trpc.evento.getAll.queryFilter(),
+                    trpc.evento.getById.queryFilter({ id: evento.id }),
                 );
-                onSucess?.(evento);
-            },
-            onError: (error) => {
-                setSalvamento("idle");
+            }
 
-                for (const [campo, mensagens] of Object.entries(
-                    error.data?.fieldErrors ?? {},
-                )) {
-                    const campoDoFormulario = campoEventoForm(campo);
-                    if (!campoDoFormulario || !mensagens.length) continue;
+            onSucess?.(salvo);
+        },
+        onError: (error: TRPCClientErrorLike<AppRouter>) => {
+            setSalvamento("idle");
 
-                    form.setError(campoDoFormulario, {
-                        type: "server",
-                        message: mensagens.join(" "),
-                    });
-                }
-            },
-        }),
+            for (const [campo, mensagens] of Object.entries(
+                error.data?.fieldErrors ?? {},
+            )) {
+                const campoDoFormulario = campoEventoForm(campo);
+                if (!campoDoFormulario || !mensagens.length) continue;
+
+                form.setError(campoDoFormulario, {
+                    type: "server",
+                    message: mensagens.join(" "),
+                });
+            }
+        },
+    };
+
+    const criarEvento = useMutation(trpc.evento.create.mutationOptions(opcoes));
+    const editarEvento = useMutation(
+        trpc.evento.update.mutationOptions(opcoes),
     );
+    const mutacao = evento ? editarEvento : criarEvento;
 
     function salvar(valoresValidos: EventoFormValues) {
         setSalvamento("loading");
-        criarEvento.mutate(eventoFormData(valoresValidos));
+        mutacao.mutate(eventoFormData(valoresValidos, evento?.id));
     }
 
     return {
         form,
         salvamento,
         salvar,
-        erro: criarEvento.error,
+        erro: mutacao.error,
     };
 }
 

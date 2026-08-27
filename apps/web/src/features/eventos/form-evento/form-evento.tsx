@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CalendarDotsIcon, FilesIcon, InfoIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 
+import type { Evento } from "@te-inscreve/schemas";
 import {
     Card,
     CardContent,
@@ -34,11 +35,21 @@ import { UnicoField } from "./fields/unico-field";
 import { PreviewEvento } from "./preview-evento";
 import { useFormEvento } from "./use-form-evento";
 
-export function FormEvento() {
+interface Props {
+    /**
+     * Evento a editar. Sem ele o formulário cria um novo — é a mesma tela nos
+     * dois casos, só muda o que já vem preenchido e para onde o salvar manda.
+     */
+    evento?: Evento;
+}
+
+export function FormEvento({ evento }: Props) {
     const router = useRouter();
+    const editando = evento !== undefined;
     const { form, salvamento, salvar, erro } = useFormEvento({
-        onSucess: (evento) => {
-            router.push(`/admin/eventos/${evento.id}`);
+        evento,
+        onSucess: (salvo) => {
+            router.push(`/admin/eventos/${salvo.id}`);
             router.refresh();
         },
     });
@@ -55,15 +66,22 @@ export function FormEvento() {
                 <div className="bg-card sticky top-0 z-20 border-b">
                     <header className="mx-auto w-full max-w-7xl px-4 py-4 md:px-6">
                         <nav aria-label="Voltar">
-                            <GoBackButton href="/admin/eventos" />
+                            <GoBackButton
+                                href={
+                                    editando
+                                        ? `/admin/eventos/${evento.id}`
+                                        : "/admin/eventos"
+                                }
+                            />
                         </nav>
 
                         <h1 className="text-3xl font-extrabold tracking-tight">
-                            Criar evento
+                            {editando ? "Editar evento" : "Criar evento"}
                         </h1>
                         <p className="text-muted-foreground my-1.5 w-full text-sm">
-                            Preencha as informações abaixo. Você pode salvar
-                            como rascunho e publicar quando estiver pronto.
+                            {editando
+                                ? "Revise as informações do evento. As alterações valem assim que você salvar."
+                                : "Preencha as informações abaixo. Você pode salvar como rascunho e publicar quando estiver pronto."}
                         </p>
                     </header>
                 </div>
