@@ -8,6 +8,7 @@
         "./shadcn.css": "./src/shadcn.css",
         "./utils": "./src/utils.ts",
         "./components/*": "./src/components/*.tsx",
+        "./alert-dialog": "./src/components/alert-dialog.tsx",
         "./badge": "./src/components/badge.tsx",
         "./button": "./src/components/button.tsx",
         "./calendar": "./src/components/calendar.tsx",
