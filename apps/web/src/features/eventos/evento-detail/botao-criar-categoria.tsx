@@ -29,12 +29,12 @@ export function BotaoCriarCategoria({
         <Link
             href={`/admin/eventos/${eventoId}/modalidade/${modalidadeId}/criar-categoria`}
             className={cn(
-                "text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 focus-visible:ring-ring/50 focus-visible:outline-ring flex h-full min-h-32 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-center transition-colors focus-visible:ring-[3px] focus-visible:outline-1",
+                "text-muted-foreground hover:border-primary hover:text-primary focus-visible:ring-ring/50 focus-visible:outline-ring flex h-full min-h-32 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-center transition-colors focus-visible:ring-[3px] focus-visible:outline-1",
                 sozinho ? "w-100" : "w-44",
             )}
         >
-            <span className="bg-muted flex size-9 items-center justify-center rounded-full border border-dashed">
-                <PlusIcon aria-hidden="true" />
+            <span className="bg-primary-foreground text-primary flex size-9 items-center justify-center rounded-full">
+                <PlusIcon aria-hidden="true" weight="bold" />
             </span>
             <span className="text-sm font-medium">Criar categoria</span>
             {sozinho && (
