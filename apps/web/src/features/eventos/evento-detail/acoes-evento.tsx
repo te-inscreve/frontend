@@ -2,32 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
 import { MegaphoneIcon } from "@phosphor-icons/react/dist/ssr/Megaphone";
 import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr/PencilSimple";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
     Button,
-    buttonVariants,
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
+    Separator,
 } from "@te-inscreve/components";
 
-import { useTRPC } from "~/shared/api/trpc/client";
+import { DialogoExcluirEvento } from "./dialogo-excluir-evento";
+import { DialogoPublicarEvento } from "./dialogo-publicar-evento";
 
 interface Props {
     eventoId: number;
@@ -36,41 +27,21 @@ interface Props {
 /**
  * Menu de ações do evento, no cabeçalho da página de detalhe.
  *
- * A exclusão é confirmada em um `AlertDialog` controlado fora do menu: o item
- * segura o `onSelect` para o Radix não fechar tudo antes do diálogo montar.
+ * A publicação e a exclusão são confirmadas em diálogos controlados fora do
+ * menu: os itens seguram o `onSelect` para o Radix não fechar tudo antes de o
+ * diálogo montar.
  */
 export function AcoesEvento({ eventoId }: Props) {
-    const router = useRouter();
-    const queryClient = useQueryClient();
-    const trpc = useTRPC();
     const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
-    const [aviso, setAviso] = useState<string | null>(null);
-
-    const excluirEvento = useMutation(
-        trpc.evento.delete.mutationOptions({
-            onSuccess: async () => {
-                setConfirmandoExclusao(false);
-                await queryClient.invalidateQueries(
-                    trpc.evento.getAll.queryFilter(),
-                );
-                // `replace`: o evento não existe mais, então o voltar do
-                // navegador não deve trazer a página dele de volta.
-                router.replace("/admin/eventos");
-                router.refresh();
-            },
-            onError: () => {
-                setConfirmandoExclusao(false);
-                setAviso("Não foi possível excluir o evento. Tente novamente.");
-            },
-        }),
-    );
+    const [confirmandoPublicacao, setConfirmandoPublicacao] = useState(false);
 
     return (
         <div className="flex flex-col items-end gap-1">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="default" size="sm">
                         Ações
+                        <Separator orientation="vertical" />
                         <CaretDownIcon aria-hidden="true" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -84,13 +55,10 @@ export function AcoesEvento({ eventoId }: Props) {
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
-                        onSelect={() =>
-                            // TODO: ligar ao endpoint de publicação quando ele
-                            // existir no backend.
-                            setAviso(
-                                "A publicação do evento ainda não está disponível.",
-                            )
-                        }
+                        onSelect={(evento) => {
+                            evento.preventDefault();
+                            setConfirmandoPublicacao(true);
+                        }}
                     >
                         <MegaphoneIcon aria-hidden="true" />
                         Publicar evento
@@ -102,7 +70,6 @@ export function AcoesEvento({ eventoId }: Props) {
                         variant="destructive"
                         onSelect={(evento) => {
                             evento.preventDefault();
-                            setAviso(null);
                             setConfirmandoExclusao(true);
                         }}
                     >
@@ -112,50 +79,16 @@ export function AcoesEvento({ eventoId }: Props) {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {aviso && (
-                <p role="status" className="text-muted-foreground text-xs">
-                    {aviso}
-                </p>
-            )}
+            <DialogoPublicarEvento
+                open={confirmandoPublicacao}
+                onOpenChange={setConfirmandoPublicacao}
+            />
 
-            <AlertDialog
+            <DialogoExcluirEvento
+                eventoId={eventoId}
                 open={confirmandoExclusao}
                 onOpenChange={setConfirmandoExclusao}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            Excluir este evento?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            As modalidades, categorias e inscrições do evento
-                            saem junto. Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={excluirEvento.isPending}>
-                            Cancelar
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            className={buttonVariants({
-                                variant: "destructive",
-                            })}
-                            disabled={excluirEvento.isPending}
-                            onClick={(clique) => {
-                                // Sem isso o Radix fecha o diálogo no clique, e
-                                // o organizador fica sem retorno da exclusão.
-                                clique.preventDefault();
-                                excluirEvento.mutate({ id: eventoId });
-                            }}
-                        >
-                            {excluirEvento.isPending
-                                ? "Excluindo…"
-                                : "Excluir evento"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            />
         </div>
     );
 }
