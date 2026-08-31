@@ -70,8 +70,6 @@ export async function DetalheEvento({ id, modalidadeAtiva }: Props) {
                 </div>
             </header>
 
-            <h3 className="text-xl font-bold">Modalidades e categorias</h3>
-
             {ativa === undefined ? (
                 // Sem modalidade não há aba de verdade, mas a linha continua
                 // ali com o atalho — é o mesmo lugar de sempre para criar.

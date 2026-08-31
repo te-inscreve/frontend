@@ -30,7 +30,12 @@ export function ListCategorias({
             {categorias.map((categoria) => (
                 // As categorias aninhadas não trazem `id`, e o nome é único
                 // dentro de uma modalidade.
-                <CardCategoria key={categoria.nome} categoria={categoria} />
+                <CardCategoria
+                    key={categoria.nome}
+                    categoria={categoria}
+                    eventoId={eventoId}
+                    modalidadeId={modalidadeId}
+                />
             ))}
             <BotaoCriarCategoria
                 eventoId={eventoId}
