@@ -26,37 +26,26 @@ export function CategoriaItem({ indice, podeRemover, onRemover }: Props) {
     return (
         <li className="bg-muted/30 flex flex-col gap-4 rounded-lg border p-4">
             <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold">
+                <h3 className="text-base font-semibold">
                     Categoria {indice + 1}
                 </h3>
                 <Button
                     type="button"
-                    variant="ghost"
+                    variant="destructive"
                     size="sm"
                     onClick={onRemover}
                     disabled={!podeRemover}
                 >
                     <TrashIcon aria-hidden="true" />
-                    Remover
                 </Button>
             </div>
 
-            <CampoTexto<ModalidadeFormValues>
-                name={`categorias.${indice}.nome`}
-                label="Nome da categoria"
-                placeholder="Ex.: Juvenil feminino"
-            />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-                <CampoNumero<ModalidadeFormValues>
-                    name={`categorias.${indice}.idadeMinima`}
-                    label="Idade mínima"
-                    placeholder="Ex.: 12"
-                />
-                <CampoNumero<ModalidadeFormValues>
-                    name={`categorias.${indice}.idadeMaxima`}
-                    label="Idade máxima"
-                    placeholder="Ex.: 17"
+            <div className="grid gap-4 sm:grid-cols-6">
+                <CampoTexto<ModalidadeFormValues>
+                    name={`categorias.${indice}.nome`}
+                    label="Nome da categoria"
+                    placeholder="Ex.: Juvenil feminino"
+                    className="col-span-4"
                 />
                 <CampoNumero<ModalidadeFormValues>
                     name={`categorias.${indice}.maxInscricoes`}
@@ -64,7 +53,20 @@ export function CategoriaItem({ indice, podeRemover, onRemover }: Props) {
                     opcional
                     min={1}
                     placeholder="Sem limite"
-                    ajuda="Deixe vazio para não limitar as inscrições."
+                    className="col-span-2"
+                />
+
+                <CampoNumero<ModalidadeFormValues>
+                    name={`categorias.${indice}.idadeMinima`}
+                    label="Idade mínima"
+                    placeholder="Ex.: 12"
+                    className="col-span-3"
+                />
+                <CampoNumero<ModalidadeFormValues>
+                    name={`categorias.${indice}.idadeMaxima`}
+                    label="Idade máxima"
+                    placeholder="Ex.: 17"
+                    className="col-span-3"
                 />
             </div>
         </li>

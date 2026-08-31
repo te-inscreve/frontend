@@ -42,15 +42,21 @@ export function CategoriasField() {
                 <FieldError errors={[{ message: erroDaLista.message }]} />
             )}
 
-            <Button
-                type="button"
-                variant="outline"
-                onClick={() => append(categoriaFormDefaults)}
-                className="self-start"
-            >
-                <PlusIcon aria-hidden="true" />
-                Adicionar categoria
-            </Button>
+            {/* Gruda no rodapé da área rolável enquanto sobrar lista abaixo,
+                então continua ao alcance por mais categorias que existam. O
+                fundo opaco impede que os cards apareçam por baixo ao rolar, e o
+                `-mt-4 pt-4` estende esse fundo sobre o gap do flex. */}
+            <div className="bg-background sticky bottom-0 -my-4 py-4">
+                <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => append(categoriaFormDefaults)}
+                    className="w-full"
+                >
+                    <PlusIcon aria-hidden="true" />
+                    Adicionar categoria
+                </Button>
+            </div>
         </div>
     );
 }

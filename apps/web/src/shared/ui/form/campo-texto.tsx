@@ -9,6 +9,7 @@ interface Props<T extends FieldValues> {
     name: FieldPath<T>;
     label: string;
     placeholder?: string;
+    className?: string;
 }
 
 /**
@@ -19,6 +20,7 @@ export function CampoTexto<T extends FieldValues>({
     name,
     label,
     placeholder,
+    className,
 }: Props<T>) {
     const { control } = useFormContext<T>();
     const { field, fieldState } = useController({ name, control });
@@ -26,7 +28,7 @@ export function CampoTexto<T extends FieldValues>({
     const valor: unknown = field.value;
 
     return (
-        <Field data-invalid={fieldState.invalid}>
+        <Field data-invalid={fieldState.invalid} className={className}>
             <FieldLabel htmlFor={name}>{label}</FieldLabel>
             <Input
                 {...field}

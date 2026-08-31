@@ -15,6 +15,7 @@ interface Props<T extends FieldValues> {
     ajuda?: string;
     placeholder?: string;
     min?: number;
+    className?: string;
 }
 
 /**
@@ -32,6 +33,7 @@ export function CampoNumero<T extends FieldValues>({
     opcional = false,
     ajuda,
     placeholder,
+    className,
     min = 0,
 }: Props<T>) {
     const { control } = useFormContext<T>();
@@ -43,7 +45,7 @@ export function CampoNumero<T extends FieldValues>({
             : null;
 
     return (
-        <Field data-invalid={fieldState.invalid}>
+        <Field data-invalid={fieldState.invalid} className={className}>
             <FieldLabel htmlFor={name} className="flex">
                 {label}
                 {opcional && (
