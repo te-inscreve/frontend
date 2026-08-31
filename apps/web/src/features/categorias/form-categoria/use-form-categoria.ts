@@ -20,6 +20,8 @@ interface Props {
     /** Evento e modalidade donos da categoria — vêm da rota, não do formulário. */
     eventoId: number;
     modalidadeId: number;
+    /** Categoria em edição. Ausente quando o formulário está criando. */
+    categoria?: Categoria;
     onSuccess?: (categoria: Categoria) => void;
 }
 
@@ -28,7 +30,12 @@ interface Props {
  * É o irmão de `useFormModalidade` para a categoria criada sozinha, depois que
  * a modalidade já existe.
  */
-export function useFormCategoria({ eventoId, modalidadeId, onSuccess }: Props) {
+export function useFormCategoria({
+    eventoId,
+    modalidadeId,
+    categoria,
+    onSuccess,
+}: Props) {
     const queryClient = useQueryClient();
     const trpc = useTRPC();
     const [salvamento, setSalvamento] = useState<
@@ -37,56 +44,97 @@ export function useFormCategoria({ eventoId, modalidadeId, onSuccess }: Props) {
 
     const form = useForm<CategoriaFormValues>({
         resolver: zodResolver(categoriaFormSchema),
-        defaultValues: categoriaFormDefaults,
+        // Editando, os campos já nascem com o que a API devolveu.
+        defaultValues: categoria
+            ? {
+                  nome: categoria.nome,
+                  idadeMinima: categoria.idadeMinima,
+                  idadeMaxima: categoria.idadeMaxima,
+                  maxInscricoes: categoria.maxInscricoes,
+              }
+            : categoriaFormDefaults,
         mode: "onTouched",
     });
 
+    // A criação e a edição só divergem no endereço; o resto é idêntico, então
+    // os dois callbacks são escritos uma vez e passados a cada mutação. Eles
+    // ficam como funções, e não como um objeto de opções compartilhado, para o
+    // tRPC continuar inferindo o tipo do erro de cada rota.
+    async function aoSalvar(salva: Categoria) {
+        setSalvamento("success");
+
+        // O detalhe da modalidade é quem carrega as categorias na página do
+        // evento — é ele que ficou velho, não a lista solta.
+        await queryClient.invalidateQueries(
+            trpc.modalidade.getById.queryFilter({ eventoId, modalidadeId }),
+        );
+
+        // Na edição o detalhe da própria categoria também envelheceu.
+        if (categoria) {
+            await queryClient.invalidateQueries(
+                trpc.categoria.getById.queryFilter({
+                    eventoId,
+                    modalidadeId,
+                    categoriaId: categoria.id,
+                }),
+            );
+        }
+
+        onSuccess?.(salva);
+    }
+
+    function aoFalhar(
+        fieldErrors: Record<string, string[]> | null | undefined,
+    ) {
+        setSalvamento("idle");
+
+        for (const [campo, mensagens] of Object.entries(fieldErrors ?? {})) {
+            const campoDoFormulario = campoCategoriaForm(campo);
+            if (!campoDoFormulario || !mensagens.length) continue;
+
+            form.setError(campoDoFormulario, {
+                type: "server",
+                message: mensagens.join(" "),
+            });
+        }
+    }
+
     const criarCategoria = useMutation(
         trpc.categoria.create.mutationOptions({
-            onSuccess: async (categoria) => {
-                setSalvamento("success");
-                // O detalhe da modalidade é quem carrega as categorias na
-                // página do evento — é ele que ficou velho, não a lista solta.
-                await queryClient.invalidateQueries(
-                    trpc.modalidade.getById.queryFilter({
-                        eventoId,
-                        modalidadeId,
-                    }),
-                );
-                onSuccess?.(categoria);
-            },
-            onError: (error) => {
-                setSalvamento("idle");
+            onSuccess: aoSalvar,
+            onError: (error) => aoFalhar(error.data?.fieldErrors),
+        }),
+    );
 
-                for (const [campo, mensagens] of Object.entries(
-                    error.data?.fieldErrors ?? {},
-                )) {
-                    const campoDoFormulario = campoCategoriaForm(campo);
-                    if (!campoDoFormulario || !mensagens.length) continue;
-
-                    form.setError(campoDoFormulario, {
-                        type: "server",
-                        message: mensagens.join(" "),
-                    });
-                }
-            },
+    const editarCategoria = useMutation(
+        trpc.categoria.update.mutationOptions({
+            onSuccess: aoSalvar,
+            onError: (error) => aoFalhar(error.data?.fieldErrors),
         }),
     );
 
     function salvar(valoresValidos: CategoriaFormValues) {
         setSalvamento("loading");
-        criarCategoria.mutate({
-            eventoId,
-            modalidadeId,
-            categoria: categoriaFormInput(valoresValidos),
-        });
+        const dados = categoriaFormInput(valoresValidos);
+
+        if (categoria) {
+            editarCategoria.mutate({
+                eventoId,
+                modalidadeId,
+                categoriaId: categoria.id,
+                categoria: dados,
+            });
+            return;
+        }
+
+        criarCategoria.mutate({ eventoId, modalidadeId, categoria: dados });
     }
 
     return {
         form,
         salvamento,
         salvar,
-        erro: criarCategoria.error,
+        erro: categoria ? editarCategoria.error : criarCategoria.error,
     };
 }
 

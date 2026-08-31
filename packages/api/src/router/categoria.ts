@@ -78,6 +78,30 @@ export const categoriaRouter = {
         }),
 
     /**
+     * Altera os dados básicos de uma categoria.
+     *
+     * `PATCH` e não `PUT`: o serializer também expõe campos que este formulário
+     * não edita, e um envio parcial evita zerá-los sem querer.
+     */
+    update: authenticatedProcedure
+        .input(
+            z.object({
+                eventoId: z.number().int().positive(),
+                modalidadeId: z.number().int().positive(),
+                categoriaId: z.number().int().positive(),
+                categoria: formCategoriaSchema,
+            }),
+        )
+        .mutation(async ({ ctx, input }) => {
+            const result = await ctx.restClient.patch<Categoria>(
+                `/eventos/${input.eventoId}/modalidades/${input.modalidadeId}/categorias/${input.categoriaId}/`,
+                input.categoria,
+            );
+            if (!result.ok) throw result.error;
+            return result.data;
+        }),
+
+    /**
      * Cria uma categoria numa modalidade que já existe.
      *
      * Os dois ids ficam fora do corpo porque o recurso é aninhado: eles são o
