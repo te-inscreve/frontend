@@ -22,7 +22,6 @@ export const categoriaSchema = z.object({
  * que a contém.
  */
 export const categoriaAninhadaSchema = categoriaSchema.omit({
-    id: true,
     modalidade: true,
 });
 

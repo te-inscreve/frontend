@@ -38,6 +38,46 @@ export const categoriaRouter = {
         }),
 
     /**
+     * Detalhe de uma categoria.
+     *
+     * O recurso é aninhado até o fim, então evento e modalidade fazem parte do
+     * caminho: o backend valida a cadeia inteira, e uma categoria que não
+     * pertence àquela modalidade responde 404 em vez de vazar o detalhe.
+     */
+    getById: publicProcedure
+        .input(
+            z.object({
+                eventoId: z.number().int().positive(),
+                modalidadeId: z.number().int().positive(),
+                categoriaId: z.number().int().positive(),
+            }),
+        )
+        .query(async ({ ctx, input }) => {
+            const result = await ctx.restClient.get<Categoria>(
+                `/eventos/${input.eventoId}/modalidades/${input.modalidadeId}/categorias/${input.categoriaId}/`,
+                {
+                    next: {
+                        revalidate: 30, // 30 segundos
+                        tags: [
+                            "categorias",
+                            `modalidade-${input.modalidadeId}-categorias`,
+                            `categoria-${input.categoriaId}`,
+                        ],
+                    },
+                },
+            );
+
+            // Link antigo para categoria que já não existe é 404 de página, e
+            // não erro: quem chama decide, e a página chama `notFound()`.
+            if (!result.ok) {
+                if (result.status === 404) return null;
+                throw result.error;
+            }
+
+            return result.data;
+        }),
+
+    /**
      * Cria uma categoria numa modalidade que já existe.
      *
      * Os dois ids ficam fora do corpo porque o recurso é aninhado: eles são o
