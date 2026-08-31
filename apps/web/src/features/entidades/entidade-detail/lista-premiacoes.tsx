@@ -73,9 +73,9 @@ export function ListaPremiacoes({ premiacoes }: Props) {
  * design, e usá-lo nos três degraus tiraria dele o significado de vitória.
  */
 const POSICOES = {
-    1: { rotulo: "1º lugar", estilo: "bg-warning/15 text-warning-foreground" },
-    2: { rotulo: "2º lugar", estilo: "bg-muted text-muted-foreground" },
-    3: { rotulo: "3º lugar", estilo: "bg-muted text-muted-foreground" },
+    1: { rotulo: "1º lugar", estilo: "text-warning" },
+    2: { rotulo: "2º lugar", estilo: "text-muted-foreground" },
+    3: { rotulo: "3º lugar", estilo: "text-[#C2410C]" },
 } as const;
 
 function ItemPremiacao({ premiacao }: { premiacao: PremiacaoMock }) {
@@ -83,14 +83,11 @@ function ItemPremiacao({ premiacao }: { premiacao: PremiacaoMock }) {
 
     return (
         <li className="flex items-center gap-3 rounded-md border p-3">
-            <span
-                aria-hidden="true"
-                className={`${posicao.estilo} flex size-9 shrink-0 items-center justify-center rounded-full`}
-            >
+            <span aria-hidden="true" className={`${posicao.estilo}`}>
                 {premiacao.colocacao === 1 ? (
-                    <TrophyIcon size={18} weight="fill" />
+                    <TrophyIcon size={24} weight="fill" />
                 ) : (
-                    <MedalIcon size={18} />
+                    <MedalIcon size={24} weight="fill" />
                 )}
             </span>
 

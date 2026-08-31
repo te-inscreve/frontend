@@ -1,6 +1,6 @@
+import { useMemo } from "react";
 import Link from "next/link";
-import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr/Check";
 import { FlagCheckeredIcon } from "@phosphor-icons/react/dist/ssr/FlagCheckered";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UserCheckIcon } from "@phosphor-icons/react/dist/ssr/UserCheck";
@@ -21,7 +21,13 @@ interface Props {
 export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
     const situacao = sortearSituacao();
     const estilo = ESTILOS[situacao];
-
+    const totalInscritos = useMemo(() => {
+        // eslint-disable-next-line react-hooks/purity
+        const ramdomAssNumber = Math.random();
+        return categoria.maxInscricoes
+            ? Math.floor(ramdomAssNumber * categoria.maxInscricoes)
+            : 0;
+    }, [categoria.maxInscricoes]);
     return (
         <Link
             href={`/admin/eventos/${eventoId}/categorias/${categoria.id}?modalidade=${modalidadeId}`}
@@ -30,7 +36,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
             // mesma suavidade. O anel de foco fica de fora porque o
             // `overflow-hidden` de dentro o cortaria — quem sinaliza foco aqui
             // é a própria borda.
-            className="bg-border hover:bg-accent focus-visible:bg-ring group block w-100 shrink-0 rounded-xl p-px transition-colors focus-visible:outline-none"
+            className="bg-border focus-visible:bg-ring group block w-100 shrink-0 rounded-xl p-px transition-colors focus-visible:outline-none"
         >
             <div
                 // `h-full` porque a fila de categorias é um flex row: sem ele a
@@ -40,7 +46,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                 // `overflow-hidden` é o que faz o canhoto respeitar o
                 // arredondado: ele encosta nas quatro bordas e é o recorte
                 // desta camada que arredonda as pontas dele.
-                className="bg-card group-hover:bg-accent/40 group-focus-visible:bg-accent/40 relative flex h-full flex-col gap-3 overflow-hidden rounded-[calc(var(--radius-xl)-1px)] p-4 pl-14 transition-colors"
+                className="bg-card relative flex h-full flex-col gap-3 overflow-hidden rounded-[calc(var(--radius-xl)-1px)] p-4 pl-14 transition-colors"
             >
                 <CanhotoIdade categoria={categoria} estilo={estilo} />
 
@@ -60,7 +66,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                         valor={
                             categoria.maxInscricoes === null
                                 ? "Sem limite"
-                                : `Até ${categoria.maxInscricoes}`
+                                : `${totalInscritos} / ${categoria.maxInscricoes}`
                         }
                     />
                     <Dado
@@ -161,7 +167,7 @@ type Situacao = "correndo" | "abertas" | "comeca" | "encerrado";
 interface Estilo {
     rotulo: string;
     icone: React.ReactNode;
-    badge: "default" | "secondary" | "outline";
+    badge: "default" | "secondary" | "outline" | "destructive";
     badgeExtra: string;
     /** Fundo e cor do texto do canhoto. */
     canhoto: string;
@@ -171,39 +177,36 @@ interface Estilo {
 
 const ESTILOS: Record<Situacao, Estilo> = {
     correndo: {
-        rotulo: "Correndo agora",
+        rotulo: "Ao vivo",
         // O ponto pulsando separa "acontecendo agora" de um estado apenas
         // favorável, como inscrições abertas.
         icone: (
-            <span
-                aria-hidden="true"
-                className="bg-primary-foreground size-1.5 animate-pulse rounded-full"
-            />
+            <span className="relative flex size-2">
+                <span className="bg-destructive-foreground absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
+                <span className="bg-destructive-foreground relative inline-flex size-2 rounded-full"></span>
+            </span>
         ),
-        badge: "default",
+        badge: "destructive",
         badgeExtra: "",
-        canhoto: "bg-primary/10 text-primary",
-        serrilha: "border-primary/30",
+        canhoto: "bg-muted text-muted-foreground",
+        serrilha: "border-border",
     },
     abertas: {
         rotulo: "Inscrições abertas",
-        icone: <CheckCircleIcon aria-hidden="true" />,
+        icone: <TicketIcon aria-hidden="true" />,
         badge: "outline",
-        badgeExtra: "text-primary",
-        canhoto: "bg-primary/10 text-primary",
-        serrilha: "border-primary/30",
+        badgeExtra:
+            "text-warning-foreground bg-warning border-warning border-transparent",
+        canhoto: "bg-muted text-muted-foreground",
+        serrilha: "border-border",
     },
     comeca: {
-        rotulo: "Começa em breve",
-        icone: <CalendarDotsIcon aria-hidden="true" />,
-        badge: "outline",
-        // O par `warning`/`warning-foreground` é calibrado junto: usar o texto
-        // sobre um tint do fundo daria contraste ruim no tema escuro, onde o
-        // foreground é quase preto. Por isso o badge é sólido, e o canhoto —
-        // que é tint — usa `text-foreground`.
-        badgeExtra: "bg-warning text-warning-foreground border-transparent",
-        canhoto: "bg-warning/15 text-foreground",
-        serrilha: "border-warning/40",
+        rotulo: "Inscrições fechadas",
+        icone: <CheckIcon aria-hidden="true" />,
+        badge: "default",
+        badgeExtra: "",
+        canhoto: "bg-muted text-muted-foreground",
+        serrilha: "border-border",
     },
     encerrado: {
         rotulo: "Encerrado",
