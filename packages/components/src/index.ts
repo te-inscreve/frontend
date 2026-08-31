@@ -14,6 +14,15 @@ export {
     AlertDialogTrigger,
 } from "./components/alert-dialog";
 export { Badge, badgeVariants } from "./components/badge";
+export {
+    Breadcrumb,
+    BreadcrumbEllipsis,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from "./components/breadcrumb";
 export { Button, buttonVariants } from "./components/button";
 export { Calendar, CalendarDayButton } from "./components/calendar";
 export {
@@ -59,6 +68,7 @@ export {
     PopoverTitle,
     PopoverTrigger,
 } from "./components/popover";
+export { ScrollArea, ScrollBar } from "./components/scroll-area";
 export { Separator } from "./components/separator";
 export { Switch } from "./components/switch";
 export {
