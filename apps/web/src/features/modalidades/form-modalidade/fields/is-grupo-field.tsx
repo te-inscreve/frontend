@@ -4,7 +4,7 @@ import { useController, useFormContext } from "react-hook-form";
 
 import { Label, Switch } from "@te-inscreve/components";
 
-import type { ModalidadeFormValues } from "../modalidade-form-schema";
+import type { ModalidadeCamposValues } from "../modalidade-form-schema";
 import { CampoNumero } from "~/shared/ui/form/campo-numero";
 
 /**
@@ -13,7 +13,7 @@ import { CampoNumero } from "~/shared/ui/form/campo-numero";
  * saem da tela e o envio manda `null` nos dois.
  */
 export function IsGrupoField() {
-    const { control } = useFormContext<ModalidadeFormValues>();
+    const { control } = useFormContext<ModalidadeCamposValues>();
     const { field } = useController({ name: "isGrupo", control });
 
     return (
@@ -35,13 +35,13 @@ export function IsGrupoField() {
 
             {field.value && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <CampoNumero<ModalidadeFormValues>
+                    <CampoNumero<ModalidadeCamposValues>
                         name="minInscritosPorGrupo"
                         label="Mínimo de inscritos por grupo"
                         min={1}
                         placeholder="Ex.: 2"
                     />
-                    <CampoNumero<ModalidadeFormValues>
+                    <CampoNumero<ModalidadeCamposValues>
                         name="maxInscritosPorGrupo"
                         label="Máximo de inscritos por grupo"
                         min={1}

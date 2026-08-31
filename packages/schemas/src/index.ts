@@ -46,11 +46,13 @@ export type { CreateEventoInput, Evento, EventoPreview } from "./evento";
 
 export {
     formModalidadeSchema as createModalidadeSchema,
+    editModalidadeSchema,
     modalidadeDetalheSchema,
     modalidadePreviewSchema,
     modalidadeSchema,
 } from "./modalidade";
 export type {
+    EditModalidade,
     FormModalidade as CreateModalidade,
     Modalidade,
     ModalidadeDetalhe,

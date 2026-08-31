@@ -9,10 +9,10 @@ import {
     Textarea,
 } from "@te-inscreve/components";
 
-import type { ModalidadeFormValues } from "../modalidade-form-schema";
+import type { ModalidadeCamposValues } from "../modalidade-form-schema";
 
 export function DescricaoField() {
-    const { control } = useFormContext<ModalidadeFormValues>();
+    const { control } = useFormContext<ModalidadeCamposValues>();
     const { field, fieldState } = useController({
         name: "descricao",
         control,

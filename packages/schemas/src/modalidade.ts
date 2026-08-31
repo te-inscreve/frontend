@@ -39,6 +39,16 @@ export const modalidadeDetalheSchema = modalidadeSchema.extend({
     categorias: z.array(categoriaAninhadaSchema),
 });
 
+/**
+ * Campos que a edição de uma modalidade envia. As categorias ficam de fora —
+ * elas já existem e têm CRUD próprio, então repeti-las aqui sobrescreveria a
+ * lista — e o `evento` também: o dono da modalidade não muda.
+ */
+export const editModalidadeSchema = modalidadeSchema.omit({
+    id: true,
+    evento: true,
+});
+
 export const formModalidadeSchema = modalidadeSchema
     .omit({
         id: true,
@@ -51,3 +61,4 @@ export type Modalidade = z.infer<typeof modalidadeSchema>;
 export type ModalidadePreview = z.infer<typeof modalidadePreviewSchema>;
 export type ModalidadeDetalhe = z.infer<typeof modalidadeDetalheSchema>;
 export type FormModalidade = z.infer<typeof formModalidadeSchema>;
+export type EditModalidade = z.infer<typeof editModalidadeSchema>;

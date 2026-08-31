@@ -1,6 +1,7 @@
+import type { RefinementCtx } from "zod/v4";
 import { z } from "zod/v4";
 
-import type { CreateModalidade } from "@te-inscreve/schemas";
+import type { CreateModalidade, EditModalidade } from "@te-inscreve/schemas";
 
 import {
     categoriaFormDefaults,
@@ -18,67 +19,87 @@ import {
  * aparece — ele vem da rota, não do organizador.
  */
 
-export const modalidadeFormSchema = z
-    .object({
-        nome: z.string().trim().min(1, "Informe o nome da modalidade."),
-        descricao: z
-            .string()
-            .trim()
-            .min(1, "Escreva uma descrição da modalidade."),
-        planilhaAberta: z.boolean(),
-        maxPosicaoPremiada: inteiroNaoNegativo(
-            "Informe quantas posições são premiadas.",
-        ),
-        isGrupo: z.boolean(),
-        minInscritosPorGrupo: inteiroPositivoOpcional(
-            "O mínimo por grupo precisa ser um número inteiro maior que zero.",
-        ),
-        maxInscritosPorGrupo: inteiroPositivoOpcional(
-            "O máximo por grupo precisa ser um número inteiro maior que zero.",
-        ),
-        maxInscricoesEntidadePorCategoria: inteiroPositivoOpcional(
-            "O limite por entidade precisa ser um número inteiro maior que zero.",
-        ),
+/**
+ * Os campos da modalidade em si, sem as categorias. Ficam separados porque a
+ * criação e a edição pedem coisas diferentes: criando, a modalidade nasce com
+ * as categorias junto; editando, elas já existem e têm telas próprias.
+ */
+const camposModalidadeSchema = z.object({
+    nome: z.string().trim().min(1, "Informe o nome da modalidade."),
+    descricao: z.string().trim().min(1, "Escreva uma descrição da modalidade."),
+    planilhaAberta: z.boolean(),
+    maxPosicaoPremiada: inteiroNaoNegativo(
+        "Informe quantas posições são premiadas.",
+    ),
+    isGrupo: z.boolean(),
+    minInscritosPorGrupo: inteiroPositivoOpcional(
+        "O mínimo por grupo precisa ser um número inteiro maior que zero.",
+    ),
+    maxInscritosPorGrupo: inteiroPositivoOpcional(
+        "O máximo por grupo precisa ser um número inteiro maior que zero.",
+    ),
+    maxInscricoesEntidadePorCategoria: inteiroPositivoOpcional(
+        "O limite por entidade precisa ser um número inteiro maior que zero.",
+    ),
+});
+
+export type ModalidadeCamposValues = z.infer<typeof camposModalidadeSchema>;
+
+/**
+ * Os dois limites por grupo só existem quando a modalidade é em grupo — e,
+ * quando existem, o backend rejeita um mínimo maior que o máximo.
+ */
+function validarLimitesDeGrupo(
+    modalidade: ModalidadeCamposValues,
+    ctx: RefinementCtx,
+) {
+    if (!modalidade.isGrupo) return;
+
+    const { minInscritosPorGrupo: minimo, maxInscritosPorGrupo: maximo } =
+        modalidade;
+
+    if (minimo === null) {
+        ctx.addIssue({
+            code: "custom",
+            path: ["minInscritosPorGrupo"],
+            message: "Informe o mínimo de inscritos por grupo.",
+        });
+    }
+
+    if (maximo === null) {
+        ctx.addIssue({
+            code: "custom",
+            path: ["maxInscritosPorGrupo"],
+            message: "Informe o máximo de inscritos por grupo.",
+        });
+    }
+
+    if (minimo !== null && maximo !== null && maximo < minimo) {
+        ctx.addIssue({
+            code: "custom",
+            path: ["maxInscritosPorGrupo"],
+            message: "O máximo não pode ser menor que o mínimo.",
+        });
+    }
+}
+
+/** Criação: a modalidade e as categorias que nascem com ela. */
+export const modalidadeFormSchema = camposModalidadeSchema
+    .extend({
         categorias: z
             .array(categoriaFormSchema)
             .min(1, "Cadastre pelo menos uma categoria."),
     })
-    // Os dois limites por grupo só existem quando a modalidade é em grupo — e,
-    // quando existem, o backend rejeita um mínimo maior que o máximo.
-    .superRefine((modalidade, ctx) => {
-        if (!modalidade.isGrupo) return;
+    .superRefine(validarLimitesDeGrupo);
 
-        const { minInscritosPorGrupo: minimo, maxInscritosPorGrupo: maximo } =
-            modalidade;
-
-        if (minimo === null) {
-            ctx.addIssue({
-                code: "custom",
-                path: ["minInscritosPorGrupo"],
-                message: "Informe o mínimo de inscritos por grupo.",
-            });
-        }
-
-        if (maximo === null) {
-            ctx.addIssue({
-                code: "custom",
-                path: ["maxInscritosPorGrupo"],
-                message: "Informe o máximo de inscritos por grupo.",
-            });
-        }
-
-        if (minimo !== null && maximo !== null && maximo < minimo) {
-            ctx.addIssue({
-                code: "custom",
-                path: ["maxInscritosPorGrupo"],
-                message: "O máximo não pode ser menor que o mínimo.",
-            });
-        }
-    });
+/** Edição: só as regras da modalidade — as categorias são editadas à parte. */
+export const modalidadeEdicaoFormSchema = camposModalidadeSchema.superRefine(
+    validarLimitesDeGrupo,
+);
 
 export type ModalidadeFormValues = z.infer<typeof modalidadeFormSchema>;
 
-export const modalidadeFormDefaults: ModalidadeFormValues = {
+export const modalidadeCamposDefaults: ModalidadeCamposValues = {
     nome: "",
     descricao: "",
     planilhaAberta: false,
@@ -87,6 +108,10 @@ export const modalidadeFormDefaults: ModalidadeFormValues = {
     minInscritosPorGrupo: null,
     maxInscritosPorGrupo: null,
     maxInscricoesEntidadePorCategoria: null,
+};
+
+export const modalidadeFormDefaults: ModalidadeFormValues = {
+    ...modalidadeCamposDefaults,
     categorias: [categoriaFormDefaults],
 };
 
@@ -104,8 +129,25 @@ export function modalidadeFormInput(
     return {
         ...dados,
         evento: eventoId,
-        // Uma modalidade individual não tem grupo: se o organizador preencheu
-        // os limites e depois desligou a chave, os valores não vão junto.
+        ...limitesDeGrupo(dados),
+    };
+}
+
+/** O mesmo para a edição, onde o `evento` e as categorias não vão no corpo. */
+export function modalidadeEdicaoInput(
+    valores: ModalidadeCamposValues,
+): EditModalidade {
+    const dados = modalidadeEdicaoFormSchema.parse(valores);
+
+    return { ...dados, ...limitesDeGrupo(dados) };
+}
+
+/**
+ * Uma modalidade individual não tem grupo: se o organizador preencheu os
+ * limites e depois desligou a chave, os valores não vão junto.
+ */
+function limitesDeGrupo(dados: ModalidadeCamposValues) {
+    return {
         minInscritosPorGrupo: dados.isGrupo ? dados.minInscritosPorGrupo : null,
         maxInscritosPorGrupo: dados.isGrupo ? dados.maxInscritosPorGrupo : null,
     };

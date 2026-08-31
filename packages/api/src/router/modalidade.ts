@@ -2,7 +2,10 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import type { Modalidade, ModalidadeDetalhe } from "@te-inscreve/schemas";
-import { createModalidadeSchema } from "@te-inscreve/schemas";
+import {
+    createModalidadeSchema,
+    editModalidadeSchema,
+} from "@te-inscreve/schemas";
 
 import { authenticatedProcedure, publicProcedure } from "../trpc";
 
@@ -69,6 +72,29 @@ export const modalidadeRouter = {
                 throw result.error;
             }
 
+            return result.data;
+        }),
+
+    /**
+     * Altera as regras de uma modalidade que já existe.
+     *
+     * `PATCH` e não `PUT`: o serializer também expõe as categorias, e um envio
+     * parcial evita mexer nelas — quem as edita é o CRUD de categoria.
+     */
+    update: authenticatedProcedure
+        .input(
+            z.object({
+                eventoId: z.number().int().positive(),
+                modalidadeId: z.number().int().positive(),
+                modalidade: editModalidadeSchema,
+            }),
+        )
+        .mutation(async ({ ctx, input }) => {
+            const result = await ctx.restClient.patch<Modalidade>(
+                `/eventos/${input.eventoId}/modalidades/${input.modalidadeId}/`,
+                input.modalidade,
+            );
+            if (!result.ok) throw result.error;
             return result.data;
         }),
 

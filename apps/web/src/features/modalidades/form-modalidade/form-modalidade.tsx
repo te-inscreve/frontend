@@ -2,12 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import {
-    FloppyDiskIcon,
-    InfoIcon,
-    TicketIcon,
-    TrophyIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { FloppyDiskIcon, InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { StackIcon } from "@phosphor-icons/react/dist/ssr/Stack";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
@@ -27,12 +22,8 @@ import {
 import { FormProvider } from "@te-inscreve/components/components/field";
 
 import type { ModalidadeFormValues } from "./modalidade-form-schema";
-import { CampoNumero } from "~/shared/ui/form/campo-numero";
-import { CampoTexto } from "~/shared/ui/form/campo-texto";
+import { CamposModalidade } from "./campos-modalidade";
 import { CategoriasField } from "./categorias/categorias-field";
-import { DescricaoField } from "./fields/descricao-field";
-import { IsGrupoField } from "./fields/is-grupo-field";
-import { PlanilhaAbertaField } from "./fields/planilha-aberta-field";
 import { useFormModalidade } from "./use-form-modalidade";
 
 interface Props {
@@ -141,41 +132,7 @@ export function FormModalidade({ eventoId, trilha }: Props) {
                                 </CardHeader>
 
                                 <CardContent className="flex flex-col gap-4">
-                                    <CampoTexto<ModalidadeFormValues>
-                                        name="nome"
-                                        label="Nome da modalidade"
-                                        placeholder="Ex.: Dança de salão"
-                                    />
-                                    <DescricaoField />
-                                    <div className="flex flex-col flex-nowrap gap-3 md:flex-row">
-                                        <CampoNumero<ModalidadeFormValues>
-                                            name="maxPosicaoPremiada"
-                                            label={
-                                                <div className="flex items-center gap-1">
-                                                    <TrophyIcon size={16} />
-                                                    Posições premiadas
-                                                </div>
-                                            }
-                                            opcional
-                                            placeholder="Sem premiação"
-                                            ajuda="Até que colocação a modalidade premia. Use 0 para não premiar."
-                                        />
-                                        <CampoNumero<ModalidadeFormValues>
-                                            name="maxInscricoesEntidadePorCategoria"
-                                            label={
-                                                <div className="flex items-center gap-1">
-                                                    <TicketIcon size={16} />
-                                                    Inscrições por entidade
-                                                </div>
-                                            }
-                                            opcional
-                                            min={1}
-                                            placeholder="Quantidade ilimitada"
-                                            ajuda="Deixe vazio para não limitar as inscrições de uma entidade."
-                                        />
-                                    </div>
-                                    <PlanilhaAbertaField />
-                                    <IsGrupoField />
+                                    <CamposModalidade />
                                 </CardContent>
                             </Card>
                         </TabsContent>
