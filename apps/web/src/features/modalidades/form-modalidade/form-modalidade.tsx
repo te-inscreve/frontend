@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
+    FloppyDiskIcon,
     InfoIcon,
     TicketIcon,
     TrophyIcon,
@@ -26,7 +27,6 @@ import {
 import { FormProvider } from "@te-inscreve/components/components/field";
 
 import type { ModalidadeFormValues } from "./modalidade-form-schema";
-import { GoBackButton } from "~/shared/ui/back-btn";
 import { CampoNumero } from "~/shared/ui/form/campo-numero";
 import { CampoTexto } from "~/shared/ui/form/campo-texto";
 import { CategoriasField } from "./categorias/categorias-field";
@@ -38,9 +38,14 @@ import { useFormModalidade } from "./use-form-modalidade";
 interface Props {
     /** Evento dono da modalidade, lido do `[slug]` da rota. */
     eventoId: number;
+    /**
+     * Trilha do evento, pronta do Server Component: o nome do evento vem do
+     * servidor, e aqui só se conhece o id.
+     */
+    trilha?: ReactNode;
 }
 
-export function FormModalidade({ eventoId }: Props) {
+export function FormModalidade({ eventoId, trilha }: Props) {
     const router = useRouter();
     const { form, salvamento, salvar, erro } = useFormModalidade({
         eventoId,
@@ -65,9 +70,11 @@ export function FormModalidade({ eventoId }: Props) {
             <form noValidate onSubmit={form.handleSubmit(salvar)}>
                 <div className="bg-card sticky top-0 z-20 border-b">
                     <header className="mx-auto flex w-full max-w-4xl flex-col gap-1.5 px-4 py-4 md:px-6">
-                        <nav aria-label="Voltar">
+                        {/* <nav aria-label="Voltar">
                             <GoBackButton href={`/admin/eventos/${eventoId}`} />
-                        </nav>
+                        </nav> */}
+
+                        {trilha}
 
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
@@ -81,19 +88,24 @@ export function FormModalidade({ eventoId }: Props) {
                             </div>
 
                             <Button type="submit" size="lg" disabled={salvando}>
-                                {salvando && (
+                                {salvando ? (
                                     <CircleNotchIcon
                                         aria-hidden="true"
                                         className="animate-spin"
                                     />
+                                ) : (
+                                    <FloppyDiskIcon
+                                        aria-hidden="true"
+                                        weight="bold"
+                                    />
                                 )}
-                                {salvando ? "Salvando…" : "Salvar modalidade"}
+                                {salvando ? "Salvando…" : "Salvar"}
                             </Button>
                         </div>
                     </header>
                 </div>
 
-                <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 md:px-6">
+                <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-4 md:px-6">
                     {/* As abas só escondem campos — o formulário continua sendo
                         um só, então a validação e o envio abrangem as duas. */}
                     <Tabs defaultValue="modalidade" className="w-full">
@@ -117,7 +129,7 @@ export function FormModalidade({ eventoId }: Props) {
                             </ModalidadeTabTrigger>
                         </TabsList>
 
-                        <TabsContent value="modalidade" className="mt-3">
+                        <TabsContent value="modalidade" className="mt-2">
                             <Card>
                                 <CardHeader>
                                     <CardTitle>
@@ -168,20 +180,12 @@ export function FormModalidade({ eventoId }: Props) {
                             </Card>
                         </TabsContent>
 
-                        <TabsContent value="categorias" className="mt-3">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Categorias</CardTitle>
-                                    <CardDescription>
-                                        As faixas em que os inscritos competem
-                                        dentro desta modalidade
-                                    </CardDescription>
-                                </CardHeader>
-
-                                <CardContent>
-                                    <CategoriasField />
-                                </CardContent>
-                            </Card>
+                        <TabsContent value="categorias" className="mt-2">
+                            <p className="text-foreground bullet mb-4 text-sm">
+                                As cadegorias servem para separar os inscritos
+                                em grupos de idade.
+                            </p>
+                            <CategoriasField />
                         </TabsContent>
                     </Tabs>
 

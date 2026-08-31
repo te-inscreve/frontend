@@ -27,7 +27,7 @@ export function BotaoCriarCategoria({
 }: Props) {
     return (
         <Link
-            href={`/admin/eventos/${eventoId}/modalidade/${modalidadeId}/criar-categoria`}
+            href={`/admin/eventos/${eventoId}/categorias/criar/?modalidadeId=${modalidadeId}`}
             className={cn(
                 "text-muted-foreground hover:border-primary hover:text-primary focus-visible:ring-ring/50 focus-visible:outline-ring flex h-full min-h-32 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-center transition-colors focus-visible:ring-[3px] focus-visible:outline-1",
                 sozinho ? "w-100" : "w-44",

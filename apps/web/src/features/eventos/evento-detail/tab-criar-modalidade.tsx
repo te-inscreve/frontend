@@ -18,7 +18,7 @@ interface Props {
 export function TabCriarModalidade({ eventoId }: Props) {
     return (
         <Link
-            href={`/admin/eventos/${eventoId}/criar-modalidade`}
+            href={`/admin/eventos/${eventoId}/modalidades/criar`}
             className="text-muted-foreground hover:text-primary focus-visible:ring-ring/50 focus-visible:outline-ring relative inline-flex h-[calc(100%-1px)] shrink-0 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:outline-1 [&_svg]:size-4 [&_svg]:shrink-0"
         >
             <PlusIcon aria-hidden="true" />
