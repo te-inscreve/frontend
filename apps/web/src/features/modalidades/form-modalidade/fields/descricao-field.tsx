@@ -20,7 +20,12 @@ export function DescricaoField() {
 
     return (
         <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="descricao">Descrição</FieldLabel>
+            <FieldLabel htmlFor="descricao" className="flex">
+                Descrição
+                <span className="text-muted-foreground ml-2 text-xs font-normal">
+                    (opcional)
+                </span>
+            </FieldLabel>
             <Textarea
                 {...field}
                 id="descricao"

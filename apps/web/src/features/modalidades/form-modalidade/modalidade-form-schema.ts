@@ -26,7 +26,10 @@ import {
  */
 const camposModalidadeSchema = z.object({
     nome: z.string().trim().min(1, "Informe o nome da modalidade."),
-    descricao: z.string().trim().min(1, "Escreva uma descrição da modalidade."),
+    // Opcional: a modalidade pode nascer só com o nome, pelo cadastro rápido,
+    // e ganhar a descrição depois. O backend exige o campo, então o vazio
+    // atravessa a borda como string vazia, e não como ausência.
+    descricao: z.string().trim(),
     planilhaAberta: z.boolean(),
     maxPosicaoPremiada: inteiroNaoNegativo(
         "Informe quantas posições são premiadas.",
@@ -97,7 +100,18 @@ export const modalidadeEdicaoFormSchema = camposModalidadeSchema.superRefine(
     validarLimitesDeGrupo,
 );
 
+/**
+ * Cadastro rápido: só o nome. É o mesmo campo do formulário completo, com a
+ * mesma mensagem — o que muda é tudo o que fica de fora.
+ */
+export const modalidadeRapidaFormSchema = camposModalidadeSchema.pick({
+    nome: true,
+});
+
 export type ModalidadeFormValues = z.infer<typeof modalidadeFormSchema>;
+export type ModalidadeRapidaFormValues = z.infer<
+    typeof modalidadeRapidaFormSchema
+>;
 
 export const modalidadeCamposDefaults: ModalidadeCamposValues = {
     nome: "",
@@ -130,6 +144,26 @@ export function modalidadeFormInput(
         ...dados,
         evento: eventoId,
         ...limitesDeGrupo(dados),
+    };
+}
+
+/**
+ * O mesmo para o cadastro rápido: o nome informado, as regras no padrão do
+ * formulário completo e nenhuma categoria. A modalidade entra na lista de
+ * abas na hora, e as categorias e as regras são detalhadas depois — cada uma
+ * na sua tela.
+ */
+export function modalidadeRapidaInput(
+    valores: ModalidadeRapidaFormValues,
+    eventoId: number,
+): CreateModalidade {
+    const { nome } = modalidadeRapidaFormSchema.parse(valores);
+
+    return {
+        ...modalidadeCamposDefaults,
+        nome,
+        evento: eventoId,
+        categorias: [],
     };
 }
 

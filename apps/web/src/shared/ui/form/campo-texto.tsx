@@ -7,9 +7,10 @@ import { Field, FieldError, FieldLabel, Input } from "@te-inscreve/components";
 
 interface Props<T extends FieldValues> {
     name: FieldPath<T>;
-    label: string;
+    label?: string;
     placeholder?: string;
     className?: string;
+    helpText?: string;
 }
 
 /**
@@ -21,6 +22,7 @@ export function CampoTexto<T extends FieldValues>({
     label,
     placeholder,
     className,
+    helpText,
 }: Props<T>) {
     const { control } = useFormContext<T>();
     const { field, fieldState } = useController({ name, control });
@@ -29,7 +31,7 @@ export function CampoTexto<T extends FieldValues>({
 
     return (
         <Field data-invalid={fieldState.invalid} className={className}>
-            <FieldLabel htmlFor={name}>{label}</FieldLabel>
+            {label && <FieldLabel htmlFor={name}>{label}</FieldLabel>}
             <Input
                 {...field}
                 value={typeof valor === "string" ? valor : ""}
@@ -42,6 +44,9 @@ export function CampoTexto<T extends FieldValues>({
                 aria-invalid={fieldState.invalid}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {helpText && (
+                <p className="text-muted-foreground text-xs">{helpText}</p>
+            )}
         </Field>
     );
 }
