@@ -19,7 +19,7 @@
      * Vem dos detalhes dourados descritos em `docs/DESIGN.md`, e fica entre o
      * verde de confirmação e o vermelho de erro. */
     --warning: oklch(0.76 0.145 80);
-    --warning-foreground: oklch(0.28 0.05 80);
+    --warning-foreground: oklch(98.7% 0.026 102.212);
     --border: oklch(0.91 0.008 80);
     --input: oklch(0.91 0.008 80);
     --ring: oklch(0.5751 0.1317 139.6817);
