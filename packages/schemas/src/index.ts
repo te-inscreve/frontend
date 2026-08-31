@@ -64,5 +64,8 @@ export {
 } from "./categoria";
 export type { Categoria, CategoriaAninhada, FormCategoria } from "./categoria";
 
+export { privateEntidadeSchema, publicEntidadeSchema } from "./entidade";
+export type { PrivateEntidade, PublicEntidade } from "./entidade";
+
 export { perfilSchema } from "./perfil";
 export type { Perfil } from "./perfil";
