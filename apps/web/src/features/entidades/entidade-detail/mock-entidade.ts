@@ -10,22 +10,16 @@ import type { PrivateEntidade } from "@te-inscreve/schemas";
  *
  * Os tipos abaixo são a forma que a tela espera. Quando o backend definir a
  * dele, o que sobreviver vira schema em `packages/schemas`.
+ *
+ * Os integrantes são a exceção: como a tela de cadastro também depende deles,
+ * moram em `shared/integrantes` e são só reexportados daqui.
  */
+
+export { integrantesMock } from "~/features/entidades/shared/integrantes";
 
 export interface EntidadeMock extends PrivateEntidade {
     /** Ano de fundação. É o que a entidade coloca em cartaz, então aparece aqui. */
     fundacao: number;
-}
-
-export interface IntegranteMock {
-    id: number;
-    nome: string;
-    /** Papel na entidade — o que a pessoa faz, não o acesso que ela tem no sistema. */
-    funcao: string;
-    /** Idade em anos completos: é ela que decide em qual categoria a pessoa compete. */
-    idade: number;
-    /** Ano de entrada na entidade. */
-    desde: number;
 }
 
 export interface GrupoMock {
@@ -80,73 +74,6 @@ export const entidadeMock: EntidadeMock = {
     estado: "RS",
     fundacao: 1987,
 };
-
-export const integrantesMock: IntegranteMock[] = [
-    { id: 1, nome: "Alceu Portela", funcao: "Patrão", idade: 52, desde: 1998 },
-    {
-        id: 2,
-        nome: "Iara Boeira",
-        funcao: "Primeira prenda",
-        idade: 24,
-        desde: 2012,
-    },
-    {
-        id: 3,
-        nome: "Vicente Machado",
-        funcao: "Instrutor de danças",
-        idade: 38,
-        desde: 2005,
-    },
-    {
-        id: 4,
-        nome: "Marina Colussi",
-        funcao: "Dançarina",
-        idade: 19,
-        desde: 2016,
-    },
-    {
-        id: 5,
-        nome: "Tiago Vasconcelos",
-        funcao: "Dançarino",
-        idade: 21,
-        desde: 2015,
-    },
-    {
-        id: 6,
-        nome: "Helena Fagundes",
-        funcao: "Declamadora",
-        idade: 17,
-        desde: 2019,
-    },
-    {
-        id: 7,
-        nome: "Bento Aguirre",
-        funcao: "Gaiteiro",
-        idade: 45,
-        desde: 2001,
-    },
-    {
-        id: 8,
-        nome: "Luiza Menezes",
-        funcao: "Dançarina",
-        idade: 13,
-        desde: 2022,
-    },
-    {
-        id: 9,
-        nome: "Otávio Ramires",
-        funcao: "Dançarino",
-        idade: 14,
-        desde: 2021,
-    },
-    {
-        id: 10,
-        nome: "Clara Bittencourt",
-        funcao: "Chula e trova",
-        idade: 28,
-        desde: 2010,
-    },
-];
 
 export const gruposMock: GrupoMock[] = [
     {

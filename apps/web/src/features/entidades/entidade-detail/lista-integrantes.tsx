@@ -1,8 +1,9 @@
-import type { IntegranteMock } from "./mock-entidade";
+import type { Integrante } from "~/features/entidades/shared/integrantes";
+import { idadeEm, rotuloFuncao } from "~/features/entidades/shared/integrantes";
 import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
 
 interface Props {
-    integrantes: IntegranteMock[];
+    integrantes: Integrante[];
 }
 
 /**
@@ -35,15 +36,18 @@ export function ListaIntegrantes({ integrantes }: Props) {
                             {integrante.nome}
                         </p>
                         <p className="text-muted-foreground truncate text-xs">
-                            {integrante.funcao} · na entidade desde{" "}
-                            {integrante.desde}
+                            {integrante.funcao
+                                ? rotuloFuncao(integrante.funcao)
+                                : "Sem função definida"}
+                            {integrante.dataFiliacao &&
+                                ` · na entidade desde ${integrante.dataFiliacao.slice(0, 4)}`}
                         </p>
                     </div>
 
                     {/* A idade fica à direita porque é ela que decide em qual
                         categoria a pessoa pode ser inscrita. */}
                     <p className="text-muted-foreground shrink-0 text-sm tabular-nums">
-                        {integrante.idade} anos
+                        {idadeEm(integrante.dataNascimento)} anos
                     </p>
                 </li>
             ))}

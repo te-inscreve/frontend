@@ -3,12 +3,14 @@ import { StarIcon } from "@phosphor-icons/react/dist/ssr/Star";
 
 import { Badge } from "@te-inscreve/components";
 
-import type { GrupoMock, IntegranteMock } from "./mock-entidade";
+import type { GrupoMock } from "./mock-entidade";
+import type { Integrante } from "~/features/entidades/shared/integrantes";
+import { idadeEm } from "~/features/entidades/shared/integrantes";
 
 interface Props {
     grupos: GrupoMock[];
     /** Todos os integrantes da entidade: o grupo guarda só os ids. */
-    integrantes: IntegranteMock[];
+    integrantes: Integrante[];
 }
 
 /**
@@ -82,7 +84,7 @@ export function ListaGrupos({ grupos, integrantes }: Props) {
                                     {membro.nome}
                                     <span className="text-muted-foreground">
                                         {" "}
-                                        · {membro.idade} anos
+                                        · {idadeEm(membro.dataNascimento)} anos
                                     </span>
                                 </li>
                             ))}
