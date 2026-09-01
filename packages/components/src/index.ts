@@ -34,6 +34,7 @@ export {
     CardHeader,
     CardTitle,
 } from "./components/card";
+export { Checkbox } from "./components/checkbox";
 export {
     Collapsible,
     CollapsibleContent,
@@ -69,6 +70,18 @@ export {
     PopoverTrigger,
 } from "./components/popover";
 export { ScrollArea, ScrollBar } from "./components/scroll-area";
+export {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectScrollDownButton,
+    SelectScrollUpButton,
+    SelectSeparator,
+    SelectTrigger,
+    SelectValue,
+} from "./components/select";
 export { Separator } from "./components/separator";
 export { Switch } from "./components/switch";
 export {
