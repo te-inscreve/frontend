@@ -75,10 +75,10 @@ export function CampoData<T extends FieldValues>({
 
     return (
         <Field data-invalid={fieldState.invalid} className={className}>
-            <FieldLabel htmlFor={name} className="flex">
+            <FieldLabel htmlFor={name} className="flex w-full">
                 {label}
                 {opcional && (
-                    <span className="text-muted-foreground ml-2 text-xs font-normal">
+                    <span className="text-muted-foreground ml-auto text-xs font-normal">
                         (opcional)
                     </span>
                 )}

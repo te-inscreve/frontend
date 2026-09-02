@@ -43,10 +43,10 @@ export function CampoTexto<T extends FieldValues>({
                 placeholder={placeholder}
                 aria-invalid={fieldState.invalid}
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             {helpText && (
                 <p className="text-muted-foreground text-xs">{helpText}</p>
             )}
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
         </Field>
     );
 }
