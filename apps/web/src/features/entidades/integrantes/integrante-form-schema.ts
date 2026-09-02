@@ -1,7 +1,6 @@
 import { z } from "zod/v4";
 
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import { FUNCOES_VALORES } from "~/features/entidades/shared/integrantes";
 
 /**
  * O cadastro de integrante na forma que a UI manipula: datas como `Date` — é
@@ -40,26 +39,14 @@ export const integranteFormSchema = z
             .string()
             .trim()
             .min(1, "Informe o número da matrícula CTG."),
-        validadeMatricula: dataObrigatoria(
-            "Informe até quando a matrícula vale.",
-        ),
         dataNascimento: dataObrigatoria("Informe a data de nascimento."),
-        dataFiliacao: z.custom<Date | null>().nullable(),
-        funcao: z.enum(FUNCOES_VALORES).nullable(),
+        validadeMatricula: z.custom<Date | null>().nullable(),
     })
     .refine(
         ({ dataNascimento }) => !dataNascimento || dataNascimento <= new Date(),
         {
             path: ["dataNascimento"],
             error: "A data de nascimento não pode estar no futuro.",
-        },
-    )
-    .refine(
-        ({ dataFiliacao, dataNascimento }) =>
-            !dataFiliacao || !dataNascimento || dataFiliacao >= dataNascimento,
-        {
-            path: ["dataFiliacao"],
-            error: "A filiação não pode ser anterior ao nascimento.",
         },
     );
 
@@ -70,8 +57,6 @@ export const integranteFormDefaults: IntegranteFormValues = {
     matriculaCtg: "",
     validadeMatricula: null,
     dataNascimento: null,
-    dataFiliacao: null,
-    funcao: null,
 };
 
 /** ISO local (`aaaa-mm-dd`) — `toISOString` deslocaria a data pelo fuso. */
@@ -102,9 +87,5 @@ export function integranteFormInput(
         matriculaCtg: dados.matriculaCtg,
         validadeMatricula: paraISO(validadeMatricula),
         dataNascimento: paraISO(dataNascimento),
-        ...(dados.dataFiliacao
-            ? { dataFiliacao: paraISO(dados.dataFiliacao) }
-            : {}),
-        ...(dados.funcao ? { funcao: dados.funcao } : {}),
     };
 }

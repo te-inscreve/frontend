@@ -1,6 +1,5 @@
 "use client";
 
-import { CakeIcon } from "@phosphor-icons/react/dist/ssr/Cake";
 import { IdentificationCardIcon } from "@phosphor-icons/react/dist/ssr/IdentificationCard";
 import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
 
@@ -12,7 +11,6 @@ import {
     formatarDataISO,
     idadeEm,
     matriculaVencida,
-    rotuloFuncao,
 } from "~/features/entidades/shared/integrantes";
 import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
 
@@ -111,26 +109,11 @@ export function ListaIntegrantes({
                                         <IdentificationCardIcon aria-hidden="true" />
                                         {integrante.matriculaCtg}
                                     </span>
+                                    {" · "}
                                     <span className="flex items-center gap-1">
-                                        <CakeIcon aria-hidden="true" />
-                                        {formatarDataISO(
-                                            integrante.dataNascimento,
-                                        )}
-                                        {" · "}
-                                        {idadeEm(
-                                            integrante.dataNascimento,
-                                        )}{" "}
+                                        {idadeEm(integrante.dataNascimento)}{" "}
                                         anos
                                     </span>
-                                    {integrante.dataFiliacao && (
-                                        <span>
-                                            na entidade desde{" "}
-                                            {integrante.dataFiliacao.slice(
-                                                0,
-                                                4,
-                                            )}
-                                        </span>
-                                    )}
                                 </p>
                             </div>
 
@@ -152,15 +135,6 @@ export function ListaIntegrantes({
                                             integrante.validadeMatricula,
                                         )}
                                     </Badge>
-                                )}
-                                {integrante.funcao ? (
-                                    <Badge variant="secondary">
-                                        {rotuloFuncao(integrante.funcao)}
-                                    </Badge>
-                                ) : (
-                                    <span className="text-muted-foreground text-xs">
-                                        Sem função
-                                    </span>
                                 )}
                             </div>
                         </li>
