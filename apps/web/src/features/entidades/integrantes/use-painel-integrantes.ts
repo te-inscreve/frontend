@@ -67,6 +67,19 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
 
     const limparSelecao = useCallback(() => setSelecionados([]), []);
 
+    /**
+     * Cadastra o integrante e devolve a lista ao estado em que ele aparece.
+     *
+     * É aqui que entra o `POST`: o formulário espera o retorno desta função e
+     * só fecha o diálogo quando ela termina bem — se ela lançar, o que foi
+     * digitado continua na tela com a mensagem do erro.
+     *
+     * Com a rota pronta, o corpo vira a mutation seguida da revalidação da
+     * lista (`router.refresh()` para dados do servidor, ou o `invalidate` da
+     * query, conforme de onde vier `integrantesIniciais`), e o `setIntegrantes`
+     * daqui sai de cena. Enquanto isso, a lista é a memória desta sessão: o
+     * integrante novo some no refresh.
+     */
     const adicionarIntegrante = useCallback(
         (novo: Omit<Integrante, "id">) => {
             const id =
@@ -78,8 +91,6 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
             // a pessoa recém-criada quase nunca casa com o recorte em uso.
             setFiltros(filtrosVazios);
             setFormAberto(false);
-
-            return id;
         },
         [integrantes],
     );
