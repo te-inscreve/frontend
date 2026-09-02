@@ -40,6 +40,18 @@ export {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "./components/collapsible";
+export {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    DialogTrigger,
+} from "./components/dialog";
 export { Input, type InputProps } from "./components/input";
 export { Field, FieldError, FieldGroup, FieldLabel } from "./components/field";
 export { Label } from "./components/label";

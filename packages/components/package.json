@@ -16,6 +16,7 @@
         "./card": "./src/components/card.tsx",
         "./checkbox": "./src/components/checkbox.tsx",
         "./collapsible": "./src/components/collapsible.tsx",
+        "./dialog": "./src/components/dialog.tsx",
         "./input": "./src/components/input.tsx",
         "./field": "./src/components/field.tsx",
         "./label": "./src/components/label.tsx",
