@@ -59,7 +59,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
 
                 <dl className="border-border/70 grid grid-cols-2 gap-3 border-t pt-3">
                     <Dado
-                        icone={<TicketIcon />}
+                        icone={<TicketIcon size={24} />}
                         termo="Inscrições"
                         // Nulo é categoria sem teto, e não zero inscrições. O
                         // total de inscritos ainda não vem da API.
@@ -70,7 +70,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                         }
                     />
                     <Dado
-                        icone={<UserCheckIcon />}
+                        icone={<UserCheckIcon size={24} />}
                         termo="Avaliadores"
                         // Nulo é categoria sem avaliador definido, não zero.
                         valor={
@@ -134,8 +134,8 @@ function Dado({
                 {icone}
             </span>
             <div className="min-w-0">
-                <dt className="text-muted-foreground text-xs">{termo}</dt>
-                <dd className="truncate text-sm font-semibold">{valor}</dd>
+                <dt className="text-muted-foreground text-sm">{termo}</dt>
+                <dd className="truncate text-base font-normal">{valor}</dd>
             </div>
         </div>
     );

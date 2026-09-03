@@ -1,11 +1,5 @@
-import { MusicNotesIcon } from "@phosphor-icons/react/dist/ssr/MusicNotes";
-import { StarIcon } from "@phosphor-icons/react/dist/ssr/Star";
-
-import { Badge } from "@te-inscreve/components";
-
 import type { GrupoMock } from "./mock-entidade";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import { idadeEm } from "~/features/entidades/shared/integrantes";
 
 interface Props {
     grupos: GrupoMock[];
@@ -52,10 +46,6 @@ export function ListaGrupos({ grupos, integrantes }: Props) {
                                 {grupo.nome}
                             </h3>
                             <div className="flex flex-wrap items-center gap-2">
-                                <Badge variant="outline">
-                                    <MusicNotesIcon aria-hidden="true" />
-                                    {grupo.modalidade}
-                                </Badge>
                                 <span className="text-muted-foreground text-xs">
                                     {membros.length === 1
                                         ? "1 integrante"
@@ -64,18 +54,7 @@ export function ListaGrupos({ grupos, integrantes }: Props) {
                             </div>
                         </div>
 
-                        {responsavel && (
-                            <p className="text-muted-foreground flex items-center gap-2 text-sm">
-                                <StarIcon
-                                    aria-hidden="true"
-                                    weight="fill"
-                                    className="text-warning size-4 shrink-0"
-                                />
-                                Responsável: {responsavel.nome}
-                            </p>
-                        )}
-
-                        <ul className="flex flex-wrap gap-1.5">
+                        {/* <ul className="flex flex-wrap gap-1.5">
                             {membros.map((membro) => (
                                 <li
                                     key={membro.id}
@@ -88,7 +67,7 @@ export function ListaGrupos({ grupos, integrantes }: Props) {
                                     </span>
                                 </li>
                             ))}
-                        </ul>
+                        </ul> */}
                     </li>
                 );
             })}

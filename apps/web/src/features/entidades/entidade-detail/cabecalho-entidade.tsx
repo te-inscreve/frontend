@@ -50,9 +50,6 @@ export function CabecalhoEntidade({
                             <MapPinIcon aria-hidden="true" />
                             {entidade.cidade} — {entidade.estado}
                         </Badge>
-                        <Badge variant="secondary">
-                            Fundada em {entidade.fundacao}
-                        </Badge>
                     </div>
                 </div>
             </div>

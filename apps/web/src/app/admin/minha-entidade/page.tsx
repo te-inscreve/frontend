@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
-import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 import { UsersFourIcon } from "@phosphor-icons/react/dist/ssr/UsersFour";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
@@ -9,13 +8,11 @@ import { Button } from "@te-inscreve/components";
 
 import { AvisoDadosExemplo } from "~/features/entidades/entidade-detail/aviso-dados-exemplo";
 import { CabecalhoEntidade } from "~/features/entidades/entidade-detail/cabecalho-entidade";
-import { EventoAtual } from "~/features/entidades/entidade-detail/evento-atual";
 import { ListaGrupos } from "~/features/entidades/entidade-detail/lista-grupos";
 import { ListaIntegrantes } from "~/features/entidades/entidade-detail/lista-integrantes";
 import { ListaPremiacoes } from "~/features/entidades/entidade-detail/lista-premiacoes";
 import {
     entidadeMock,
-    eventoAtualMock,
     gruposMock,
     integrantesMock,
     premiacoesMock,
@@ -49,13 +46,13 @@ export default function MinhaEntidadePage() {
                 <AvisoDadosExemplo />
             </div>
 
-            <Secao
+            {/* <Secao
                 titulo="Evento atual"
                 descricao="O evento em que a entidade está inscrita agora."
                 icone={<CalendarDotsIcon size={20} weight="duotone" />}
             >
                 <EventoAtual evento={eventoAtualMock} />
-            </Secao>
+            </Secao> */}
 
             <div className="grid gap-8 lg:grid-cols-5">
                 <div className="lg:col-span-2">
