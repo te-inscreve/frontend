@@ -52,6 +52,20 @@ export {
     DialogTitle,
     DialogTrigger,
 } from "./components/dialog";
+export {
+    ExpandableDialog,
+    ExpandableDialogBody,
+    ExpandableDialogClose,
+    ExpandableDialogContent,
+    ExpandableDialogDescription,
+    ExpandableDialogFooter,
+    ExpandableDialogHeader,
+    ExpandableDialogIcon,
+    ExpandableDialogLabel,
+    ExpandableDialogTitle,
+    ExpandableDialogTrigger,
+    EXPANSION_TRANSITION,
+} from "./components/expandable-dialog";
 export { Input, type InputProps } from "./components/input";
 export { Field, FieldError, FieldGroup, FieldLabel } from "./components/field";
 export { Label } from "./components/label";

@@ -17,6 +17,7 @@
         "./checkbox": "./src/components/checkbox.tsx",
         "./collapsible": "./src/components/collapsible.tsx",
         "./dialog": "./src/components/dialog.tsx",
+        "./expandable-dialog": "./src/components/expandable-dialog.tsx",
         "./input": "./src/components/input.tsx",
         "./field": "./src/components/field.tsx",
         "./label": "./src/components/label.tsx",
@@ -44,6 +45,7 @@
     "dependencies": {
         "@phosphor-icons/react": "^2.1.10",
         "class-variance-authority": "^0.7.1",
+        "motion": "^13.2.0",
         "radix-ui": "^1.4.3",
         "react-day-picker": "^10.0.1",
         "react-hook-form": "^7.85.0",

@@ -4349,6 +4349,7 @@ __metadata:
     "@types/react": "npm:~19.2.0"
     class-variance-authority: "npm:^0.7.1"
     eslint: "npm:^9.38.0"
+    motion: "npm:^13.2.0"
     prettier: "npm:^3.6.2"
     radix-ui: "npm:^1.4.3"
     react: "npm:19.2.8"
@@ -4467,6 +4468,7 @@ __metadata:
     eslint: "npm:^9.38.0"
     jiti: "npm:^2.7.0"
     morphicons: "npm:^1.7.0"
+    motion: "npm:^13.2.0"
     next: "npm:^16.2.12"
     prettier: "npm:^3.6.2"
     raw-loader: "npm:4.0.2"
@@ -7805,6 +7807,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"framer-motion@npm:^13.2.0":
+  version: 13.2.0
+  resolution: "framer-motion@npm:13.2.0"
+  dependencies:
+    motion-dom: "npm:^13.2.0"
+    motion-utils: "npm:^13.0.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/b381cf2c6f9def6ae169c096f9f873b0dafc8343fbdc78cc3d27e3ede2e8f682b22e1160a1f8cde07f263993aecab2c94239a43702fe4f06eccaeba109fcff13
+  languageName: node
+  linkType: hard
+
 "fresh@npm:^2.0.0":
   version: 2.0.0
   resolution: "fresh@npm:2.0.0"
@@ -9701,6 +9722,40 @@ __metadata:
     vue:
       optional: true
   checksum: 10c0/20652cfcd49f6ce4c381786e9c4fe3ed2f2fdc0d25e61d336965ad99b3692eaa66d9f115f800d69a8c609ebea4d1e85d55e66991ac92ed3e3f3541ddadd852aa
+  languageName: node
+  linkType: hard
+
+"motion-dom@npm:^13.2.0":
+  version: 13.2.0
+  resolution: "motion-dom@npm:13.2.0"
+  dependencies:
+    motion-utils: "npm:^13.0.0"
+  checksum: 10c0/009725cf822940fcd10e20492cfd0be50f11db9b5f1b374dd2fddbe2bc53db80c7f44d02c8bf68e2b9baaa8335aba45bd2a860176b3c23685ca8b59ca69db6b7
+  languageName: node
+  linkType: hard
+
+"motion-utils@npm:^13.0.0":
+  version: 13.0.0
+  resolution: "motion-utils@npm:13.0.0"
+  checksum: 10c0/4b279ce85f71926d668ff5966feb898b174541d16952a61c7150982388553266602ecd2a76e057530076ff8f38d06672e585639ddc73c41dd1a67d04aaa3662d
+  languageName: node
+  linkType: hard
+
+"motion@npm:^13.2.0":
+  version: 13.2.0
+  resolution: "motion@npm:13.2.0"
+  dependencies:
+    framer-motion: "npm:^13.2.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/3943e36a0848f39a3633fb822bc2230966cf8e215fd243d0cd39a62b1799c89ca75fdc07f964b9633b962a3ace845525f4c4b2f63860a7268e9d13cc1667ad4a
   languageName: node
   linkType: hard
 
