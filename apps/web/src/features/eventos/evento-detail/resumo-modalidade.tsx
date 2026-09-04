@@ -10,7 +10,7 @@ import { UserIcon } from "@phosphor-icons/react/dist/ssr/User";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 
 import type { ModalidadeDetalhe } from "@te-inscreve/schemas";
-import { Badge, Button } from "@te-inscreve/components";
+import { Button } from "@te-inscreve/components";
 
 interface Props {
     eventoId: number;
@@ -129,14 +129,14 @@ export function ResumoModalidade({
                 para quem enxerga. */}
             <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <Badge
-                        variant={emGrupo ? "default" : "secondary"}
-                        className="flex items-center gap-1 rounded-sm"
-                    >
-                        {/* {emGrupo ? <UsersThreeIcon /> : <UserIcon />} */}
-                        {"Apresentações " +
-                            (emGrupo ? "em grupo" : "individuais")}
-                    </Badge>
+                    <div className="flex items-center gap-1 rounded-sm text-sm">
+                        {emGrupo ? (
+                            <UsersThreeIcon size={16} />
+                        ) : (
+                            <UserIcon size={16} />
+                        )}
+                        {emGrupo ? "Em grupo" : "Individual"}
+                    </div>
 
                     {regras
                         .filter(({ emDestaque }) => emDestaque)

@@ -36,8 +36,10 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
             // mesma suavidade. O anel de foco fica de fora porque o
             // `overflow-hidden` de dentro o cortaria — quem sinaliza foco aqui
             // é a própria borda.
-            className="bg-border focus-visible:bg-ring group block w-100 shrink-0 rounded-xl p-px transition-colors focus-visible:outline-none"
+            className="bg-border focus-visible:bg-ring group flex w-100 shrink-0 rounded-xl p-px transition-colors focus-visible:outline-none"
         >
+            <CanhotoIdade categoria={categoria} estilo={estilo} />
+
             <div
                 // `h-full` porque a fila de categorias é um flex row: sem ele a
                 // camada de borda estica até a altura do cartão mais alto e a
@@ -46,10 +48,8 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                 // `overflow-hidden` é o que faz o canhoto respeitar o
                 // arredondado: ele encosta nas quatro bordas e é o recorte
                 // desta camada que arredonda as pontas dele.
-                className="bg-card relative flex h-full flex-col gap-3 overflow-hidden rounded-[calc(var(--radius-xl)-1px)] p-4 pl-14 transition-colors"
+                className="bg-card relative flex h-full w-full flex-col gap-3 overflow-hidden rounded-r-xl p-4 transition-colors"
             >
-                <CanhotoIdade categoria={categoria} estilo={estilo} />
-
                 <div className="flex items-start justify-between gap-2">
                     <h5 className="text-base leading-tight font-bold">
                         {categoria.nome}
@@ -57,15 +57,15 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                     <SituacaoBadge estilo={estilo} />
                 </div>
 
-                <dl className="border-border/70 grid grid-cols-2 gap-3 border-t pt-3">
+                <dl className="grid grid-cols-2 gap-3 pt-1">
                     <Dado
-                        icone={<TicketIcon size={24} />}
+                        icone={<TicketIcon size={36} className="text-xl" />}
                         termo="Inscrições"
                         // Nulo é categoria sem teto, e não zero inscrições. O
                         // total de inscritos ainda não vem da API.
                         valor={
                             categoria.maxInscricoes === null
-                                ? "Sem limite"
+                                ? totalInscritos.toString()
                                 : `${totalInscritos} / ${categoria.maxInscricoes}`
                         }
                     />
@@ -103,19 +103,18 @@ function CanhotoIdade({
     estilo: Estilo;
 }) {
     return (
-        <>
-            <span
-                className={`${estilo.canhoto} absolute inset-y-0 left-0 flex w-9 items-center justify-center`}
-            >
-                <span className="rotate-180 text-[11px] font-bold tracking-wider whitespace-nowrap [writing-mode:vertical-rl]">
-                    {categoria.idadeMinima} a {categoria.idadeMaxima} anos
-                </span>
+        <div
+            className={`${estilo.canhoto} relative flex w-fit flex-col items-center justify-center rounded-l-xl px-3`}
+        >
+            <span className="text-base font-bold tracking-wider whitespace-nowrap">
+                {categoria.idadeMinima}-{categoria.idadeMaxima}
             </span>
+            <span className="text-sm">anos</span>
             <span
                 aria-hidden="true"
-                className={`${estilo.serrilha} absolute inset-0 left-9 border-l border-dashed`}
+                className={`${estilo.serrilha} absolute right-0 h-full border-l-2 border-dashed`}
             />
-        </>
+        </div>
     );
 }
 
@@ -129,12 +128,12 @@ function Dado({
     valor: string;
 }) {
     return (
-        <div className="flex items-center gap-2 [&_svg]:size-4">
-            <span aria-hidden="true" className="text-primary shrink-0">
-                {icone}
-            </span>
-            <div className="min-w-0">
-                <dt className="text-muted-foreground text-sm">{termo}</dt>
+        <div className="flex flex-col [&_svg]:size-4">
+            <dt className="text-muted-foreground text-sm">{termo}</dt>
+            <div className="flex items-center gap-2">
+                <span className="text-primary shrink-0" aria-hidden="true">
+                    {icone}
+                </span>
                 <dd className="truncate text-base font-normal">{valor}</dd>
             </div>
         </div>
@@ -145,7 +144,7 @@ function SituacaoBadge({ estilo }: { estilo: Estilo }) {
     return (
         <Badge
             variant={estilo.badge}
-            className={`shrink-0 ${estilo.badgeExtra}`}
+            className={`shrink-0 ${estilo.badgeExtra} gap-2`}
         >
             {estilo.icone}
             {estilo.rotulo}
@@ -187,24 +186,24 @@ const ESTILOS: Record<Situacao, Estilo> = {
             </span>
         ),
         badge: "destructive",
-        badgeExtra: "",
+        badgeExtra: "font-bold",
         canhoto: "bg-muted text-muted-foreground",
         serrilha: "border-border",
     },
     abertas: {
         rotulo: "Inscrições abertas",
-        icone: <TicketIcon aria-hidden="true" />,
+        icone: <TicketIcon aria-hidden="true" weight="bold" />,
         badge: "outline",
         badgeExtra:
-            "text-warning-foreground bg-warning border-warning border-transparent",
+            "text-warning-foreground bg-warning border-warning border-transparent font-bold",
         canhoto: "bg-muted text-muted-foreground",
         serrilha: "border-border",
     },
     comeca: {
         rotulo: "Inscrições fechadas",
-        icone: <CheckIcon aria-hidden="true" />,
+        icone: <CheckIcon aria-hidden="true" weight="bold" />,
         badge: "default",
-        badgeExtra: "",
+        badgeExtra: "font-bold",
         canhoto: "bg-muted text-muted-foreground",
         serrilha: "border-border",
     },

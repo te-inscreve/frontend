@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import type { CategoriaAninhada } from "@te-inscreve/schemas";
 
 import { HorizontalScrollList } from "~/shared/ui/horizontal-scroll-list";
@@ -25,9 +27,25 @@ export function ListCategorias({
     modalidadeNome,
     categorias,
 }: Props) {
+    const sortedCategorias = useMemo(
+        () =>
+            categorias.slice().sort((a, b) => {
+                // A ordenação é por idade mínima, e depois por idade máxima.
+                const minDiff = a.idadeMinima - b.idadeMinima;
+                if (minDiff !== 0) return minDiff;
+                return a.idadeMaxima - b.idadeMaxima;
+            }),
+        [categorias],
+    );
+
     return (
         <HorizontalScrollList label={`Categorias de ${modalidadeNome}`}>
-            {categorias.map((categoria) => (
+            <BotaoCriarCategoria
+                eventoId={eventoId}
+                modalidadeId={modalidadeId}
+                sozinho={categorias.length === 0}
+            />
+            {sortedCategorias.map((categoria) => (
                 // As categorias aninhadas não trazem `id`, e o nome é único
                 // dentro de uma modalidade.
                 <CardCategoria
@@ -37,11 +55,6 @@ export function ListCategorias({
                     modalidadeId={modalidadeId}
                 />
             ))}
-            <BotaoCriarCategoria
-                eventoId={eventoId}
-                modalidadeId={modalidadeId}
-                sozinho={categorias.length === 0}
-            />
         </HorizontalScrollList>
     );
 }
