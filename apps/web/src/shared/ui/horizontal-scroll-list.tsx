@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRef } from "react";
 import { CaretLeftIcon } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight";
+import { motion } from "motion/react";
 
 import { Button, cn } from "@te-inscreve/components";
 
@@ -95,8 +96,12 @@ export function HorizontalScrollList({
             {/* `div` com `role="list"` em vez de `<ul>`: o hook tipa a ref como
                 `HTMLDivElement`, e forçar o tipo aqui esconderia erro de
                 verdade mais tarde. Para o leitor de tela, dá na mesma. */}
-            <div
+            <motion.div
                 ref={scrollDivRef}
+                // `layoutScroll` avisa o Motion de que este ancestral rola: sem
+                // ele, um cartão daqui que vira modal (`ExpandableDialog`)
+                // nasceria deslocado no eixo X assim que a fila fosse rolada.
+                layoutScroll
                 role="list"
                 aria-label={label}
                 // Rolável pelo teclado: os cartões não têm foco próprio, então
@@ -117,7 +122,7 @@ export function HorizontalScrollList({
                         {item}
                     </div>
                 ))}
-            </div>
+            </motion.div>
 
             {/* Anel de foco em um irmão, e não no elemento rolável: ali a
                 máscara o recortaria junto com o conteúdo. Só desenha a linha —
