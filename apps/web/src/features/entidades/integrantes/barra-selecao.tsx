@@ -25,15 +25,25 @@ interface Props {
 /**
  * A ponte entre filtrar e montar um grupo.
  *
- * Aparece só quando há seleção, e mostra os nomes escolhidos: depois de trocar
- * o filtro, quem está selecionado pode não estar mais na lista, e a barra é o
- * único lugar onde a seleção inteira continua visível.
+ * Mostra os nomes escolhidos: depois de trocar o filtro, quem está selecionado
+ * pode não estar mais na lista, e a barra é o único lugar onde a seleção
+ * inteira continua visível.
+ *
+ * Só é montada dentro do modo de seleção, e por isso vazia ela ainda diz o que
+ * fazer em vez de sumir — quem acabou de entrar no modo precisa dessa frase.
  */
 export function BarraSelecao({ selecionados, onLimpar, onCriarGrupo }: Props) {
     const [aberto, setAberto] = useState(false);
     const [nome, setNome] = useState("");
 
-    if (selecionados.length === 0) return null;
+    if (selecionados.length === 0) {
+        return (
+            <p className="border-primary/30 bg-primary/5 text-muted-foreground rounded-xl border border-dashed p-3 text-sm">
+                Marque as pessoas que vão formar o grupo. A lista continua
+                filtrável — a seleção não se perde ao trocar o filtro.
+            </p>
+        );
+    }
 
     const criar = () => {
         const nomeLimpo = nome.trim();

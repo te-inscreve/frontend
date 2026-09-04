@@ -27,6 +27,7 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
     const [integrantes, setIntegrantes] = useState(iniciais);
     const [filtros, setFiltros] = useState<FiltrosIntegrantes>(filtrosVazios);
     const [selecionados, setSelecionados] = useState<number[]>([]);
+    const [modoSelecao, setModoSelecao] = useState(false);
     const [formAberto, setFormAberto] = useState(false);
     const [gruposCriados, setGruposCriados] = useState<GrupoCriado[]>([]);
 
@@ -68,6 +69,38 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
     const limparSelecao = useCallback(() => setSelecionados([]), []);
 
     /**
+     * Liga e desliga o modo de seleção. Sair sempre zera o que estava marcado:
+     * uma seleção invisível voltaria a valer na próxima vez que o modo fosse
+     * ligado, e ninguém lembraria dela.
+     */
+    const alternarModoSelecao = useCallback(() => {
+        setModoSelecao((ligado) => {
+            if (ligado) setSelecionados([]);
+            return !ligado;
+        });
+    }, []);
+
+    /**
+     * Os grupos desta sessão que cada integrante integra, para o detalhe dele
+     * poder mostrá-los. Um mapa, e não uma busca por pessoa, porque a lista
+     * inteira pergunta isso a cada renderização.
+     */
+    const gruposDaSessaoPorIntegrante = useMemo(() => {
+        const porIntegrante = new Map<number, string[]>();
+
+        for (const grupo of gruposCriados) {
+            for (const id of grupo.integrantesIds) {
+                porIntegrante.set(id, [
+                    ...(porIntegrante.get(id) ?? []),
+                    grupo.nome,
+                ]);
+            }
+        }
+
+        return porIntegrante;
+    }, [gruposCriados]);
+
+    /**
      * Cadastra o integrante e devolve a lista ao estado em que ele aparece.
      *
      * É aqui que entra o `POST`: o formulário espera o retorno desta função e
@@ -105,6 +138,9 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
                 { id: atual.length + 1, nome, integrantesIds: selecionados },
             ]);
             setSelecionados([]);
+            // Montado o grupo, a tarefa acabou: a tela volta a ser de leitura,
+            // com as linhas abrindo o detalhe de novo.
+            setModoSelecao(false);
         },
         [selecionados],
     );
@@ -117,6 +153,8 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
         setFiltros,
         selecionados,
         selecionadosIntegrantes,
+        modoSelecao,
+        alternarModoSelecao,
         alternarSelecao,
         selecionarVisiveis,
         limparSelecao,
@@ -124,6 +162,7 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
         setFormAberto,
         adicionarIntegrante,
         gruposCriados,
+        gruposDaSessaoPorIntegrante,
         criarGrupo,
     };
 }

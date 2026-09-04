@@ -1,41 +1,39 @@
 "use client";
 
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/ssr/IdentificationCard";
-import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
-
-import { Badge, Checkbox, Label } from "@te-inscreve/components";
-import { cn } from "@te-inscreve/components/utils";
+import { Checkbox, Label } from "@te-inscreve/components";
 
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import {
-    formatarDataISO,
-    idadeEm,
-    matriculaVencida,
-} from "~/features/entidades/shared/integrantes";
-import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
+import { LinhaIntegrante } from "./linha-integrante";
 
 interface Props {
     integrantes: Integrante[];
     selecionados: number[];
+    /** Com a seleção ligada as linhas marcam; sem ela, abrem o detalhe. */
+    modoSelecao: boolean;
     onAlternar: (id: number) => void;
     onSelecionarTodos: (marcar: boolean) => void;
     /** Verdadeiro quando a lista está vazia por causa do filtro, não do cadastro. */
     filtrada: boolean;
+    /** Nomes dos grupos montados nesta sessão, por id de integrante. */
+    gruposDaSessaoPorIntegrante: Map<number, string[]>;
 }
 
 /**
- * A listagem de integrantes com seleção.
+ * A listagem de integrantes.
  *
  * Cada linha carrega o que decide uma inscrição: idade, matrícula e validade.
- * A caixa de seleção fica à esquerda porque a tarefa que a usa — montar um
- * grupo — é uma varredura de cima a baixo, e não a leitura de uma pessoa só.
+ * Clicar nela abre o detalhe da pessoa — a leitura é o que se faz aqui o tempo
+ * todo. Marcar para montar um grupo é a tarefa rara, e por isso é um modo à
+ * parte: só nele aparecem as caixas de seleção.
  */
 export function ListaIntegrantes({
     integrantes,
     selecionados,
+    modoSelecao,
     onAlternar,
     onSelecionarTodos,
     filtrada,
+    gruposDaSessaoPorIntegrante,
 }: Props) {
     if (integrantes.length === 0) {
         return (
@@ -53,93 +51,37 @@ export function ListaIntegrantes({
 
     return (
         <div className="bg-card overflow-hidden rounded-xl border">
-            <div className="bg-muted/40 flex items-center gap-3 border-b px-4 py-2.5">
-                <Checkbox
-                    id="selecionar-todos"
-                    checked={todosMarcados}
-                    onCheckedChange={(marcado) =>
-                        onSelecionarTodos(marcado === true)
-                    }
-                />
-                <Label
-                    htmlFor="selecionar-todos"
-                    className="text-muted-foreground text-xs font-medium"
-                >
-                    Selecionar todos os {integrantes.length} listados
-                </Label>
-            </div>
+            {modoSelecao && (
+                <div className="bg-muted/40 flex items-center gap-3 border-b px-4 py-2.5">
+                    <Checkbox
+                        id="selecionar-todos"
+                        checked={todosMarcados}
+                        onCheckedChange={(marcado) =>
+                            onSelecionarTodos(marcado === true)
+                        }
+                    />
+                    <Label
+                        htmlFor="selecionar-todos"
+                        className="text-muted-foreground text-xs font-medium"
+                    >
+                        Selecionar todos os {integrantes.length} listados
+                    </Label>
+                </div>
+            )}
 
             <ul className="divide-y">
-                {integrantes.map((integrante) => {
-                    const marcado = selecionados.includes(integrante.id);
-                    const vencida = matriculaVencida(integrante);
-
-                    return (
-                        <li
-                            key={integrante.id}
-                            className={cn(
-                                "flex flex-wrap items-center gap-3 p-3 transition-colors",
-                                marcado && "bg-primary/5",
-                            )}
-                        >
-                            <Checkbox
-                                id={`integrante-${integrante.id}`}
-                                checked={marcado}
-                                onCheckedChange={() =>
-                                    onAlternar(integrante.id)
-                                }
-                                aria-label={`Selecionar ${integrante.nome}`}
-                            />
-
-                            <AvatarUsuario
-                                nome={integrante.nome}
-                                size={36}
-                                alt=""
-                            />
-
-                            <div className="min-w-0 flex-1">
-                                <Label
-                                    htmlFor={`integrante-${integrante.id}`}
-                                    className="block truncate text-sm font-semibold"
-                                >
-                                    {integrante.nome}
-                                </Label>
-                                <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
-                                    <span className="flex items-center gap-1">
-                                        <IdentificationCardIcon aria-hidden="true" />
-                                        {integrante.matriculaCtg}
-                                    </span>
-                                    {" · "}
-                                    <span className="flex items-center gap-1">
-                                        {idadeEm(integrante.dataNascimento)}{" "}
-                                        anos
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div className="flex shrink-0 items-center gap-2">
-                                {/* A validade só aparece quando é problema —
-                                    matrícula vencida trava a inscrição. */}
-                                {vencida && (
-                                    <Badge
-                                        variant="outline"
-                                        className="border-warning/40 bg-warning/10 gap-1"
-                                    >
-                                        <WarningIcon
-                                            aria-hidden="true"
-                                            weight="fill"
-                                            className="text-warning"
-                                        />
-                                        Matrícula vencida em{" "}
-                                        {formatarDataISO(
-                                            integrante.validadeMatricula,
-                                        )}
-                                    </Badge>
-                                )}
-                            </div>
-                        </li>
-                    );
-                })}
+                {integrantes.map((integrante) => (
+                    <LinhaIntegrante
+                        key={integrante.id}
+                        integrante={integrante}
+                        modoSelecao={modoSelecao}
+                        marcado={selecionados.includes(integrante.id)}
+                        onAlternar={onAlternar}
+                        gruposDaSessao={
+                            gruposDaSessaoPorIntegrante.get(integrante.id) ?? []
+                        }
+                    />
+                ))}
             </ul>
         </div>
     );

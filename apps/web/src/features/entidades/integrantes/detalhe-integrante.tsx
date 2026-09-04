@@ -1,0 +1,255 @@
+"use client";
+
+import { CalendarBlankIcon } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
+import { IdentificationCardIcon } from "@phosphor-icons/react/dist/ssr/IdentificationCard";
+import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
+import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
+import { UsersFourIcon } from "@phosphor-icons/react/dist/ssr/UsersFour";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
+
+import { Badge } from "@te-inscreve/components";
+
+import type { Integrante } from "~/features/entidades/shared/integrantes";
+import {
+    gruposDoIntegrante,
+    inscricoesDoIntegrante,
+    ROTULO_RESULTADO,
+} from "~/features/entidades/shared/historico-integrante";
+import {
+    formatarDataISO,
+    idadeEm,
+    matriculaVencida,
+    rotuloFuncao,
+} from "~/features/entidades/shared/integrantes";
+
+interface Props {
+    integrante: Integrante;
+    /**
+     * Grupos montados nesta sessão da tela que incluem esta pessoa. Vêm de
+     * fora porque são estado do painel, e não do cadastro — e é justamente por
+     * isso que aparecem separados dos outros.
+     */
+    gruposDaSessao: string[];
+}
+
+/**
+ * O que se sabe sobre um integrante, em três blocos: a matrícula que decide se
+ * ele pode ser inscrito, os grupos a que pertence e o que já disputou.
+ *
+ * Grupos e histórico são mock (`shared/historico-integrante.ts`) — a API ainda
+ * não expõe nem o integrante. A tela já está montada em cima do formato que
+ * eles terão, então o que muda depois é a origem dos dados.
+ */
+export function DetalheIntegrante({ integrante, gruposDaSessao }: Props) {
+    const grupos = gruposDoIntegrante(integrante);
+    const inscricoes = inscricoesDoIntegrante(integrante);
+    const vencida = matriculaVencida(integrante);
+
+    return (
+        <div className="flex flex-col gap-5">
+            <Secao icone={<IdentificationCardIcon />} titulo="Dados">
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <Dado
+                        termo="Matrícula CTG"
+                        valor={integrante.matriculaCtg}
+                    />
+                    <Dado
+                        termo="Validade da matrícula"
+                        valor={formatarDataISO(integrante.validadeMatricula)}
+                        alerta={vencida}
+                    />
+                    <Dado
+                        termo="Nascimento"
+                        valor={`${formatarDataISO(integrante.dataNascimento)} · ${idadeEm(integrante.dataNascimento)} anos`}
+                    />
+                    <Dado
+                        termo="Função na entidade"
+                        valor={
+                            integrante.funcao
+                                ? rotuloFuncao(integrante.funcao)
+                                : "Não informada"
+                        }
+                    />
+                    {/* Filiação é opcional: sem ela a linha some, em vez de
+                        mostrar um traço que não diz nada. */}
+                    {integrante.dataFiliacao && (
+                        <Dado
+                            termo="Na entidade desde"
+                            valor={formatarDataISO(integrante.dataFiliacao)}
+                        />
+                    )}
+                </dl>
+
+                {vencida && (
+                    <p className="text-warning-foreground bg-warning/10 border-warning/40 flex items-start gap-2 rounded-lg border p-2.5 text-xs">
+                        <WarningIcon
+                            aria-hidden="true"
+                            weight="fill"
+                            className="text-warning mt-px shrink-0"
+                        />
+                        Com a matrícula vencida, esta pessoa não pode ser
+                        inscrita em novas categorias até a renovação.
+                    </p>
+                )}
+            </Secao>
+
+            <Secao icone={<UsersFourIcon />} titulo="Grupos">
+                {grupos.length === 0 && gruposDaSessao.length === 0 ? (
+                    <Vazio>
+                        Ainda não faz parte de nenhum grupo desta entidade.
+                    </Vazio>
+                ) : (
+                    <ul className="flex flex-col gap-1.5">
+                        {grupos.map((grupo) => (
+                            <li
+                                key={grupo.id}
+                                className="bg-muted/40 flex items-center justify-between gap-2 rounded-lg px-3 py-2"
+                            >
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-medium">
+                                        {grupo.nome}
+                                    </p>
+                                    <p className="text-muted-foreground text-xs">
+                                        {grupo.modalidade}
+                                    </p>
+                                </div>
+                                {grupo.responsavel && (
+                                    <Badge
+                                        variant="secondary"
+                                        className="shrink-0"
+                                    >
+                                        Responsável
+                                    </Badge>
+                                )}
+                            </li>
+                        ))}
+
+                        {/* Os grupos montados agora ainda não foram salvos —
+                            aparecem aqui para a seleção fazer sentido, mas
+                            marcados como o que são. */}
+                        {gruposDaSessao.map((nome) => (
+                            <li
+                                key={nome}
+                                className="border-primary/30 bg-primary/5 flex items-center justify-between gap-2 rounded-lg border border-dashed px-3 py-2"
+                            >
+                                <p className="min-w-0 truncate text-sm font-medium">
+                                    {nome}
+                                </p>
+                                <Badge variant="outline" className="shrink-0">
+                                    Montado agora
+                                </Badge>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </Secao>
+
+            <Secao icone={<TicketIcon />} titulo="Inscrições anteriores">
+                {inscricoes.length === 0 ? (
+                    <Vazio>
+                        Nenhuma inscrição registrada em edições anteriores.
+                    </Vazio>
+                ) : (
+                    <ul className="flex flex-col gap-1.5">
+                        {inscricoes.map((inscricao) => (
+                            <li
+                                key={inscricao.id}
+                                className="flex items-center gap-3 rounded-lg border px-3 py-2"
+                            >
+                                <span
+                                    aria-hidden="true"
+                                    className="text-muted-foreground flex w-9 shrink-0 items-center gap-1 text-xs font-semibold tabular-nums"
+                                >
+                                    <CalendarBlankIcon className="shrink-0" />
+                                    {inscricao.ano}
+                                </span>
+
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">
+                                        {inscricao.evento}
+                                    </p>
+                                    <p className="text-muted-foreground truncate text-xs">
+                                        {inscricao.modalidade} ·{" "}
+                                        {inscricao.categoria}
+                                    </p>
+                                </div>
+
+                                <Badge
+                                    variant={
+                                        inscricao.resultado === "premiado"
+                                            ? "default"
+                                            : "secondary"
+                                    }
+                                    className="shrink-0"
+                                >
+                                    {inscricao.resultado === "premiado" && (
+                                        <TrophyIcon
+                                            aria-hidden="true"
+                                            weight="fill"
+                                        />
+                                    )}
+                                    {ROTULO_RESULTADO[inscricao.resultado]}
+                                </Badge>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </Secao>
+        </div>
+    );
+}
+
+function Secao({
+    icone,
+    titulo,
+    children,
+}: {
+    icone: React.ReactNode;
+    titulo: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <section className="flex flex-col gap-2.5">
+            <h3 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase [&_svg]:size-4">
+                <span aria-hidden="true" className="flex">
+                    {icone}
+                </span>
+                {titulo}
+            </h3>
+            {children}
+        </section>
+    );
+}
+
+function Dado({
+    termo,
+    valor,
+    alerta = false,
+}: {
+    termo: string;
+    valor: string;
+    alerta?: boolean;
+}) {
+    return (
+        <div className="min-w-0">
+            <dt className="text-muted-foreground text-xs">{termo}</dt>
+            <dd
+                className={
+                    alerta
+                        ? "text-warning-foreground truncate text-sm font-medium"
+                        : "truncate text-sm font-medium"
+                }
+            >
+                {valor}
+            </dd>
+        </div>
+    );
+}
+
+function Vazio({ children }: { children: React.ReactNode }) {
+    return (
+        <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-2.5 text-xs">
+            {children}
+        </p>
+    );
+}
