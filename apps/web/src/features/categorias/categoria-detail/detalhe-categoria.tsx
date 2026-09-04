@@ -1,14 +1,11 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr/ClipboardText";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr/PencilSimple";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UserCheckIcon } from "@phosphor-icons/react/dist/ssr/UserCheck";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 
 import {
-    Button,
     Tabs,
     TabsContent,
     TabsList,
@@ -16,6 +13,7 @@ import {
 } from "@te-inscreve/components";
 
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
+import { BotaoEditarCategoria } from "./botao-editar-categoria";
 import { PainelNaoImplementado } from "./painel-nao-implementado";
 
 interface Props {
@@ -56,14 +54,11 @@ export async function DetalheCategoria({
                         {categoria.nome}
                     </h1>
 
-                    <Button variant="outline" asChild>
-                        <Link
-                            href={`/admin/eventos/${eventoId}/categorias/${categoriaId}/editar?modalidade=${modalidadeId}`}
-                        >
-                            <PencilSimpleIcon aria-hidden="true" />
-                            Editar
-                        </Link>
-                    </Button>
+                    <BotaoEditarCategoria
+                        eventoId={eventoId}
+                        modalidadeId={modalidadeId}
+                        categoria={categoria}
+                    />
                 </div>
                 <dl className="text-muted-foreground flex flex-col gap-1 text-sm sm:flex-row sm:gap-4">
                     <Resumo
