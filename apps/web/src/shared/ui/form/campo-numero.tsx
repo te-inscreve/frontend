@@ -49,7 +49,7 @@ export function CampoNumero<T extends FieldValues>({
             <FieldLabel htmlFor={name} className="flex">
                 {label}
                 {opcional && (
-                    <span className="text-muted-foreground ml-2 text-xs font-normal">
+                    <span className="text-muted-foreground ml-auto text-xs font-normal">
                         (opcional)
                     </span>
                 )}
