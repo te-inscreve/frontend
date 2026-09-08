@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
@@ -7,17 +8,18 @@ import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import { Button } from "@te-inscreve/components";
 
 import { AvisoDadosExemplo } from "~/features/entidades/entidade-detail/aviso-dados-exemplo";
-import { CabecalhoEntidade } from "~/features/entidades/entidade-detail/cabecalho-entidade";
+import { CabecalhoEntidadeSkeleton } from "~/features/entidades/entidade-detail/cabecalho-entidade-skeleton";
+import { CabecalhoMinhaEntidade } from "~/features/entidades/entidade-detail/cabecalho-minha-entidade";
 import { ListaGrupos } from "~/features/entidades/entidade-detail/lista-grupos";
 import { ListaIntegrantes } from "~/features/entidades/entidade-detail/lista-integrantes";
 import { ListaPremiacoes } from "~/features/entidades/entidade-detail/lista-premiacoes";
 import {
-    entidadeMock,
     gruposMock,
     integrantesMock,
     premiacoesMock,
 } from "~/features/entidades/entidade-detail/mock-entidade";
 import { Secao } from "~/features/entidades/entidade-detail/secao";
+import { prefetch, trpc } from "~/shared/api/trpc/server";
 
 export const metadata = {
     title: "Minha Entidade | Te Inscreve",
@@ -29,20 +31,24 @@ export const metadata = {
  * Painel da entidade de quem está logado.
  *
  * A ordem das seções segue a urgência: primeiro o evento com prazo correndo,
- * depois quem a entidade tem para inscrever e, por último, o histórico. Todo o
- * conteúdo vem de `mock-entidade.ts` enquanto a API não expõe esses recursos —
- * por isso a página é síncrona e não busca nada.
+ * depois quem a entidade tem para inscrever e, por último, o histórico.
+ *
+ * Só o cadastro da entidade — e os totais de integrantes e grupos — vem da
+ * API; as listas, as inscrições e as premiações seguem em `mock-entidade.ts`
+ * até o backend expor esses recursos.
+ *
+ * Não checa vínculo: o layout do segmento já o faz por todas as rotas daqui,
+ * e troca esta página pelo pedido de acesso quando não há nenhum.
  */
 export default function MinhaEntidadePage() {
+    void prefetch(trpc.entidade.minha.queryOptions());
+
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-6 md:py-8">
             <div className="flex flex-col gap-4">
-                <CabecalhoEntidade
-                    entidade={entidadeMock}
-                    integrantes={integrantesMock.length}
-                    grupos={gruposMock.length}
-                    trofeus={premiacoesMock.length}
-                />
+                <Suspense fallback={<CabecalhoEntidadeSkeleton />}>
+                    <CabecalhoMinhaEntidade />
+                </Suspense>
                 <AvisoDadosExemplo />
             </div>
 

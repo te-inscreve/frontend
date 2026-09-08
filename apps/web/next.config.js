@@ -30,18 +30,25 @@ const config = {
     allowedDevOrigins: process.env.ALLOWED_ORIGINS?.split(",") ?? [],
     images: {
         dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
-        remotePatterns: process.env.IMAGE_PROVIDERS?.split(",").filter(pattern => !!pattern)?.map((pattern) => {
-            const url = new URL(pattern);
-            return {
-                protocol: url.protocol.includes("https") ? "https" : "http",
-                hostname: url.hostname,
-                port: url.port,
-                pathname: '/**',
-            };
-        }) ?? [],
+        remotePatterns:
+            process.env.IMAGE_PROVIDERS?.split(",")
+                .filter((pattern) => !!pattern)
+                ?.map((pattern) => {
+                    const url = new URL(pattern);
+                    return {
+                        protocol: url.protocol.includes("https")
+                            ? "https"
+                            : "http",
+                        hostname: url.hostname,
+                        port: url.port,
+                        pathname: "/**",
+                    };
+                }) ?? [],
     },
     experimental: {
         optimizePackageImports: ["@phosphor-icons/react"],
+        /** Libera `forbidden()` e o arquivo `forbidden.tsx` de rota. */
+        authInterrupts: true,
     },
     turbopack: {
         rules: {

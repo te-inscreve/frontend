@@ -95,6 +95,26 @@ function readJwtExpiry(token: string): Date | null {
     }
 }
 
+/**
+ * Quantos segundos faltam até a sessão trocar o access token.
+ *
+ * `getSession` renova quando o token entra na janela de {@link
+ * REFRESH_WINDOW_MS} antes do `exp`, então este é o tempo de vida útil do token
+ * que está em mãos agora. Serve para dimensionar cache de respostas que foram
+ * buscadas com ele: passado esse prazo o token é outro, e a resposta guardada
+ * já não corresponde à sessão.
+ *
+ * Devolve `0` quando o `exp` não dá para ler — o chamador deve tratar isso como
+ * "não guarde nada", que é o lado seguro do erro.
+ */
+export function secondsUntilRefresh(accessToken: string): number {
+    const expiresAt = readJwtExpiry(accessToken)?.getTime();
+    if (expiresAt == null) return 0;
+
+    const restante = expiresAt - REFRESH_WINDOW_MS - Date.now();
+    return Math.max(0, Math.floor(restante / 1000));
+}
+
 const storedUserSchema = z.object({
     id: z.string(),
     email: z.string(),
