@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import type { Evento, EventoPreview } from "@te-inscreve/schemas";
 
+import { tagsEvento, tagsEventos } from "../cache-tags";
 import { authenticatedProcedure, publicProcedure } from "../trpc";
 
 /**
@@ -25,7 +26,7 @@ export const eventoRouter = {
             const result = await ctx.restClient.get<EventoPreview[]>(
                 `/eventos`,
                 {
-                    next: { revalidate: 30, tags: ["eventos"] },
+                    next: { revalidate: 30, tags: tagsEventos() },
                 },
             );
             if (!result.ok) throw result.error;
@@ -40,7 +41,7 @@ export const eventoRouter = {
                 {
                     next: {
                         revalidate: 30,
-                        tags: ["eventos", `evento-${input.id}`],
+                        tags: tagsEvento(input.id),
                     },
                 },
             );

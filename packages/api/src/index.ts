@@ -18,6 +18,7 @@ type RouterInputs = inferRouterInputs<AppRouter>;
  */
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
+export * from "./cache-tags";
 export { ApiValidationError, toTRPCError } from "./rest-error";
 export { appRouter, type AppRouter } from "./router/_app";
 export { createTRPCServerContext, type TRPCContext } from "./trpc";

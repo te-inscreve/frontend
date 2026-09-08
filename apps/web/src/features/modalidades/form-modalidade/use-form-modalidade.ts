@@ -11,6 +11,7 @@ import type {
     ModalidadeCamposValues,
     ModalidadeFormValues,
 } from "./modalidade-form-schema";
+import { revalidarEvento, revalidarModalidade } from "~/shared/api/revalidar";
 import { useTRPC } from "~/shared/api/trpc/client";
 import {
     modalidadeEdicaoFormSchema,
@@ -47,8 +48,10 @@ export function useFormModalidade({ eventoId, onSuccess }: Props) {
         trpc.modalidade.create.mutationOptions({
             onSuccess: async (modalidade) => {
                 setSalvamento("success");
-                // As abas saem de `evento.getById`, que agora traz as
-                // modalidades — invalidar a lista solta não mudaria a página.
+                // As abas saem de `evento.getById`, e a régua é montada no
+                // servidor: sem derrubar o cache dele, o `router.refresh()` de
+                // quem chama não traria a modalidade nova.
+                await revalidarEvento(eventoId);
                 await queryClient.invalidateQueries(
                     trpc.evento.getById.queryFilter({ id: eventoId }),
                 );
@@ -132,7 +135,14 @@ export function useFormEdicaoModalidade({
                 setSalvamento("success");
 
                 // O painel da aba sai de `modalidade.getById`, e o rótulo dela
-                // vem das modalidades do evento — o nome pode ter mudado.
+                // vem das modalidades do evento — o nome pode ter mudado. Os
+                // dois são renderizados no servidor, então o cache de lá é
+                // quem precisa cair antes do `router.refresh()`.
+                await Promise.all([
+                    revalidarModalidade(eventoId, modalidade.id),
+                    revalidarEvento(eventoId),
+                ]);
+
                 await Promise.all([
                     queryClient.invalidateQueries(
                         trpc.modalidade.getById.queryFilter({

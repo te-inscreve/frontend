@@ -17,6 +17,7 @@ import {
     AlertDialogTitle,
 } from "@te-inscreve/components";
 
+import { revalidarEvento, revalidarListaEventos } from "~/shared/api/revalidar";
 import { useTRPC } from "~/shared/api/trpc/client";
 import { HoldToAct } from "~/shared/ui/hold-to-act";
 
@@ -48,6 +49,12 @@ export function DialogoExcluirEvento({ eventoId, open, onOpenChange }: Props) {
     const excluirEvento = useMutation(
         trpc.evento.delete.mutationOptions({
             onSuccess: async () => {
+                // A listagem para onde o organizador volta é montada no
+                // servidor: sem derrubar o cache de lá, o evento excluído
+                // continuaria na grade por até 30 segundos.
+                await revalidarListaEventos();
+                await revalidarEvento(eventoId);
+
                 await queryClient.invalidateQueries(
                     trpc.evento.getAll.queryFilter(),
                 );

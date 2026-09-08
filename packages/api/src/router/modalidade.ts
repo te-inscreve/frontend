@@ -7,6 +7,7 @@ import {
     editModalidadeSchema,
 } from "@te-inscreve/schemas";
 
+import { tagsModalidade, tagsModalidades } from "../cache-tags";
 import { authenticatedProcedure, publicProcedure } from "../trpc";
 
 export const modalidadeRouter = {
@@ -25,10 +26,7 @@ export const modalidadeRouter = {
                 {
                     next: {
                         revalidate: 30, // 30 segundos
-                        tags: [
-                            "modalidades",
-                            `evento-${input.eventoId}-modalidades`,
-                        ],
+                        tags: tagsModalidades(input.eventoId),
                     },
                 },
             );
@@ -56,11 +54,10 @@ export const modalidadeRouter = {
                 {
                     next: {
                         revalidate: 30, // 30 segundos
-                        tags: [
-                            "modalidades",
-                            `evento-${input.eventoId}-modalidades`,
-                            `modalidade-${input.modalidadeId}`,
-                        ],
+                        tags: tagsModalidade(
+                            input.eventoId,
+                            input.modalidadeId,
+                        ),
                     },
                 },
             );

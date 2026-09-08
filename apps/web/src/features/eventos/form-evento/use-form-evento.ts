@@ -10,6 +10,7 @@ import type { AppRouter } from "@te-inscreve/api";
 import type { Evento } from "@te-inscreve/schemas";
 
 import type { EventoFormValues } from "./evento-form-schema";
+import { revalidarEvento, revalidarListaEventos } from "~/shared/api/revalidar";
 import { useTRPC } from "~/shared/api/trpc/client";
 import {
     eventoFormData,
@@ -41,6 +42,14 @@ export function useFormEvento({ evento, onSucess }: Props) {
     const opcoes = {
         onSuccess: async (salvo: Evento) => {
             setSalvamento("success");
+
+            // A listagem e o detalhe são montados no servidor, com o `fetch`
+            // guardado por 30 segundos: derrubar só o cache do cliente
+            // deixaria o `router.refresh()` de quem chama repintar com os
+            // dados de antes.
+            await revalidarListaEventos();
+            if (evento) await revalidarEvento(evento.id);
+
             await queryClient.invalidateQueries(
                 trpc.evento.getAll.queryFilter(),
             );

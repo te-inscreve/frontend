@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import type { Categoria } from "@te-inscreve/schemas";
 import { formCategoriaSchema } from "@te-inscreve/schemas";
 
+import { tagsCategoria, tagsCategorias } from "../cache-tags";
 import { authenticatedProcedure, publicProcedure } from "../trpc";
 
 export const categoriaRouter = {
@@ -26,10 +27,7 @@ export const categoriaRouter = {
                 {
                     next: {
                         revalidate: 30,
-                        tags: [
-                            "categorias",
-                            `modalidade-${input.modalidadeId}-categorias`,
-                        ],
+                        tags: tagsCategorias(input.modalidadeId),
                     },
                 },
             );
@@ -58,11 +56,10 @@ export const categoriaRouter = {
                 {
                     next: {
                         revalidate: 30, // 30 segundos
-                        tags: [
-                            "categorias",
-                            `modalidade-${input.modalidadeId}-categorias`,
-                            `categoria-${input.categoriaId}`,
-                        ],
+                        tags: tagsCategoria(
+                            input.modalidadeId,
+                            input.categoriaId,
+                        ),
                     },
                 },
             );

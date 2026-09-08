@@ -9,6 +9,10 @@ import { useForm } from "react-hook-form";
 import type { Categoria } from "@te-inscreve/schemas";
 
 import type { CategoriaFormValues } from "./categoria-form-schema";
+import {
+    revalidarCategoria,
+    revalidarModalidade,
+} from "~/shared/api/revalidar";
 import { useTRPC } from "~/shared/api/trpc/client";
 import {
     categoriaFormDefaults,
@@ -63,13 +67,25 @@ export function useFormCategoria({
     async function aoSalvar(salva: Categoria) {
         setSalvamento("success");
 
-        // O detalhe da modalidade é quem carrega as categorias na página do
-        // evento — é ele que ficou velho, não a lista solta.
+        // A fila de categorias é montada no servidor, a partir de
+        // `modalidade.getById`. É o cache *do servidor* que precisa cair: sem
+        // isto o `router.refresh()` de quem chama repinta a fila com a
+        // resposta anterior, e a categoria recém-criada só apareceria quando
+        // os 30 segundos de `revalidate` expirassem. Na edição o detalhe da
+        // própria categoria também envelheceu.
+        if (categoria) {
+            await revalidarCategoria(eventoId, modalidadeId, categoria.id);
+        } else {
+            await revalidarModalidade(eventoId, modalidadeId);
+        }
+
+        // O cliente ainda não assina estas queries em tela nenhuma, mas o
+        // `queryClient` é o mesmo se alguma delas passar a ser buscada no
+        // navegador — e aí ficaria velho.
         await queryClient.invalidateQueries(
             trpc.modalidade.getById.queryFilter({ eventoId, modalidadeId }),
         );
 
-        // Na edição o detalhe da própria categoria também envelheceu.
         if (categoria) {
             await queryClient.invalidateQueries(
                 trpc.categoria.getById.queryFilter({
