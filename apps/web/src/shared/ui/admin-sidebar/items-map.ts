@@ -10,6 +10,14 @@ export interface ItemNavegacao {
 
 export interface ItemNavegacaoComSubItens extends ItemNavegacao {
     subItens?: ItemNavegacao[];
+    /**
+     * Se os `subItens` só aparecem para quem tem vínculo com uma entidade.
+     *
+     * O portão fica declarado aqui, e não implícito em "todo submenu", porque
+     * hoje só um item tem filhos: gatear pela existência de `subItens` faria o
+     * próximo item que ganhasse filhos herdar a regra sem ninguém pedir.
+     */
+    subItensExigemEntidade?: boolean;
 }
 
 interface ItensMap {
@@ -34,6 +42,10 @@ const getItensMap = (): ItensMap[] => [
                 titulo: "Minha Entidade",
                 href: "/admin/minha-entidade",
                 icone: "buildings",
+                // O item em si fica para todo mundo: é por ele que quem não tem
+                // vínculo chega ao pedido de acesso. Só os filhos é que somem —
+                // todos levam a telas que o portão do segmento já barra.
+                subItensExigemEntidade: true,
                 subItens: [
                     {
                         titulo: "Integrantes",

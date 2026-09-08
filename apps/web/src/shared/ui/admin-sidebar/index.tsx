@@ -19,7 +19,16 @@ import {
 
 import { itensMap } from "./items-map";
 import { SidebarItem } from "./sidebar-item";
+import { SubItens } from "./sub-itens";
 
+/**
+ * Sidebar do painel.
+ *
+ * Não espera nada: o mapa de itens é estático e o que depende do perfil — os
+ * subitens de quem tem vínculo com uma entidade — fica atrás do `Suspense` do
+ * {@link SubItens}. Um `await` aqui subiria até o boundary acima do layout do
+ * `/admin` e seguraria a casca inteira.
+ */
 export function AdminSidebar() {
     return (
         <Sidebar collapsible="icon">
@@ -59,15 +68,11 @@ export function AdminSidebar() {
                         )}
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {itens.map((item) => {
-                                    return (
-                                        <SidebarItem
-                                            key={item.href}
-                                            item={item}
-                                            subItens={item.subItens}
-                                        />
-                                    );
-                                })}
+                                {itens.map((item) => (
+                                    <SidebarItem key={item.href} item={item}>
+                                        <SubItens item={item} />
+                                    </SidebarItem>
+                                ))}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
-    SidebarMenu,
     SidebarMenuButton,
-    SidebarMenuSub,
+    SidebarMenuItem,
+    SidebarMenuSubItem,
 } from "@te-inscreve/components/components/sidebar";
 
 import type { ItemNavegacao } from "./items-map";
@@ -14,19 +14,30 @@ import { DynamicIcon } from "./icons-map";
 
 interface Props {
     item: ItemNavegacao;
-    subItens?: ItemNavegacao[];
-    isSubItem?: boolean;
+    /** Linha dentro de um `SidebarMenuSub`, e não do menu de primeiro nível. */
+    subItem?: boolean;
+    /** O submenu do item, quando houver. */
+    children?: React.ReactNode;
 }
-export function SidebarItem({ item, subItens, isSubItem }: Props) {
+
+/**
+ * Uma linha da sidebar do painel.
+ *
+ * Cliente por causa do `usePathname`: o destaque do item ativo é a única coisa
+ * aqui que depende do navegador. O submenu chega por `children` em vez de sair
+ * de uma recursão sobre os subitens — assim quem monta a árvore é o servidor, e
+ * um submenu pode ficar atrás de um `Suspense` sem arrastar esta linha junto.
+ */
+export function SidebarItem({ item, subItem, children }: Props) {
     const pathname = usePathname();
 
     const ativo =
         pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-    const MenuItem = isSubItem ? SidebarMenuSub : SidebarMenu;
+    const Wrapper = subItem ? SidebarMenuSubItem : SidebarMenuItem;
 
     return (
-        <MenuItem key={item.href}>
+        <Wrapper className="flex flex-col gap-1">
             <SidebarMenuButton asChild isActive={ativo} tooltip={item.titulo}>
                 <Link href={item.href}>
                     <DynamicIcon
@@ -45,13 +56,8 @@ export function SidebarItem({ item, subItens, isSubItem }: Props) {
                     <span>{item.titulo}</span>
                 </Link>
             </SidebarMenuButton>
-            {subItens && subItens.length > 0 && (
-                <SidebarMenuSub>
-                    {subItens.map((subItem) => (
-                        <SidebarItem key={subItem.href} item={subItem} />
-                    ))}
-                </SidebarMenuSub>
-            )}
-        </MenuItem>
+
+            {children}
+        </Wrapper>
     );
 }

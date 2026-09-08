@@ -10,6 +10,7 @@ import {
     tagModalidadesDoEvento,
     tagsEntidades,
     tagsEventos,
+    tagsPerfil,
 } from "@te-inscreve/api";
 
 /**
@@ -83,4 +84,17 @@ export async function revalidarCategoria(
  */
 export async function revalidarEntidades() {
     tagsEntidades().forEach((tag) => updateTag(tag));
+}
+
+/**
+ * Depois que algo pode ter mudado o vínculo da conta com uma entidade.
+ *
+ * `perfil.me` é a única leitura daqui que ninguém escreve: não existe mutation
+ * de perfil, e quem vincula a conta a uma entidade faz isso fora do app. O
+ * prazo de 60 segundos do router era a única saída, e enquanto ele não vence a
+ * pessoa vê a tela de pedido de acesso mesmo já tendo sido vinculada. Esta
+ * função é a saída manual — o botão de atualizar do pedido de acesso.
+ */
+export async function revalidarPerfil() {
+    tagsPerfil().forEach((tag) => updateTag(tag));
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowsClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowsClockwise";
 import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr/Buildings";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 
@@ -14,6 +16,7 @@ import {
     SelectValue,
 } from "@te-inscreve/components";
 
+import { revalidarPerfil } from "~/shared/api/revalidar";
 import { TelaAviso } from "~/shared/ui/tela-aviso";
 
 interface Props {
@@ -32,10 +35,33 @@ interface Props {
  * e o estado de sucesso passa a ser o retorno dela.
  */
 export function FormularioSolicitarAcesso({ entidades }: Props) {
+    const router = useRouter();
     const [entidadeId, setEntidadeId] = useState("");
     const [enviado, setEnviado] = useState(false);
+    const [atualizando, iniciarAtualizacao] = useTransition();
 
     const escolhida = entidades.find((e) => String(e.id) === entidadeId);
+
+    /**
+     * Relê o perfil sem esperar o cache vencer.
+     *
+     * Quem vincula a conta a uma entidade faz isso fora do app, então esta tela
+     * não tem como saber que a espera acabou — e a leitura do perfil fica até
+     * 60 segundos no Data Cache. Derrubar a tag antes do `refresh` é o que
+     * garante que o servidor vá mesmo à API em vez de repintar a mesma
+     * resposta; sem isso o botão pareceria quebrado.
+     *
+     * O `refresh` repinta os Server Components da rota, layouts inclusive: se o
+     * vínculo chegou, o portão do segmento deixa passar e a sidebar ganha os
+     * subitens no mesmo movimento. O estado desta tela sobrevive ao refresh,
+     * então quem ainda não foi vinculado continua exatamente onde estava.
+     */
+    const atualizar = () => {
+        iniciarAtualizacao(async () => {
+            await revalidarPerfil();
+            router.refresh();
+        });
+    };
 
     if (enviado && escolhida) {
         return (
@@ -55,13 +81,35 @@ export function FormularioSolicitarAcesso({ entidades }: Props) {
                     solicitações ainda não está ligado à API — por enquanto isto
                     só demonstra a tela, e ninguém foi notificado.
                 </p>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEnviado(false)}
-                >
-                    Escolher outra
-                </Button>
+                <p className="text-muted-foreground max-w-sm text-sm">
+                    Se alguém já vinculou sua conta, atualize para buscar o
+                    perfil de novo.
+                </p>
+
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={atualizar}
+                        disabled={atualizando}
+                    >
+                        <ArrowsClockwiseIcon
+                            aria-hidden="true"
+                            className={atualizando ? "animate-spin" : undefined}
+                            size={16}
+                        />
+                        {atualizando ? "Atualizando…" : "Atualizar"}
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEnviado(false)}
+                        disabled={atualizando}
+                    >
+                        Escolher outra
+                    </Button>
+                </div>
             </TelaAviso>
         );
     }
