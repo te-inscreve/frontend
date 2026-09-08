@@ -69,7 +69,10 @@ export const inscricaoRouter = {
     criar: protectedProcedure
         .input(createInscricaoSchema)
         .mutation(async ({ ctx, input }) => {
-            const result = await ctx.restClient.post<Inscricao>("/inscricoes", input);
+            const result = await ctx.restClient.post<Inscricao>(
+                "/inscricoes",
+                input,
+            );
             if (!result.ok) throw result.error;
             return result.data;
         }),
