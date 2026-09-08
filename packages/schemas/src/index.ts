@@ -66,8 +66,20 @@ export {
 } from "./categoria";
 export type { Categoria, CategoriaAninhada, FormCategoria } from "./categoria";
 
-export { privateEntidadeSchema, publicEntidadeSchema } from "./entidade";
-export type { PrivateEntidade, PublicEntidade } from "./entidade";
+export {
+    entidadeOpcaoSchema,
+    formEntidadeSchema,
+    minhaEntidadeSchema,
+    privateEntidadeSchema,
+    publicEntidadeSchema,
+} from "./entidade";
+export type {
+    EntidadeOpcao,
+    FormEntidade,
+    MinhaEntidade,
+    PrivateEntidade,
+    PublicEntidade,
+} from "./entidade";
 
-export { perfilSchema } from "./perfil";
+export { perfilSchema, temEntidade } from "./perfil";
 export type { Perfil } from "./perfil";

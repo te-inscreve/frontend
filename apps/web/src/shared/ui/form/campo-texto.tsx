@@ -11,6 +11,12 @@ interface Props<T extends FieldValues> {
     placeholder?: string;
     className?: string;
     helpText?: string;
+    /**
+     * Reescreve o que foi digitado antes de guardar — é assim que CNPJ e
+     * telefone ganham máscara sem cada formulário refazer o `onChange`.
+     */
+    mask?: (valor: string) => string;
+    inputMode?: React.ComponentProps<typeof Input>["inputMode"];
 }
 
 /**
@@ -23,6 +29,8 @@ export function CampoTexto<T extends FieldValues>({
     placeholder,
     className,
     helpText,
+    mask,
+    inputMode,
 }: Props<T>) {
     const { control } = useFormContext<T>();
     const { field, fieldState } = useController({ name, control });
@@ -35,7 +43,13 @@ export function CampoTexto<T extends FieldValues>({
             <Input
                 {...field}
                 value={typeof valor === "string" ? valor : ""}
+                onChange={(evento) =>
+                    field.onChange(
+                        mask ? mask(evento.target.value) : evento.target.value,
+                    )
+                }
                 id={name}
+                inputMode={inputMode}
                 // `bg-card` e não o transparente do `Input`: nos cartões e
                 // nas faixas de categoria o campo precisa se destacar do
                 // fundo em vez de sumir nele.

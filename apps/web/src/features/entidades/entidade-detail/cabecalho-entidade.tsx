@@ -6,16 +6,19 @@ import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 import { UsersFourIcon } from "@phosphor-icons/react/dist/ssr/UsersFour";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 
+import type { PrivateEntidade } from "@te-inscreve/schemas";
 import { Badge } from "@te-inscreve/components";
 
-import type { EntidadeMock } from "./mock-entidade";
+import { formatTelefone } from "~/shared/utils/format-telefone";
 
 interface Props {
-    entidade: EntidadeMock;
+    entidade: PrivateEntidade;
     /** Contagens do próprio painel: dizem o tamanho da entidade sem virar métrica decorativa. */
     integrantes: number;
     grupos: number;
     trofeus: number;
+    /** O que se pode fazer com a entidade — hoje, editar o cadastro. */
+    acoes?: React.ReactNode;
 }
 
 /**
@@ -30,6 +33,7 @@ export function CabecalhoEntidade({
     integrantes,
     grupos,
     trofeus,
+    acoes,
 }: Props) {
     return (
         <header className="flex flex-col gap-4">
@@ -41,7 +45,7 @@ export function CabecalhoEntidade({
                     <BuildingsIcon size={32} weight="duotone" />
                 </span>
 
-                <div className="flex min-w-0 flex-col gap-1.5">
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <h1 className="text-primary text-3xl font-extrabold tracking-tight md:text-4xl">
                         {entidade.nome}
                     </h1>
@@ -52,6 +56,8 @@ export function CabecalhoEntidade({
                         </Badge>
                     </div>
                 </div>
+
+                {acoes && <div className="ml-auto">{acoes}</div>}
             </div>
 
             <dl className="text-muted-foreground flex flex-wrap gap-x-6 gap-y-2 text-sm">
@@ -63,7 +69,7 @@ export function CabecalhoEntidade({
                 <Dado
                     icone={<PhoneIcon />}
                     termo="Telefone"
-                    valor={entidade.telefone}
+                    valor={formatTelefone(entidade.telefone)}
                 />
                 <Dado
                     icone={<UsersThreeIcon />}

@@ -1,10 +1,8 @@
-import type { PrivateEntidade } from "@te-inscreve/schemas";
-
 /**
  * Dados de exemplo do painel da entidade.
  *
  * A API ainda não expõe integrantes, grupos, inscrições nem premiações — só o
- * cadastro da entidade. Enquanto isso, a tela é montada a partir daqui, num
+ * cadastro da entidade, que já vem de `entidade.minha`. Enquanto isso, a tela é montada a partir daqui, num
  * módulo separado para que trocar o mock pelas queries do tRPC seja uma
  * mudança de origem de dados, e não uma reescrita dos componentes.
  *
@@ -16,11 +14,6 @@ import type { PrivateEntidade } from "@te-inscreve/schemas";
  */
 
 export { integrantesMock } from "~/features/entidades/shared/integrantes";
-
-export interface EntidadeMock extends PrivateEntidade {
-    /** Ano de fundação. É o que a entidade coloca em cartaz, então aparece aqui. */
-    fundacao: number;
-}
 
 export interface GrupoMock {
     id: number;
@@ -64,16 +57,6 @@ export interface PremiacaoMock {
     /** Quem subiu ao palco — grupo ou integrante. */
     participante: string;
 }
-
-export const entidadeMock: EntidadeMock = {
-    id: 1,
-    nome: "CTG Potaria do Rio Grande",
-    cnpj: "12.345.678/0001-90",
-    telefone: "(54) 1234-5678",
-    cidade: "Vacaria",
-    estado: "RS",
-    fundacao: 1987,
-};
 
 export const gruposMock: GrupoMock[] = [
     {
