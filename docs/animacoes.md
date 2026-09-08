@@ -30,13 +30,14 @@ até a próxima ação sem desorientar.
 - cartão de uma lista que abre o detalhe ou o formulário daquele item;
 - linha de tabela que abre a edição da linha;
 - atalho em forma de cartão que abre o cadastro que ele promete
-  (`BotaoCriarCategoria` é o caso de referência).
+  (`BotaoCriarCategoria` é o caso de referência);
+- botão de cabeçalho cujo rótulo já nomeia o formulário que ele abre
+  (`BotaoEditarCategoria`, `DialogIntegrante`).
 
 **Não use** quando não há item de origem, ou quando a origem não é o assunto:
 
 - confirmação destrutiva e avisos → `AlertDialog`;
-- formulário aberto por um botão de barra ou de cabeçalho → `Dialog` comum
-  (ex.: `DialogIntegrante`);
+- formulário que não continua nada visível na tela → `Dialog` comum;
 - conteúdo que substitui a tela inteira → uma rota.
 
 Expandir tudo tira o significado da expansão. Se o modal não é aquele item,
@@ -167,9 +168,13 @@ de layout aparecem sem a animação para disfarçar.
   da listagem de integrantes vira o detalhe da pessoa.
 - `apps/web/src/features/categorias/categoria-detail/botao-editar-categoria.tsx`
   — o botão "Editar" do detalhe da categoria vira o formulário de edição.
+- `apps/web/src/features/entidades/integrantes/dialog-integrante.tsx` — o botão
+  "Novo integrante" da listagem vira o cadastro.
+- `apps/web/src/features/entidades/form-entidade/botao-editar-entidade.tsx` — o
+  botão "Editar" do cabeçalho do painel vira o cadastro da entidade.
 
-Nos três casos o formulário deixou de ser rota: criar, editar categoria e ver
-integrante acontecem sobre a tela que já estava aberta.
+Em todos eles o formulário deixou de ser rota: criar e editar categoria,
+cadastrar e ver integrante acontecem sobre a tela que já estava aberta.
 
 ## 7. Linha de tabela: as duas coisas a mais
 

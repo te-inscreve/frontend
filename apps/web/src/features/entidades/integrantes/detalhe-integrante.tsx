@@ -81,7 +81,7 @@ export function DetalheIntegrante({ integrante, gruposDaSessao }: Props) {
                 </dl>
 
                 {vencida && (
-                    <p className="text-warning-foreground bg-warning/10 border-warning/40 flex items-start gap-2 rounded-lg border p-2.5 text-xs">
+                    <p className="text-warning bg-warning/10 border-warning/40 flex items-start gap-2 rounded-lg border p-2.5 text-xs">
                         <WarningIcon
                             aria-hidden="true"
                             weight="fill"

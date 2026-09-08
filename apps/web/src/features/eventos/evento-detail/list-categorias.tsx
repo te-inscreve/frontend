@@ -46,10 +46,8 @@ export function ListCategorias({
                 sozinho={categorias.length === 0}
             />
             {sortedCategorias.map((categoria) => (
-                // As categorias aninhadas não trazem `id`, e o nome é único
-                // dentro de uma modalidade.
                 <CardCategoria
-                    key={categoria.nome}
+                    key={categoria.id}
                     categoria={categoria}
                     eventoId={eventoId}
                     modalidadeId={modalidadeId}
