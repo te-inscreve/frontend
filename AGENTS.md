@@ -18,3 +18,13 @@ Aplica-se a todo modal escrito em `frontend/apps/web`.
 - Quando o modal é a continuação de um item já visível na tela — cartão de lista, linha de tabela, atalho em forma de cartão —, ele se expande a partir desse item em vez de aparecer no centro. Use `ExpandableDialog` de `@te-inscreve/components`, não o `Dialog`.
 - Confirmação destrutiva, aviso e formulário aberto por botão de barra continuam em `AlertDialog` ou `Dialog` comuns: expandir tudo tira o significado da expansão.
 - A técnica usa shared layout animations do [Motion](https://motion.dev/docs/react) e tem armadilhas que parecem código estranho (`forceMount`, `borderRadius` em `style`, `layoutScroll`). Leia `docs/animacoes.md` antes de mexer no primitivo ou de aplicá-lo em um lugar novo.
+
+# Renderização (FCP)
+
+Aplica-se a toda tela escrita em `frontend/apps/web`.
+
+- Nenhum `await` no corpo de `page.tsx` ou `layout.tsx`. A página é síncrona, `params`/`searchParams` saem de `use(Promise.all([...]))`, e todo dado desce para um Server Component assíncrono atrás do seu próprio `<Suspense>`. Um `await` em `layout.tsx` segura todas as rotas abaixo dele.
+- Dispare os dados com `void prefetch(trpc....queryOptions(...))` no topo da página e consuma com `await getQueryClient().fetchQuery(...)` no filho suspenso: o query client é `cache`ado por request, então é a mesma requisição, não duas.
+- O boundary fica o mais fundo possível — um por unidade de espera independente — e o fallback tem a geometria do conteúdo final. Skeleton para carregamento de estrutura, spinner só para ação localizada.
+- Exceções são pontuais e justificadas por comentário no próprio arquivo: `defaultValues` de formulário, portão que decide se a página existe, leitura de `cookies()`. Elas justificam um `await`, não a página inteira.
+- `app/admin/eventos/[slug]/page.tsx` é o exemplo canônico. Leia `docs/fcp.md` antes de criar uma tela nova ou de acrescentar uma espera a uma existente.
