@@ -11,13 +11,17 @@ import { AvisoDadosExemplo } from "~/features/entidades/entidade-detail/aviso-da
 import { CabecalhoEntidadeSkeleton } from "~/features/entidades/entidade-detail/cabecalho-entidade-skeleton";
 import { CabecalhoMinhaEntidade } from "~/features/entidades/entidade-detail/cabecalho-minha-entidade";
 import { ListaGrupos } from "~/features/entidades/entidade-detail/lista-grupos";
-import { ListaIntegrantes } from "~/features/entidades/entidade-detail/lista-integrantes";
+import {
+    INTEGRANTES_NO_PAINEL,
+    ListaIntegrantesSkeleton,
+} from "~/features/entidades/entidade-detail/lista-integrantes-skeleton";
 import { ListaPremiacoes } from "~/features/entidades/entidade-detail/lista-premiacoes";
 import {
     gruposMock,
     integrantesMock,
     premiacoesMock,
 } from "~/features/entidades/entidade-detail/mock-entidade";
+import { PreviewIntegrantes } from "~/features/entidades/entidade-detail/preview-integrantes";
 import { Secao } from "~/features/entidades/entidade-detail/secao";
 import { prefetch, trpc } from "~/shared/api/trpc/server";
 
@@ -33,15 +37,18 @@ export const metadata = {
  * A ordem das seções segue a urgência: primeiro o evento com prazo correndo,
  * depois quem a entidade tem para inscrever e, por último, o histórico.
  *
- * Só o cadastro da entidade — e os totais de integrantes e grupos — vem da
- * API; as listas, as inscrições e as premiações seguem em `mock-entidade.ts`
- * até o backend expor esses recursos.
+ * O cadastro da entidade — com os totais de integrantes e grupos — e a lista
+ * de integrantes vêm da API; grupos, inscrições e premiações seguem em
+ * `mock-entidade.ts` até o backend expor esses recursos.
  *
  * Não checa vínculo: o layout do segmento já o faz por todas as rotas daqui,
  * e troca esta página pelo pedido de acesso quando não há nenhum.
  */
 export default function MinhaEntidadePage() {
     void prefetch(trpc.entidade.minha.queryOptions());
+    void prefetch(
+        trpc.integrante.list.queryOptions({ pageSize: INTEGRANTES_NO_PAINEL }),
+    );
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-6 md:py-8">
@@ -80,9 +87,9 @@ export default function MinhaEntidadePage() {
                     >
                         {/* O painel resume; cadastrar e filtrar é na tela de
                             integrantes. */}
-                        <ListaIntegrantes
-                            integrantes={integrantesMock.slice(0, 5)}
-                        />
+                        <Suspense fallback={<ListaIntegrantesSkeleton />}>
+                            <PreviewIntegrantes />
+                        </Suspense>
                     </Secao>
                 </div>
 
