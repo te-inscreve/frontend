@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/ssr/EnvelopeSimple";
-import { IdentificationCardIcon } from "@phosphor-icons/react/dist/ssr/IdentificationCard";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 
-import type { Perfil } from "@te-inscreve/schemas";
 import {
     Button,
     Card,
@@ -12,28 +9,31 @@ import {
     Separator,
 } from "@te-inscreve/components";
 
-import { formatCpf } from "~/shared/utils/format-cpf";
-import { AvatarUsuario } from "./avatar-usuario";
-
 interface Props {
     nome: string;
     email: string;
-    /** `null` quando a conta ainda não tem perfil cadastrado na API. */
-    perfil: Perfil | null;
-    /** Preenchido quando a API não respondeu — distingue "sem dados" de "falhou". */
-    aviso?: string;
+    /**
+     * O avatar, que depende da foto vinda da API. Entra como slot para poder
+     * chegar por streaming: nome e e-mail saem da sessão e não têm por que
+     * esperar por ele. Ver `docs/fcp.md`.
+     */
+    avatar: React.ReactNode;
+    /** Os dados que só a API sabe — hoje o CPF e o aviso de falha ou ausência. */
+    dados: React.ReactNode;
 }
 
-export function PerfilCard({ nome, email, perfil, aviso }: Props) {
+/**
+ * O cartão do perfil: o que a sessão já sabe, mais o que vem da API.
+ *
+ * A divisão entre os dois não é arbitrária — é ela que permite a página pintar
+ * inteira antes de a API responder. Nome e e-mail vêm do cookie de sessão;
+ * avatar e CPF chegam depois, cada um atrás do próprio boundary.
+ */
+export function PerfilCard({ nome, email, avatar, dados }: Props) {
     return (
         <Card className="w-full max-w-2xl">
             <CardHeader className="flex flex-row items-center gap-4">
-                <AvatarUsuario
-                    photo={perfil?.photo}
-                    nome={nome}
-                    size={96}
-                    className="border"
-                />
+                {avatar}
                 <div className="flex min-w-0 flex-col gap-1">
                     <h2 className="truncate text-2xl font-semibold">{nome}</h2>
                     <p className="text-muted-foreground truncate text-sm">
@@ -45,47 +45,12 @@ export function PerfilCard({ nome, email, perfil, aviso }: Props) {
             <Separator />
 
             <CardContent className="flex flex-col gap-4 pt-6">
-                <Dado
+                <DadoDoPerfil
                     icone={<EnvelopeSimpleIcon size={18} weight="duotone" />}
                     rotulo="E-mail"
                     valor={email}
                 />
-                <Dado
-                    icone={
-                        <IdentificationCardIcon size={18} weight="duotone" />
-                    }
-                    rotulo="CPF"
-                    valor={perfil ? formatCpf(perfil.cpf) : null}
-                />
-
-                {aviso ? (
-                    <p
-                        role="alert"
-                        className="text-destructive flex items-start gap-2 text-sm"
-                    >
-                        <WarningCircleIcon
-                            className="mt-0.5 shrink-0"
-                            size={16}
-                            aria-hidden="true"
-                        />
-                        {aviso}
-                    </p>
-                ) : (
-                    !perfil && (
-                        <p
-                            role="status"
-                            className="text-muted-foreground flex items-start gap-2 text-sm"
-                        >
-                            <WarningCircleIcon
-                                className="mt-0.5 shrink-0"
-                                size={16}
-                                aria-hidden="true"
-                            />
-                            Ainda não há um perfil cadastrado para esta conta.
-                            Os dados aparecem aqui assim que forem preenchidos.
-                        </p>
-                    )
-                )}
+                {dados}
 
                 <Button asChild variant="outline" className="self-start">
                     <Link href="/configuracoes">Editar perfil</Link>
@@ -95,7 +60,7 @@ export function PerfilCard({ nome, email, perfil, aviso }: Props) {
     );
 }
 
-function Dado({
+export function DadoDoPerfil({
     icone,
     rotulo,
     valor,

@@ -237,14 +237,9 @@ por streaming atrás do próprio boundary.
 
 ## 9. Débitos conhecidos
 
-Telas que hoje contrariam o princípio. Listadas para que não sejam lidas como
+Telas que ainda contrariam o princípio. Listadas para que não sejam lidas como
 padrão da casa.
 
-| Onde                                                      | Problema                                                                                                                                                                                                                          |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/perfil/page.tsx`                                     | Dois `await` sequenciais (`getSession`, depois `getPerfil`) e nenhum `<Suspense>`. Nada pinta até os dois resolverem. Degrada bem em erro — mostra um aviso —, mas não em latência.                                               |
-| `app/(vitrine)/layout.tsx` e `(vitrine)/page.tsx`         | `getSession()` no layout **e** na página. É o pior FCP da aplicação, na tela menos dinâmica e mais visitada por quem ainda não conhece o produto.                                                                                 |
-| `features/eventos/lista-eventos/lista-eventos.tsx`        | Spinner com "Carregando eventos..." para carga estrutural, contrariando [DESIGN.md](DESIGN.md#13-movimento). Deveria ser uma grade de esqueletos com a geometria dos cartões.                                                     |
-| `features/eventos/lista-eventos/card-evento-skeleton.tsx` | `CardEventoSkeleton` não tem nenhuma referência. É exatamente o fallback que falta ao item acima.                                                                                                                                 |
-| `features/eventos/lista-eventos/lista-eventos.tsx`        | Importa `Link` de `next/dist/client/link`, caminho interno do Next, em vez de `next/link`.                                                                                                                                        |
-| `app/`                                                    | Não existe nenhum `loading.tsx` nem `error.tsx`. O JSDoc de `cabecalho-minha-entidade.tsx` cita um `error.tsx` que nunca foi criado, então erros de servidor caem na página de erro padrão do Next em vez de uma tela do produto. |
+| Onde   | Problema                                                                                                                                                                                                                                                                                 |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/` | Não existe nenhum `loading.tsx` nem `error.tsx`. O JSDoc de `cabecalho-minha-entidade.tsx` cita um `error.tsx` que nunca foi criado, então erros de servidor caem na página de erro padrão do Next em vez de uma tela do produto. `not-found.tsx` e `forbidden.tsx` existem e funcionam. |
