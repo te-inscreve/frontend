@@ -1,39 +1,40 @@
 "use client";
 
-import { Checkbox, Label } from "@te-inscreve/components";
+import {
+    Table,
+    TableBody,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@te-inscreve/components";
 
+import type { Visualizacao } from "./visualizacao";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
+import { CartaoIntegrante } from "./cartao-integrante";
 import { LinhaIntegrante } from "./linha-integrante";
 
 interface Props {
     integrantes: Integrante[];
-    selecionados: number[];
-    /** Com a seleção ligada as linhas marcam; sem ela, abrem o detalhe. */
-    modoSelecao: boolean;
-    onAlternar: (id: number) => void;
-    onSelecionarTodos: (marcar: boolean) => void;
+    visualizacao: Visualizacao;
     /** Verdadeiro quando a lista está vazia por causa do filtro, não do cadastro. */
     filtrada: boolean;
-    /** Nomes dos grupos montados nesta sessão, por id de integrante. */
-    gruposDaSessaoPorIntegrante: Map<number, string[]>;
 }
 
 /**
- * A listagem de integrantes.
+ * A listagem de integrantes, em cartões ou em tabela.
  *
- * Cada linha carrega o que decide uma inscrição: idade, matrícula e validade.
- * Clicar nela abre o detalhe da pessoa — a leitura é o que se faz aqui o tempo
- * todo. Marcar para montar um grupo é a tarefa rara, e por isso é um modo à
- * parte: só nele aparecem as caixas de seleção.
+ * As duas visualizações mostram a mesma gente e abrem o mesmo detalhe; o que
+ * muda é o que cabe na tela sem clicar. O cartão é para reconhecer alguém —
+ * avatar e nome, poucos por vez; a tabela é para comparar todo mundo pelo mesmo
+ * critério, e por isso é ela que ganha colunas.
+ *
+ * O vazio é decidido aqui, e não em cada visualização: a mensagem é a mesma nas
+ * duas, e trocar de visualização com a lista vazia não deve mudar o que se lê.
  */
 export function ListaIntegrantes({
     integrantes,
-    selecionados,
-    modoSelecao,
-    onAlternar,
-    onSelecionarTodos,
+    visualizacao,
     filtrada,
-    gruposDaSessaoPorIntegrante,
 }: Props) {
     if (integrantes.length === 0) {
         return (
@@ -45,44 +46,40 @@ export function ListaIntegrantes({
         );
     }
 
-    const todosMarcados = integrantes.every(({ id }) =>
-        selecionados.includes(id),
-    );
-
-    return (
-        <div className="bg-card overflow-hidden rounded-xl border">
-            {modoSelecao && (
-                <div className="bg-muted/40 flex items-center gap-3 border-b px-4 py-2.5">
-                    <Checkbox
-                        id="selecionar-todos"
-                        checked={todosMarcados}
-                        onCheckedChange={(marcado) =>
-                            onSelecionarTodos(marcado === true)
-                        }
-                    />
-                    <Label
-                        htmlFor="selecionar-todos"
-                        className="text-muted-foreground text-xs font-medium"
-                    >
-                        Selecionar todos os {integrantes.length} listados
-                    </Label>
-                </div>
-            )}
-
-            <ul className="divide-y">
+    if (visualizacao === "cartoes") {
+        return (
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {integrantes.map((integrante) => (
-                    <LinhaIntegrante
+                    <CartaoIntegrante
                         key={integrante.id}
                         integrante={integrante}
-                        modoSelecao={modoSelecao}
-                        marcado={selecionados.includes(integrante.id)}
-                        onAlternar={onAlternar}
-                        gruposDaSessao={
-                            gruposDaSessaoPorIntegrante.get(integrante.id) ?? []
-                        }
                     />
                 ))}
             </ul>
+        );
+    }
+
+    return (
+        <div className="bg-card overflow-hidden rounded-xl border">
+            <Table>
+                <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                        <TableHead className="px-2">Nome</TableHead>
+                        <TableHead>Matrícula MTG</TableHead>
+                        <TableHead>Idade</TableHead>
+                        <TableHead>Situação</TableHead>
+                    </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                    {integrantes.map((integrante) => (
+                        <LinhaIntegrante
+                            key={integrante.id}
+                            integrante={integrante}
+                        />
+                    ))}
+                </TableBody>
+            </Table>
         </div>
     );
 }

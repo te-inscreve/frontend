@@ -78,8 +78,8 @@ export default function MinhaEntidadePage() {
                             </Button>
                         }
                     >
-                        {/* O painel resume; cadastrar, filtrar e agrupar é na
-                            tela de integrantes. */}
+                        {/* O painel resume; cadastrar e filtrar é na tela de
+                            integrantes. */}
                         <ListaIntegrantes
                             integrantes={integrantesMock.slice(0, 5)}
                         />

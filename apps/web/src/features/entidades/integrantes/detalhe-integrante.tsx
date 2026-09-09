@@ -24,12 +24,6 @@ import {
 
 interface Props {
     integrante: Integrante;
-    /**
-     * Grupos montados nesta sessão da tela que incluem esta pessoa. Vêm de
-     * fora porque são estado do painel, e não do cadastro — e é justamente por
-     * isso que aparecem separados dos outros.
-     */
-    gruposDaSessao: string[];
 }
 
 /**
@@ -40,7 +34,7 @@ interface Props {
  * não expõe nem o integrante. A tela já está montada em cima do formato que
  * eles terão, então o que muda depois é a origem dos dados.
  */
-export function DetalheIntegrante({ integrante, gruposDaSessao }: Props) {
+export function DetalheIntegrante({ integrante }: Props) {
     const grupos = gruposDoIntegrante(integrante);
     const inscricoes = inscricoesDoIntegrante(integrante);
     const vencida = matriculaVencida(integrante);
@@ -50,7 +44,7 @@ export function DetalheIntegrante({ integrante, gruposDaSessao }: Props) {
             <Secao icone={<IdentificationCardIcon />} titulo="Dados">
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <Dado
-                        termo="Matrícula CTG"
+                        termo="Matrícula MTG"
                         valor={integrante.matriculaCtg}
                     />
                     <Dado
@@ -94,7 +88,7 @@ export function DetalheIntegrante({ integrante, gruposDaSessao }: Props) {
             </Secao>
 
             <Secao icone={<UsersFourIcon />} titulo="Grupos">
-                {grupos.length === 0 && gruposDaSessao.length === 0 ? (
+                {grupos.length === 0 ? (
                     <Vazio>
                         Ainda não faz parte de nenhum grupo desta entidade.
                     </Vazio>
@@ -121,23 +115,6 @@ export function DetalheIntegrante({ integrante, gruposDaSessao }: Props) {
                                         Responsável
                                     </Badge>
                                 )}
-                            </li>
-                        ))}
-
-                        {/* Os grupos montados agora ainda não foram salvos —
-                            aparecem aqui para a seleção fazer sentido, mas
-                            marcados como o que são. */}
-                        {gruposDaSessao.map((nome) => (
-                            <li
-                                key={nome}
-                                className="border-primary/30 bg-primary/5 flex items-center justify-between gap-2 rounded-lg border border-dashed px-3 py-2"
-                            >
-                                <p className="min-w-0 truncate text-sm font-medium">
-                                    {nome}
-                                </p>
-                                <Badge variant="outline" className="shrink-0">
-                                    Montado agora
-                                </Badge>
                             </li>
                         ))}
                     </ul>
@@ -221,6 +198,12 @@ function Secao({
     );
 }
 
+/**
+ * O alerta é um ícone, e não uma cor no texto: `--warning-foreground` é a cor
+ * *sobre* `bg-warning` sólido, e aqui não há esse fundo — aplicada ao valor
+ * solto ela o deixava invisível nos dois temas. Ícone também atende o "não
+ * depender apenas de cor" do DESIGN.md.
+ */
 function Dado({
     termo,
     valor,
@@ -233,13 +216,14 @@ function Dado({
     return (
         <div className="min-w-0">
             <dt className="text-muted-foreground text-xs">{termo}</dt>
-            <dd
-                className={
-                    alerta
-                        ? "text-warning-foreground truncate text-sm font-medium"
-                        : "truncate text-sm font-medium"
-                }
-            >
+            <dd className="flex items-center gap-1 truncate text-sm font-medium">
+                {alerta && (
+                    <WarningIcon
+                        aria-hidden="true"
+                        weight="fill"
+                        className="text-warning shrink-0"
+                    />
+                )}
                 {valor}
             </dd>
         </div>

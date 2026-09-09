@@ -37,7 +37,7 @@ export interface Integrante {
     id: number;
     /** Nome completo, como consta na matrícula do MTG. */
     nome: string;
-    /** Número da matrícula CTG — é ela que a comissão do evento confere. */
+    /** Número da matrícula MTG — é ela que a comissão do evento confere. */
     matriculaCtg: string;
     /** Data em que a matrícula vence, em ISO (`aaaa-mm-dd`). */
     validadeMatricula: string;

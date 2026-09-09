@@ -38,7 +38,7 @@ export const integranteFormSchema = z
         matriculaCtg: z
             .string()
             .trim()
-            .min(1, "Informe o número da matrícula CTG."),
+            .min(1, "Informe o número da matrícula MTG."),
         dataNascimento: dataObrigatoria("Informe a data de nascimento."),
         validadeMatricula: z.custom<Date | null>().nullable(),
     })

@@ -3,33 +3,28 @@
 import { useCallback, useMemo, useState } from "react";
 
 import type { FiltrosIntegrantes } from "./filtros-integrantes";
+import type { Visualizacao } from "./visualizacao";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { useDebounce } from "~/shared/utils/use-debounce";
 import { filtrarIntegrantes, filtrosVazios } from "./filtros-integrantes";
 
-/** Um grupo montado a partir da seleção. Vive só nesta sessão da tela. */
-export interface GrupoCriado {
-    id: number;
-    nome: string;
-    integrantesIds: number[];
-}
-
 /**
- * Todo o estado da tela de integrantes: a lista, o recorte, a seleção, o
- * formulário e os grupos criados.
+ * Todo o estado da tela de integrantes: a lista, o recorte, a visualização e o
+ * formulário.
  *
- * Está num hook, e não espalhado pelos componentes, porque as quatro coisas se
- * cruzam — cadastrar limpa o filtro para a pessoa nova aparecer, criar grupo
- * consome a seleção — e porque é aqui que a troca do mock pelo tRPC vai doer
- * apenas uma vez.
+ * Está num hook, e não espalhado pelos componentes, porque as peças se cruzam —
+ * cadastrar limpa o filtro para a pessoa nova aparecer — e porque é aqui que a
+ * troca do mock pelo tRPC vai doer apenas uma vez.
+ *
+ * A visualização não é lembrada entre visitas: a tela sempre abre em cartões.
+ * Guardá-la exigiria o servidor saber da escolha antes do primeiro render, ou
+ * a lista piscaria na visualização errada ao hidratar — ver `docs/fcp.md`.
  */
 export function usePainelIntegrantes(iniciais: Integrante[]) {
     const [integrantes, setIntegrantes] = useState(iniciais);
     const [filtros, setFiltros] = useState<FiltrosIntegrantes>(filtrosVazios);
-    const [selecionados, setSelecionados] = useState<number[]>([]);
-    const [modoSelecao, setModoSelecao] = useState(false);
+    const [visualizacao, setVisualizacao] = useState<Visualizacao>("cartoes");
     const [formAberto, setFormAberto] = useState(false);
-    const [gruposCriados, setGruposCriados] = useState<GrupoCriado[]>([]);
 
     // Os campos respondem na hora; a lista espera a digitação parar. O atraso
     // vale para o filtro inteiro — nos que mudam por clique ele não se nota.
@@ -39,66 +34,6 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
         () => filtrarIntegrantes(integrantes, filtrosAplicados),
         [integrantes, filtrosAplicados],
     );
-
-    const selecionadosIntegrantes = useMemo(
-        () => integrantes.filter(({ id }) => selecionados.includes(id)),
-        [integrantes, selecionados],
-    );
-
-    const alternarSelecao = useCallback((id: number) => {
-        setSelecionados((atual) =>
-            atual.includes(id)
-                ? atual.filter((selecionado) => selecionado !== id)
-                : [...atual, id],
-        );
-    }, []);
-
-    /** O "selecionar todos" do cabeçalho age sobre o resultado do filtro. */
-    const selecionarVisiveis = useCallback(
-        (marcar: boolean) => {
-            const ids = visiveis.map(({ id }) => id);
-            setSelecionados((atual) =>
-                marcar
-                    ? [...new Set([...atual, ...ids])]
-                    : atual.filter((id) => !ids.includes(id)),
-            );
-        },
-        [visiveis],
-    );
-
-    const limparSelecao = useCallback(() => setSelecionados([]), []);
-
-    /**
-     * Liga e desliga o modo de seleção. Sair sempre zera o que estava marcado:
-     * uma seleção invisível voltaria a valer na próxima vez que o modo fosse
-     * ligado, e ninguém lembraria dela.
-     */
-    const alternarModoSelecao = useCallback(() => {
-        setModoSelecao((ligado) => {
-            if (ligado) setSelecionados([]);
-            return !ligado;
-        });
-    }, []);
-
-    /**
-     * Os grupos desta sessão que cada integrante integra, para o detalhe dele
-     * poder mostrá-los. Um mapa, e não uma busca por pessoa, porque a lista
-     * inteira pergunta isso a cada renderização.
-     */
-    const gruposDaSessaoPorIntegrante = useMemo(() => {
-        const porIntegrante = new Map<number, string[]>();
-
-        for (const grupo of gruposCriados) {
-            for (const id of grupo.integrantesIds) {
-                porIntegrante.set(id, [
-                    ...(porIntegrante.get(id) ?? []),
-                    grupo.nome,
-                ]);
-            }
-        }
-
-        return porIntegrante;
-    }, [gruposCriados]);
 
     /**
      * Cadastra o integrante e devolve a lista ao estado em que ele aparece.
@@ -128,41 +63,16 @@ export function usePainelIntegrantes(iniciais: Integrante[]) {
         [integrantes],
     );
 
-    /** Cria o grupo com quem está selecionado e devolve a seleção ao zero. */
-    const criarGrupo = useCallback(
-        (nome: string) => {
-            if (selecionados.length === 0) return;
-
-            setGruposCriados((atual) => [
-                ...atual,
-                { id: atual.length + 1, nome, integrantesIds: selecionados },
-            ]);
-            setSelecionados([]);
-            // Montado o grupo, a tarefa acabou: a tela volta a ser de leitura,
-            // com as linhas abrindo o detalhe de novo.
-            setModoSelecao(false);
-        },
-        [selecionados],
-    );
-
     return {
         integrantes,
         visiveis,
         filtros,
         filtrosAplicados,
         setFiltros,
-        selecionados,
-        selecionadosIntegrantes,
-        modoSelecao,
-        alternarModoSelecao,
-        alternarSelecao,
-        selecionarVisiveis,
-        limparSelecao,
+        visualizacao,
+        setVisualizacao,
         formAberto,
         setFormAberto,
         adicionarIntegrante,
-        gruposCriados,
-        gruposDaSessaoPorIntegrante,
-        criarGrupo,
     };
 }

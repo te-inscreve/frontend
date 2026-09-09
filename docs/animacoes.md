@@ -164,8 +164,12 @@ de layout aparecem sem a animação para disfarçar.
 - `apps/web/src/features/eventos/evento-detail/botao-criar-categoria.tsx` — o
   atalho tracejado no fim da fila de categorias vira o formulário de criar
   categoria.
-- `apps/web/src/features/entidades/integrantes/linha-integrante.tsx` — a linha
-  da listagem de integrantes vira o detalhe da pessoa.
+- `apps/web/src/features/entidades/integrantes/cartao-integrante.tsx` — o
+  cartão da grade de integrantes vira o detalhe da pessoa.
+- `apps/web/src/features/entidades/integrantes/linha-integrante.tsx` — a célula
+  do nome, na visualização em tabela, vira o mesmo detalhe. O `id` difere do
+  cartão de propósito: com o mesmo `id` nos dois, trocar de visualização faria o
+  Motion animar cada pessoa da posição no cartão até a da linha.
 - `apps/web/src/features/categorias/categoria-detail/botao-editar-categoria.tsx`
   — o botão "Editar" do detalhe da categoria vira o formulário de edição.
 - `apps/web/src/features/entidades/integrantes/dialog-integrante.tsx` — o botão

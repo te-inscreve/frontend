@@ -91,7 +91,7 @@ export function FormIntegrante({ onSalvar, onCancelar }: Props) {
                         />
                         <CampoTexto<IntegranteFormValues>
                             name="matriculaCtg"
-                            label="Matrícula CTG"
+                            label="Matrícula MTG"
                             placeholder="Ex.: MTG-2016-01204"
                             className="sm:col-span-4"
                             helpText="Código da carteirinha de identidade tradicionalista."
