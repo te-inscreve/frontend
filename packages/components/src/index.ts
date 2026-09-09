@@ -111,6 +111,16 @@ export {
 export { Separator } from "./components/separator";
 export { Switch } from "./components/switch";
 export {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "./components/table";
+export {
     Tabs,
     TabsContent,
     TabsList,
