@@ -83,3 +83,19 @@ export type {
 
 export { perfilSchema, temEntidade } from "./perfil";
 export type { Perfil } from "./perfil";
+
+export { paginadoSchema, proximaPagina } from "./paginacao";
+export type { Paginado } from "./paginacao";
+
+export {
+    formIntegranteSchema,
+    integranteDetalheSchema,
+    integranteSchema,
+    paginaIntegrantesSchema,
+} from "./integrante";
+export type {
+    FormIntegrante,
+    Integrante,
+    IntegranteDetalhe,
+    PaginaIntegrantes,
+} from "./integrante";
