@@ -1,5 +1,5 @@
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import { idadeEm, rotuloFuncao } from "~/features/entidades/shared/integrantes";
+import { idadeEm, nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
 
 interface Props {
@@ -29,18 +29,18 @@ export function ListaIntegrantes({ integrantes }: Props) {
                     key={integrante.id}
                     className="flex flex-wrap items-center gap-3 p-3"
                 >
-                    <AvatarUsuario nome={integrante.nome} size={36} alt="" />
+                    <AvatarUsuario
+                        nome={nomeCompleto(integrante)}
+                        size={36}
+                        alt=""
+                    />
 
                     <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">
-                            {integrante.nome}
+                            {nomeCompleto(integrante)}
                         </p>
                         <p className="text-muted-foreground truncate text-xs">
-                            {integrante.funcao
-                                ? rotuloFuncao(integrante.funcao)
-                                : "Sem função definida"}
-                            {integrante.dataFiliacao &&
-                                ` · na entidade desde ${integrante.dataFiliacao.slice(0, 4)}`}
+                            {integrante.matriculaMtg}
                         </p>
                     </div>
 

@@ -9,6 +9,7 @@ import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
 
 import { Badge } from "@te-inscreve/components";
 
+import type { AoEditarIntegrante } from "./modal-integrante";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import {
     gruposDoIntegrante,
@@ -19,10 +20,10 @@ import {
     formatarDataISO,
     idadeEm,
     matriculaVencida,
-    rotuloFuncao,
 } from "~/features/entidades/shared/integrantes";
+import { DialogEditarIntegrante } from "./dialog-editar-integrante";
 
-interface Props {
+interface Props extends AoEditarIntegrante {
     integrante: Integrante;
 }
 
@@ -30,48 +31,45 @@ interface Props {
  * O que se sabe sobre um integrante, em três blocos: a matrícula que decide se
  * ele pode ser inscrito, os grupos a que pertence e o que já disputou.
  *
- * Grupos e histórico são mock (`shared/historico-integrante.ts`) — a API ainda
- * não expõe nem o integrante. A tela já está montada em cima do formato que
- * eles terão, então o que muda depois é a origem dos dados.
+ * Os dados vêm da API; grupos e histórico ainda são mock
+ * (`shared/historico-integrante.ts`) — o detalhe devolve `grupos` vazio e
+ * sem formato. A tela já está montada em cima do formato que eles terão,
+ * então o que muda depois é a origem dos dados.
+ *
+ * A edição sai daqui, e não do cartão: é no detalhe que a pessoa confere o
+ * que está errado antes de corrigir.
  */
-export function DetalheIntegrante({ integrante }: Props) {
+export function DetalheIntegrante({ integrante, onEditar }: Props) {
     const grupos = gruposDoIntegrante(integrante);
     const inscricoes = inscricoesDoIntegrante(integrante);
     const vencida = matriculaVencida(integrante);
 
     return (
         <div className="flex flex-col gap-5">
-            <Secao icone={<IdentificationCardIcon />} titulo="Dados">
+            <Secao
+                icone={<IdentificationCardIcon />}
+                titulo="Dados"
+                acao={
+                    <DialogEditarIntegrante
+                        integrante={integrante}
+                        onEditar={onEditar}
+                    />
+                }
+            >
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <Dado
                         termo="Matrícula MTG"
-                        valor={integrante.matriculaCtg}
+                        valor={integrante.matriculaMtg}
                     />
                     <Dado
                         termo="Validade da matrícula"
-                        valor={formatarDataISO(integrante.validadeMatricula)}
+                        valor={formatarDataISO(integrante.validade)}
                         alerta={vencida}
                     />
                     <Dado
                         termo="Nascimento"
                         valor={`${formatarDataISO(integrante.dataNascimento)} · ${idadeEm(integrante.dataNascimento)} anos`}
                     />
-                    <Dado
-                        termo="Função na entidade"
-                        valor={
-                            integrante.funcao
-                                ? rotuloFuncao(integrante.funcao)
-                                : "Não informada"
-                        }
-                    />
-                    {/* Filiação é opcional: sem ela a linha some, em vez de
-                        mostrar um traço que não diz nada. */}
-                    {integrante.dataFiliacao && (
-                        <Dado
-                            termo="Na entidade desde"
-                            valor={formatarDataISO(integrante.dataFiliacao)}
-                        />
-                    )}
                 </dl>
 
                 {vencida && (
@@ -179,20 +177,26 @@ export function DetalheIntegrante({ integrante }: Props) {
 function Secao({
     icone,
     titulo,
+    acao,
     children,
 }: {
     icone: React.ReactNode;
     titulo: string;
+    /** Botão à direita do título — a única ação que cabe numa seção. */
+    acao?: React.ReactNode;
     children: React.ReactNode;
 }) {
     return (
         <section className="flex flex-col gap-2.5">
-            <h3 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase [&_svg]:size-4">
-                <span aria-hidden="true" className="flex">
-                    {icone}
-                </span>
-                {titulo}
-            </h3>
+            <div className="flex items-center justify-between gap-2">
+                <h3 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase [&_svg]:size-4">
+                    <span aria-hidden="true" className="flex">
+                        {icone}
+                    </span>
+                    {titulo}
+                </h3>
+                {acao}
+            </div>
             {children}
         </section>
     );

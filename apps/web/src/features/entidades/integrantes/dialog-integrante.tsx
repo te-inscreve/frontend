@@ -2,6 +2,7 @@
 
 import { UserPlusIcon } from "@phosphor-icons/react/dist/ssr/UserPlus";
 
+import type { FormIntegrante as DadosIntegrante } from "@te-inscreve/schemas";
 import {
     buttonVariants,
     cn,
@@ -16,13 +17,12 @@ import {
     ExpandableDialogTrigger,
 } from "@te-inscreve/components";
 
-import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { FormIntegrante } from "./form-integrante";
 
 interface Props {
     aberto: boolean;
     onAbertoChange: (aberto: boolean) => void;
-    onSalvar: (integrante: Omit<Integrante, "id">) => Promise<void> | void;
+    onSalvar: (dados: DadosIntegrante) => Promise<void> | void;
 }
 
 /**

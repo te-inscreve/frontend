@@ -1,16 +1,14 @@
 "use client";
 
-import type { Integrante } from "~/features/entidades/shared/integrantes";
+import { useVerticalScroll } from "~/shared/utils/use-vertical-scroll";
 import { BarraFiltros } from "./barra-filtros";
+import { GradeIntegrantesSkeleton } from "./cartao-integrante-skeleton";
 import { DialogIntegrante } from "./dialog-integrante";
-import { temFiltroAtivo } from "./filtros-integrantes";
 import { ListaIntegrantes } from "./lista-integrantes";
 import { usePainelIntegrantes } from "./use-painel-integrantes";
 import { SeletorVisualizacao } from "./visualizacao";
 
-interface Props {
-    integrantesIniciais: Integrante[];
-}
+export { INTEGRANTES_POR_PAGINA } from "./use-painel-integrantes";
 
 /**
  * A tela de integrantes: listar, filtrar e cadastrar.
@@ -18,9 +16,16 @@ interface Props {
  * O cadastro abre em diálogo sobre a listagem: é uma tarefa curta, e voltar
  * para a lista logo depois — com filtro e rolagem no lugar — importa mais do
  * que ver o formulário e a lista ao mesmo tempo.
+ *
+ * A sentinela no fim é o que pede a próxima página: um `div` de um pixel que,
+ * ao entrar na tela, dispara o `fetchNextPage`. Enquanto a página chega, a
+ * grade ganha uma linha de esqueletos — estrutura, e não spinner.
  */
-export function PainelIntegrantes({ integrantesIniciais }: Props) {
-    const painel = usePainelIntegrantes(integrantesIniciais);
+export function PainelIntegrantes() {
+    const painel = usePainelIntegrantes();
+    const { triggerScrollRef } = useVerticalScroll({
+        onScrollEnd: painel.carregarMais,
+    });
 
     return (
         <div className="flex flex-col gap-4">
@@ -46,15 +51,23 @@ export function PainelIntegrantes({ integrantesIniciais }: Props) {
             <BarraFiltros
                 filtros={painel.filtros}
                 onChange={painel.setFiltros}
-                resultados={painel.visiveis.length}
-                total={painel.integrantes.length}
+                resultados={painel.integrantes.length}
+                total={painel.total}
             />
 
             <ListaIntegrantes
-                integrantes={painel.visiveis}
+                integrantes={painel.integrantes}
                 visualizacao={painel.visualizacao}
-                filtrada={temFiltroAtivo(painel.filtrosAplicados)}
+                carregando={painel.isLoading}
+                erro={painel.error}
+                onEditar={painel.editarIntegrante}
             />
+
+            {painel.isFetchingNextPage && (
+                <GradeIntegrantesSkeleton quantidade={3} />
+            )}
+
+            <div ref={triggerScrollRef} aria-hidden="true" className="h-px" />
         </div>
     );
 }

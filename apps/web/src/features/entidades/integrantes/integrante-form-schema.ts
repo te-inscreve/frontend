@@ -1,15 +1,16 @@
 import { z } from "zod/v4";
 
-import type { Integrante } from "~/features/entidades/shared/integrantes";
+import type { FormIntegrante, Integrante } from "@te-inscreve/schemas";
+
+import { dataDeISO, paraISO } from "~/features/entidades/shared/integrantes";
 
 /**
  * O cadastro de integrante na forma que a UI manipula: datas como `Date` — é
  * o que o calendário devolve — e tudo que pode estar vazio como `null`,
  * inclusive o que é obrigatório: o campo nasce vazio e é o Zod que cobra.
  *
- * O schema é local à feature porque o backend ainda não tem contrato para
- * integrante. Quando tiver, as regras de domínio sobem para
- * `packages/schemas` e aqui fica só o que é da tela.
+ * O contrato com a API é o `formIntegranteSchema` de `@te-inscreve/schemas`;
+ * este é só o que é da tela, e `integranteFormInput` traduz um no outro.
  */
 
 /**
@@ -26,21 +27,16 @@ const dataObrigatoria = (mensagem: string) =>
 
 export const integranteFormSchema = z
     .object({
-        nome: z
-            .string()
-            .trim()
-            .min(1, "Informe o nome completo.")
-            // Sobrenome não é firula: é ele que distingue duas pessoas na
-            // planilha da comissão do evento.
-            .refine((nome) => nome.split(/\s+/).length > 1, {
-                error: "Informe o nome completo, com sobrenome.",
-            }),
-        matriculaCtg: z
+        nome: z.string().trim().min(1, "Informe o nome."),
+        // Sobrenome não é firula: é ele que distingue duas pessoas na
+        // planilha da comissão do evento.
+        sobrenome: z.string().trim().min(1, "Informe o sobrenome."),
+        matriculaMtg: z
             .string()
             .trim()
             .min(1, "Informe o número da matrícula MTG."),
         dataNascimento: dataObrigatoria("Informe a data de nascimento."),
-        validadeMatricula: z.custom<Date | null>().nullable(),
+        validade: z.custom<Date | null>().nullable(),
     })
     .refine(
         ({ dataNascimento }) => !dataNascimento || dataNascimento <= new Date(),
@@ -52,40 +48,53 @@ export const integranteFormSchema = z
 
 export type IntegranteFormValues = z.infer<typeof integranteFormSchema>;
 
-export const integranteFormDefaults: IntegranteFormValues = {
-    nome: "",
-    matriculaCtg: "",
-    validadeMatricula: null,
-    dataNascimento: null,
-};
+/**
+ * O formulário vazio, ou preenchido com o integrante em edição.
+ */
+export function integranteFormDefaults(
+    integrante?: Integrante,
+): IntegranteFormValues {
+    if (!integrante) {
+        return {
+            nome: "",
+            sobrenome: "",
+            matriculaMtg: "",
+            dataNascimento: null,
+            validade: null,
+        };
+    }
 
-/** ISO local (`aaaa-mm-dd`) — `toISOString` deslocaria a data pelo fuso. */
-function paraISO(data: Date): string {
-    const mes = String(data.getMonth() + 1).padStart(2, "0");
-    const dia = String(data.getDate()).padStart(2, "0");
-    return `${data.getFullYear()}-${mes}-${dia}`;
+    return {
+        nome: integrante.nome,
+        sobrenome: integrante.sobrenome,
+        matriculaMtg: integrante.matriculaMtg,
+        dataNascimento: dataDeISO(integrante.dataNascimento),
+        validade: integrante.validade ? dataDeISO(integrante.validade) : null,
+    };
 }
 
 /**
- * Converte o formulário validado no integrante que a lista guarda. O id fica
- * de fora: enquanto não há API, quem atribui é quem conhece a lista inteira.
+ * Converte o formulário validado no que a rota tRPC envia. `grupos` vai
+ * vazio: o backend aceita o campo, mas o cadastro ainda não vincula ninguém.
  */
 export function integranteFormInput(
     valores: IntegranteFormValues,
-): Omit<Integrante, "id"> {
+): FormIntegrante {
     const dados = integranteFormSchema.parse(valores);
-    const { validadeMatricula, dataNascimento } = dados;
+    const { validade, dataNascimento } = dados;
 
-    if (!validadeMatricula || !dataNascimento) {
+    if (!dataNascimento) {
         throw new Error(
-            "Integrante sem as datas obrigatórias — o schema deveria ter barrado.",
+            "Integrante sem data de nascimento — o schema deveria ter barrado.",
         );
     }
 
     return {
         nome: dados.nome,
-        matriculaCtg: dados.matriculaCtg,
-        validadeMatricula: paraISO(validadeMatricula),
+        sobrenome: dados.sobrenome,
+        matriculaMtg: dados.matriculaMtg,
         dataNascimento: paraISO(dataNascimento),
+        validade: validade ? paraISO(validade) : null,
+        grupos: [],
     };
 }

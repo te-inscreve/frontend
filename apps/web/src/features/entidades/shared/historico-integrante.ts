@@ -2,10 +2,11 @@
  * A vida do integrante fora do cadastro: os grupos de que ele faz parte e as
  * categorias em que já se inscreveu.
  *
- * Nada disso existe na API ainda — nem o recurso de integrante existe. Este
- * arquivo é o mock que sustenta o detalhe da pessoa até os endpoints chegarem,
- * e é separado de `integrantes.ts` justamente para ser fácil de apagar inteiro
- * quando isso acontecer: o que sobreviver vira consulta, não constante.
+ * O integrante já vem da API, mas grupos e inscrições ainda não: o detalhe
+ * devolve `grupos` sempre vazio e sem formato definido. Este arquivo é o mock
+ * que sustenta o detalhe da pessoa até isso mudar, e é separado de
+ * `integrantes.ts` justamente para ser fácil de apagar inteiro quando
+ * acontecer: o que sobreviver vira consulta, não constante.
  *
  * O mock é **derivado do id**, e não sorteado. Sorteio mudaria a cada
  * renderização, e o detalhe de uma pessoa passaria a contar uma história
@@ -102,11 +103,9 @@ export function gruposDoIntegrante(
             id: `${integrante.id}-${posicao}`,
             nome: grupo.nome,
             modalidade: grupo.modalidade,
-            // Quem instrui ou é patrão/prenda responde pelo primeiro grupo.
-            responsavel:
-                posicao === 0 &&
-                (integrante.funcao === "instrutor" ||
-                    integrante.funcao === "patrao-prenda"),
+            // A API não diz quem responde pelo grupo: um a cada três é
+            // responsável pelo primeiro, para a tela mostrar o selo.
+            responsavel: posicao === 0 && integrante.id % 3 === 0,
         };
     });
 }

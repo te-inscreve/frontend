@@ -9,7 +9,9 @@ import {
     ExpandableDialogTrigger,
 } from "@te-inscreve/components";
 
+import type { AoEditarIntegrante } from "./modal-integrante";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
+import { nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
 import {
     AvisoMatricula,
@@ -33,7 +35,10 @@ import {
  * cartão até a posição na linha, e os nomes cruzariam a tela por cima das
  * outras pessoas — a troca é um corte, não um morph.
  */
-export function CartaoIntegrante({ integrante }: { integrante: Integrante }) {
+export function CartaoIntegrante({
+    integrante,
+    onEditar,
+}: { integrante: Integrante } & AoEditarIntegrante) {
     const [aberto, setAberto] = useState(false);
 
     return (
@@ -46,7 +51,7 @@ export function CartaoIntegrante({ integrante }: { integrante: Integrante }) {
                 <ExpandableDialogTrigger className="bg-card hover:bg-muted/50 focus-visible:ring-ring/50 flex w-full items-center gap-3 border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none">
                     <ExpandableDialogIcon className="size-9 bg-transparent">
                         <AvatarUsuario
-                            nome={integrante.nome}
+                            nome={nomeCompleto(integrante)}
                             size={36}
                             alt=""
                         />
@@ -54,7 +59,7 @@ export function CartaoIntegrante({ integrante }: { integrante: Integrante }) {
 
                     <span className="min-w-0 flex-1">
                         <ExpandableDialogLabel className="block truncate text-sm font-semibold">
-                            {integrante.nome}
+                            {nomeCompleto(integrante)}
                         </ExpandableDialogLabel>
                         <ResumoIntegrante integrante={integrante} />
                     </span>
@@ -62,7 +67,7 @@ export function CartaoIntegrante({ integrante }: { integrante: Integrante }) {
                     <AvisoMatricula integrante={integrante} />
                 </ExpandableDialogTrigger>
 
-                <ModalIntegrante integrante={integrante} />
+                <ModalIntegrante integrante={integrante} onEditar={onEditar} />
             </ExpandableDialog>
         </li>
     );

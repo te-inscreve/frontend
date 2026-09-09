@@ -1,19 +1,98 @@
 /**
  * Dados de exemplo do painel da entidade.
  *
- * A API ainda não expõe integrantes, grupos, inscrições nem premiações — só o
- * cadastro da entidade, que já vem de `entidade.minha`. Enquanto isso, a tela é montada a partir daqui, num
- * módulo separado para que trocar o mock pelas queries do tRPC seja uma
- * mudança de origem de dados, e não uma reescrita dos componentes.
+ * A API ainda não expõe grupos, inscrições nem premiações — só o cadastro da
+ * entidade (`entidade.minha`) e os integrantes (`integrante.list`). Enquanto
+ * isso, o resto da tela é montado a partir daqui, num módulo separado para
+ * que trocar o mock pelas queries do tRPC seja uma mudança de origem de
+ * dados, e não uma reescrita dos componentes.
  *
  * Os tipos abaixo são a forma que a tela espera. Quando o backend definir a
  * dele, o que sobreviver vira schema em `packages/schemas`.
- *
- * Os integrantes são a exceção: como a tela de cadastro também depende deles,
- * moram em `shared/integrantes` e são só reexportados daqui.
  */
 
-export { integrantesMock } from "~/features/entidades/shared/integrantes";
+import type { Integrante } from "~/features/entidades/shared/integrantes";
+
+/**
+ * As pessoas que os grupos de exemplo referenciam por id.
+ *
+ * Só existem para `gruposMock` — a lista de integrantes do painel já vem da
+ * API. Somem junto com os grupos quando o backend expuser o recurso.
+ */
+export const integrantesMock: Integrante[] = [
+    {
+        id: 2,
+        nome: "Iara",
+        sobrenome: "Boeira",
+        matriculaMtg: "MTG-2012-00871",
+        validade: "2027-03-31",
+        dataNascimento: "2002-01-20",
+    },
+    {
+        id: 3,
+        nome: "Vicente",
+        sobrenome: "Machado",
+        matriculaMtg: "MTG-2005-00330",
+        validade: "2026-12-31",
+        dataNascimento: "1988-04-02",
+    },
+    {
+        id: 4,
+        nome: "Marina",
+        sobrenome: "Colussi",
+        matriculaMtg: "MTG-2016-01204",
+        validade: "2027-03-31",
+        dataNascimento: "2007-05-30",
+    },
+    {
+        id: 5,
+        nome: "Tiago",
+        sobrenome: "Vasconcelos",
+        matriculaMtg: "MTG-2015-01098",
+        validade: "2026-06-30",
+        dataNascimento: "2005-02-14",
+    },
+    {
+        id: 6,
+        nome: "Helena",
+        sobrenome: "Fagundes",
+        matriculaMtg: "MTG-2019-01677",
+        validade: "2027-03-31",
+        dataNascimento: "2009-07-08",
+    },
+    {
+        id: 7,
+        nome: "Bento",
+        sobrenome: "Aguirre",
+        matriculaMtg: "MTG-2001-00218",
+        validade: "2027-03-31",
+        dataNascimento: "1981-03-25",
+    },
+    {
+        id: 8,
+        nome: "Luiza",
+        sobrenome: "Menezes",
+        matriculaMtg: "MTG-2022-02015",
+        validade: "2027-03-31",
+        dataNascimento: "2013-08-22",
+    },
+    {
+        id: 9,
+        nome: "Otávio",
+        sobrenome: "Ramires",
+        matriculaMtg: "MTG-2021-01952",
+        validade: "2027-03-31",
+        dataNascimento: "2012-03-05",
+    },
+    {
+        id: 10,
+        nome: "Clara",
+        sobrenome: "Bittencourt",
+        matriculaMtg: "MTG-2010-00644",
+        validade: "2027-03-31",
+        dataNascimento: "1998-01-09",
+    },
+];
 
 export interface GrupoMock {
     id: number;

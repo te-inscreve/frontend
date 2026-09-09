@@ -3,6 +3,7 @@
 import { IdentificationCardIcon } from "@phosphor-icons/react/dist/ssr/IdentificationCard";
 import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
 
+import type { FormIntegrante } from "@te-inscreve/schemas";
 import {
     Badge,
     ExpandableDialogBody,
@@ -17,6 +18,7 @@ import {
     formatarDataISO,
     idadeEm,
     matriculaVencida,
+    nomeCompleto,
 } from "~/features/entidades/shared/integrantes";
 import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
 import { DetalheIntegrante } from "./detalhe-integrante";
@@ -33,14 +35,22 @@ import { DetalheIntegrante } from "./detalhe-integrante";
  * Motion, e escala em texto é esticamento: quem cresce no morph é a caixa, não
  * as peças dela. Ver `docs/animacoes.md`. A folga à direita é do botão fechar.
  */
-export function ModalIntegrante({ integrante }: { integrante: Integrante }) {
+/** Quem edita recebe o id e o cadastro pronto para a API. */
+export interface AoEditarIntegrante {
+    onEditar: (id: number, dados: FormIntegrante) => Promise<void> | void;
+}
+
+export function ModalIntegrante({
+    integrante,
+    onEditar,
+}: { integrante: Integrante } & AoEditarIntegrante) {
     return (
         <ExpandableDialogContent className="max-w-xl!">
             <ExpandableDialogHeader>
                 <div className="flex items-center gap-3 pr-7">
                     <ExpandableDialogIcon className="size-9 bg-transparent">
                         <AvatarUsuario
-                            nome={integrante.nome}
+                            nome={nomeCompleto(integrante)}
                             size={36}
                             alt=""
                         />
@@ -48,7 +58,7 @@ export function ModalIntegrante({ integrante }: { integrante: Integrante }) {
 
                     <span className="min-w-0 flex-1">
                         <ExpandableDialogTitle className="block truncate text-sm font-semibold">
-                            {integrante.nome}
+                            {nomeCompleto(integrante)}
                         </ExpandableDialogTitle>
                         <ResumoIntegrante integrante={integrante} />
                     </span>
@@ -58,7 +68,10 @@ export function ModalIntegrante({ integrante }: { integrante: Integrante }) {
             </ExpandableDialogHeader>
 
             <ExpandableDialogBody>
-                <DetalheIntegrante integrante={integrante} />
+                <DetalheIntegrante
+                    integrante={integrante}
+                    onEditar={onEditar}
+                />
             </ExpandableDialogBody>
         </ExpandableDialogContent>
     );
@@ -75,7 +88,7 @@ export function ResumoIntegrante({ integrante }: { integrante: Integrante }) {
         <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
             <span className="flex items-center gap-1">
                 <IdentificationCardIcon aria-hidden="true" />
-                {integrante.matriculaCtg}
+                {integrante.matriculaMtg}
             </span>
             {" · "}
             <span className="flex items-center gap-1">
@@ -101,7 +114,7 @@ export function AvisoMatricula({ integrante }: { integrante: Integrante }) {
             <Badge
                 variant="outline"
                 className="border-warning/40 bg-warning/10 gap-1"
-                title={`Matrícula vencida em ${formatarDataISO(integrante.validadeMatricula)}`}
+                title={`Matrícula vencida em ${formatarDataISO(integrante.validade)}`}
             >
                 <WarningIcon
                     aria-hidden="true"
@@ -130,7 +143,11 @@ export function SituacaoMatricula({ integrante }: { integrante: Integrante }) {
             className={
                 vencida ? "border-warning/40 bg-warning/10 gap-1" : "gap-1"
             }
-            title={`Válida até ${formatarDataISO(integrante.validadeMatricula)}`}
+            title={
+                integrante.validade
+                    ? `Válida até ${formatarDataISO(integrante.validade)}`
+                    : "Validade da matrícula não informada"
+            }
         >
             {vencida && (
                 <WarningIcon

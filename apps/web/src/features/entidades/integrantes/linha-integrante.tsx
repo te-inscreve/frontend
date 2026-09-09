@@ -11,8 +11,9 @@ import {
     TableRow,
 } from "@te-inscreve/components";
 
+import type { AoEditarIntegrante } from "./modal-integrante";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import { idadeEm } from "~/features/entidades/shared/integrantes";
+import { idadeEm, nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
 import { ModalIntegrante, SituacaoMatricula } from "./modal-integrante";
 
@@ -30,7 +31,10 @@ import { ModalIntegrante, SituacaoMatricula } from "./modal-integrante";
  *
  * O `id` diz `linha` porque o cartão usa outro — ver {@link CartaoIntegrante}.
  */
-export function LinhaIntegrante({ integrante }: { integrante: Integrante }) {
+export function LinhaIntegrante({
+    integrante,
+    onEditar,
+}: { integrante: Integrante } & AoEditarIntegrante) {
     const [aberto, setAberto] = useState(false);
 
     return (
@@ -52,20 +56,20 @@ export function LinhaIntegrante({ integrante }: { integrante: Integrante }) {
                     >
                         <ExpandableDialogIcon className="size-9 bg-transparent">
                             <AvatarUsuario
-                                nome={integrante.nome}
+                                nome={nomeCompleto(integrante)}
                                 size={36}
                                 alt=""
                             />
                         </ExpandableDialogIcon>
 
                         <ExpandableDialogLabel className="min-w-0 flex-1 truncate text-sm font-semibold">
-                            {integrante.nome}
+                            {nomeCompleto(integrante)}
                         </ExpandableDialogLabel>
                     </ExpandableDialogTrigger>
                 </TableCell>
 
                 <TableCell className="text-muted-foreground">
-                    {integrante.matriculaCtg}
+                    {integrante.matriculaMtg}
                 </TableCell>
 
                 <TableCell className="tabular-nums">
@@ -77,7 +81,7 @@ export function LinhaIntegrante({ integrante }: { integrante: Integrante }) {
                 </TableCell>
             </TableRow>
 
-            <ModalIntegrante integrante={integrante} />
+            <ModalIntegrante integrante={integrante} onEditar={onEditar} />
         </ExpandableDialog>
     );
 }
