@@ -33,6 +33,10 @@ interface Props {
  * A abertura é controlada de fora porque quem fecha é o salvamento: só depois
  * de o cadastro dar certo é que a tela volta para a lista, já com a pessoa
  * nova. Enquanto o envio falha, o diálogo fica aberto com o que foi digitado.
+ *
+ * É também de fora que vem a abertura pedida pela URL: `usePainelIntegrantes`
+ * lê o `?novo` da chegada e já entrega `aberto`. Aqui dentro não há como saber
+ * disso — e nem precisa: para o diálogo, é a mesma abertura de sempre.
  */
 export function DialogIntegrante({ aberto, onAbertoChange, onSalvar }: Props) {
     return (

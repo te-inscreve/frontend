@@ -18,7 +18,7 @@ interface Props {
  */
 export function Secao({ titulo, descricao, icone, acao, children }: Props) {
     return (
-        <section className="flex flex-col gap-3">
+        <section className="flex h-full flex-col gap-3">
             <div className="flex flex-wrap items-end justify-between gap-2">
                 <div>
                     <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">

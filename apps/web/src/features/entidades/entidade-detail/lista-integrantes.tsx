@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { UserPlusIcon } from "@phosphor-icons/react/dist/ssr/UserPlus";
 import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
 
-import { Badge } from "@te-inscreve/components";
+import { Badge, Button } from "@te-inscreve/components";
 
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import {
@@ -32,9 +33,17 @@ interface Props {
 export function ListaIntegrantes({ integrantes, total }: Props) {
     if (integrantes.length === 0) {
         return (
-            <p className="text-muted-foreground rounded-xl border border-dashed p-6 text-sm">
-                Nenhum integrante cadastrado. Cadastre as pessoas da entidade
-                para poder inscrevê-las nas categorias de um evento.
+            <p className="text-muted-foreground bg-card flex h-full flex-col items-center justify-center rounded-xl border border-dashed p-6 text-sm">
+                Nenhum integrante cadastrado.
+                {/* O `?novo` leva a tela de integrantes a abrir o cadastro
+                    sozinha: quem clicou aqui já disse o que queria fazer, e
+                    seria estranho largá-lo diante de outra lista vazia. */}
+                <Button variant="link" asChild>
+                    <Link href="/admin/minha-entidade/integrantes?novo=1">
+                        <UserPlusIcon aria-hidden="true" weight="bold" />
+                        Cadastrar
+                    </Link>
+                </Button>
             </p>
         );
     }

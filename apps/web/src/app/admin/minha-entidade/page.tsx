@@ -3,7 +3,6 @@ import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 import { UsersFourIcon } from "@phosphor-icons/react/dist/ssr/UsersFour";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 
-import { AvisoDadosExemplo } from "~/features/entidades/entidade-detail/aviso-dados-exemplo";
 import { CabecalhoEntidadeSkeleton } from "~/features/entidades/entidade-detail/cabecalho-entidade-skeleton";
 import { CabecalhoMinhaEntidade } from "~/features/entidades/entidade-detail/cabecalho-minha-entidade";
 import { ListaGrupos } from "~/features/entidades/entidade-detail/lista-grupos";
@@ -48,12 +47,9 @@ export default function MinhaEntidadePage() {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-6 md:py-8">
-            <div className="flex flex-col gap-4">
-                <Suspense fallback={<CabecalhoEntidadeSkeleton />}>
-                    <CabecalhoMinhaEntidade />
-                </Suspense>
-                <AvisoDadosExemplo />
-            </div>
+            <Suspense fallback={<CabecalhoEntidadeSkeleton />}>
+                <CabecalhoMinhaEntidade />
+            </Suspense>
 
             {/* <Secao
                 titulo="Evento atual"

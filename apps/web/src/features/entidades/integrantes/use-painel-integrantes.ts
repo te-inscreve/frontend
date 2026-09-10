@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
     useInfiniteQuery,
     useMutation,
@@ -17,6 +18,15 @@ import { filtrosVazios } from "./filtros-integrantes";
 
 /** Quantos por página. O mesmo valor do `prefetch` da página, ou a hidratação não casa. */
 export const INTEGRANTES_POR_PAGINA = 20;
+
+/**
+ * O parâmetro que já traz o cadastro aberto na chegada.
+ *
+ * É o que o "Cadastrar" do vazio da lista do painel da entidade aponta: de lá
+ * não dá para abrir o diálogo, que vive nesta tela, então o pedido viaja pela
+ * URL. Só a presença importa — o valor é ignorado.
+ */
+const PARAM_NOVO = "novo";
 
 /**
  * Todo o estado da tela de integrantes: a lista, o recorte, a visualização e o
@@ -47,7 +57,31 @@ export function usePainelIntegrantes() {
 
     const [filtros, setFiltros] = useState<FiltrosIntegrantes>(filtrosVazios);
     const [visualizacao, setVisualizacao] = useState<Visualizacao>("cartoes");
-    const [formAberto, setFormAberto] = useState(false);
+    // A URL é lida uma vez, na montagem: depois disso quem manda no diálogo é
+    // o estado, e o parâmetro já saiu de cena.
+    const params = useSearchParams();
+    const [formAberto, setAberto] = useState(() => params.has(PARAM_NOVO));
+
+    /**
+     * Abre e fecha o cadastro, tirando da URL o pedido que o abriu.
+     *
+     * Sem a limpeza o `?novo` ficaria para trás: quem desistisse e recarregasse
+     * — ou voltasse pelo histórico — encontraria o formulário aberto de novo,
+     * sem ter pedido.
+     *
+     * `history.replaceState`, e não `router.replace`: só a URL muda, e o
+     * segundo buscaria de novo o RSC da rota inteira por causa disso.
+     */
+    const setFormAberto = useCallback((aberto: boolean) => {
+        setAberto(aberto);
+        if (aberto) return;
+
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has(PARAM_NOVO)) return;
+
+        url.searchParams.delete(PARAM_NOVO);
+        window.history.replaceState(null, "", url);
+    }, []);
 
     const lista = useInfiniteQuery(
         trpc.integrante.list.infiniteQueryOptions(
@@ -101,7 +135,7 @@ export function usePainelIntegrantes() {
             setFiltros(filtrosVazios);
             setFormAberto(false);
         },
-        [criar, invalidarLista, queryClient, trpc],
+        [criar, invalidarLista, queryClient, trpc, setFormAberto],
     );
 
     /** Edita e rebusca: a lista e o detalhe repintam com o que a API guardou. */
