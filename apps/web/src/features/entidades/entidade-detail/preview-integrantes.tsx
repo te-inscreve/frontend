@@ -17,5 +17,10 @@ export async function PreviewIntegrantes() {
         trpc.integrante.list.queryOptions({ pageSize: INTEGRANTES_NO_PAINEL }),
     );
 
-    return <ListaIntegrantes integrantes={pagina.items} />;
+    return (
+        <ListaIntegrantes
+            integrantes={pagina.items}
+            total={pagina.totalItems}
+        />
+    );
 }

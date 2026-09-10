@@ -1,11 +1,7 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { TrophyIcon } from "@phosphor-icons/react/dist/ssr/Trophy";
 import { UsersFourIcon } from "@phosphor-icons/react/dist/ssr/UsersFour";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
-
-import { Button } from "@te-inscreve/components";
 
 import { AvisoDadosExemplo } from "~/features/entidades/entidade-detail/aviso-dados-exemplo";
 import { CabecalhoEntidadeSkeleton } from "~/features/entidades/entidade-detail/cabecalho-entidade-skeleton";
@@ -73,20 +69,9 @@ export default function MinhaEntidadePage() {
                         titulo="Integrantes"
                         descricao="Quem faz parte da entidade."
                         icone={<UsersThreeIcon size={20} weight="duotone" />}
-                        acao={
-                            <Button asChild variant="ghost" size="sm">
-                                <Link href="/admin/minha-entidade/integrantes">
-                                    Ver todos
-                                    <ArrowRightIcon
-                                        aria-hidden="true"
-                                        className="size-3"
-                                    />
-                                </Link>
-                            </Button>
-                        }
                     >
-                        {/* O painel resume; cadastrar e filtrar é na tela de
-                            integrantes. */}
+                        {/* O painel resume; o rodapé da lista leva à tela de
+                            integrantes, onde se cadastra e filtra. */}
                         <Suspense fallback={<ListaIntegrantesSkeleton />}>
                             <PreviewIntegrantes />
                         </Suspense>
