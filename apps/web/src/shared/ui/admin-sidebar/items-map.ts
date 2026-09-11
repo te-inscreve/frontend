@@ -32,6 +32,14 @@ const getItensMap = (): ItensMap[] => [
                 titulo: "Eventos",
                 href: "/admin/eventos",
                 icone: "calendar",
+                subItensExigemEntidade: true,
+                subItens: [
+                    {
+                        titulo: "Promovidos",
+                        href: "/admin/minha-entidade/eventos-promovidos",
+                        icone: "tv",
+                    },
+                ],
             },
         ],
     },
@@ -63,7 +71,7 @@ const getItensMap = (): ItensMap[] => [
                         icone: "ticket",
                     },
                     {
-                        titulo: "Sala de Troféus",
+                        titulo: "Troféus",
                         href: "/admin/minha-entidade/trofeus",
                         icone: "trophy",
                     },
