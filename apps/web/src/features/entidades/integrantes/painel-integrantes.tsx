@@ -34,25 +34,27 @@ export function PainelIntegrantes() {
                     Integrantes
                 </h2>
 
-                <div className="flex items-center gap-2">
-                    <SeletorVisualizacao
-                        visualizacao={painel.visualizacao}
-                        onChange={painel.setVisualizacao}
-                    />
-
-                    <DialogIntegrante
-                        aberto={painel.formAberto}
-                        onAbertoChange={painel.setFormAberto}
-                        onSalvar={painel.adicionarIntegrante}
-                    />
-                </div>
+                <DialogIntegrante
+                    aberto={painel.formAberto}
+                    onAbertoChange={painel.setFormAberto}
+                    onSalvar={painel.adicionarIntegrante}
+                />
             </div>
 
+            {/* O seletor de visualização desceu para a barra: ele muda como a
+                listagem se apresenta, igual ao filtro, e no cabeçalho disputava
+                atenção com o "Novo integrante", que é a ação da tela. */}
             <BarraFiltros
                 filtros={painel.filtros}
                 onChange={painel.setFiltros}
                 resultados={painel.integrantes.length}
                 total={painel.total}
+                acoes={
+                    <SeletorVisualizacao
+                        visualizacao={painel.visualizacao}
+                        onChange={painel.setVisualizacao}
+                    />
+                }
             />
 
             <ListaIntegrantes
