@@ -112,8 +112,7 @@ export function AvisoMatricula({ integrante }: { integrante: Integrante }) {
     return (
         <span className="flex shrink-0 items-center gap-2">
             <Badge
-                variant="outline"
-                className="border-warning/40 bg-warning/10 gap-1"
+                variant={"warning"}
                 title={`Matrícula vencida em ${formatarDataISO(integrante.validade)}`}
             >
                 <WarningIcon
@@ -139,10 +138,7 @@ export function SituacaoMatricula({ integrante }: { integrante: Integrante }) {
 
     return (
         <Badge
-            variant="outline"
-            className={
-                vencida ? "border-warning/40 bg-warning/10 gap-1" : "gap-1"
-            }
+            variant={vencida ? "warning" : "outline"}
             title={
                 integrante.validade
                     ? `Válida até ${formatarDataISO(integrante.validade)}`

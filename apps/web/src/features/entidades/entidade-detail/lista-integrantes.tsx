@@ -75,14 +75,7 @@ export function ListaIntegrantes({ integrantes, total }: Props) {
                                 </p>
                             </div>
 
-                            <Badge
-                                variant="outline"
-                                className={
-                                    vencida
-                                        ? "border-warning/40 bg-warning/10 shrink-0 gap-1"
-                                        : "shrink-0 gap-1"
-                                }
-                            >
+                            <Badge variant={vencida ? "warning" : "outline"}>
                                 {vencida ? (
                                     <WarningIcon
                                         aria-hidden="true"
