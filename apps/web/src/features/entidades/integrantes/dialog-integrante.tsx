@@ -63,7 +63,7 @@ export function DialogIntegrante({ aberto, onAbertoChange, onSalvar }: Props) {
                 <ExpandableDialogLabel>Novo integrante</ExpandableDialogLabel>
             </ExpandableDialogTrigger>
 
-            <ExpandableDialogContent className="max-w-xl!">
+            <ExpandableDialogContent className="max-w-3xl!">
                 <ExpandableDialogHeader>
                     <div className="flex items-center gap-2">
                         <SeloCompartilhado />

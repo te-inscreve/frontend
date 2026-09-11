@@ -43,7 +43,7 @@ export function DialogEditarIntegrante({ integrante, onEditar }: Props) {
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-xl">
+            <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Editar integrante</DialogTitle>
                     <DialogDescription>

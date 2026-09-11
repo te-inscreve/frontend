@@ -2,12 +2,18 @@ import { z } from "zod/v4";
 
 import type { FormIntegrante, Integrante } from "@te-inscreve/schemas";
 
-import { dataDeISO, paraISO } from "~/features/entidades/shared/integrantes";
+import {
+    dataDeISO,
+    dividirNome,
+    nomeCompleto,
+    paraISO,
+} from "~/features/entidades/shared/integrantes";
 
 /**
  * O cadastro de integrante na forma que a UI manipula: datas como `Date` — é
- * o que o calendário devolve — e tudo que pode estar vazio como `null`,
- * inclusive o que é obrigatório: o campo nasce vazio e é o Zod que cobra.
+ * o que o calendário devolve —, o nome numa caixa só, e tudo que pode estar
+ * vazio como `null`, inclusive o que é obrigatório: o campo nasce vazio e é o
+ * Zod que cobra.
  *
  * O contrato com a API é o `formIntegranteSchema` de `@te-inscreve/schemas`;
  * este é só o que é da tela, e `integranteFormInput` traduz um no outro.
@@ -27,10 +33,18 @@ const dataObrigatoria = (mensagem: string) =>
 
 export const integranteFormSchema = z
     .object({
-        nome: z.string().trim().min(1, "Informe o nome."),
-        // Sobrenome não é firula: é ele que distingue duas pessoas na
-        // planilha da comissão do evento.
-        sobrenome: z.string().trim().min(1, "Informe o sobrenome."),
+        // Um campo só, dividido em nome e sobrenome no envio: é assim que o
+        // nome está escrito na carteirinha que a pessoa tem na mão, e dois
+        // campos faziam parar no meio para decidir onde cortar.
+        nomeCompleto: z
+            .string()
+            .trim()
+            .min(1, "Informe o nome completo.")
+            // Sobrenome não é firula: é ele que distingue duas pessoas na
+            // planilha da comissão do evento.
+            .refine((valor) => dividirNome(valor).sobrenome.length > 0, {
+                error: "Informe também o sobrenome.",
+            }),
         matriculaMtg: z
             .string()
             .trim()
@@ -56,8 +70,7 @@ export function integranteFormDefaults(
 ): IntegranteFormValues {
     if (!integrante) {
         return {
-            nome: "",
-            sobrenome: "",
+            nomeCompleto: "",
             matriculaMtg: "",
             dataNascimento: null,
             validade: null,
@@ -65,8 +78,7 @@ export function integranteFormDefaults(
     }
 
     return {
-        nome: integrante.nome,
-        sobrenome: integrante.sobrenome,
+        nomeCompleto: nomeCompleto(integrante),
         matriculaMtg: integrante.matriculaMtg,
         dataNascimento: dataDeISO(integrante.dataNascimento),
         validade: integrante.validade ? dataDeISO(integrante.validade) : null,
@@ -89,9 +101,12 @@ export function integranteFormInput(
         );
     }
 
+    // O `parse` acima já garantiu que sobra sobrenome depois do corte.
+    const { nome, sobrenome } = dividirNome(dados.nomeCompleto);
+
     return {
-        nome: dados.nome,
-        sobrenome: dados.sobrenome,
+        nome,
+        sobrenome,
         matriculaMtg: dados.matriculaMtg,
         dataNascimento: paraISO(dataNascimento),
         validade: validade ? paraISO(validade) : null,

@@ -19,6 +19,23 @@ export function nomeCompleto(
     return `${integrante.nome} ${integrante.sobrenome}`.trim();
 }
 
+/**
+ * O caminho de volta de {@link nomeCompleto}: a primeira palavra é o nome, o
+ * resto é o sobrenome.
+ *
+ * "Maria da Silva Souza" vira "Maria" e "da Silva Souza". Não é a regra que
+ * acerta todo mundo — quem tem nome composto na frente, como "Ana Paula",
+ * perde a segunda metade para o sobrenome —, mas é a que erra menos numa
+ * caixa só: a API guarda os dois campos separados, e quem cadastra lê o nome
+ * inteiro da carteirinha de uma vez.
+ *
+ * Espaço repetido no meio some junto, senão o sobrenome sairia com buraco.
+ */
+export function dividirNome(completo: string) {
+    const [nome = "", ...resto] = completo.trim().split(/\s+/);
+    return { nome, sobrenome: resto.join(" ") };
+}
+
 /** Lê uma data ISO (`aaaa-mm-dd`) como data local, sem o fuso do `new Date`. */
 export function dataDeISO(iso: string): Date {
     const [ano = 0, mes = 1, dia = 1] = iso.split("-").map(Number);
