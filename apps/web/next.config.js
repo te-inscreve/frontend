@@ -5,6 +5,13 @@ const jiti = createJiti(import.meta.url);
 // Import env files to validate at build time. Use jiti so we can load .ts files in here.
 await jiti.import("./src/shared/utils/env");
 
+// O portão do `next/image`, pelo mesmo carregador. O `jiti.import` devolve
+// `unknown`, e é o cast que traz de volta os tipos do módulo.
+const { provedoresDeImagem, ehHostLocal } =
+    /** @type {typeof import("./imagens.config")} */ (
+        await jiti.import("./imagens.config")
+    );
+
 /** @type {import("next").NextConfig} */
 const config = {
     /** Enables hot reloading for local packages without a build step */
@@ -29,21 +36,24 @@ const config = {
     // typescript: { ignoreBuildErrors: true },
     allowedDevOrigins: process.env.ALLOWED_ORIGINS?.split(",") ?? [],
     images: {
-        dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
-        remotePatterns:
-            process.env.IMAGE_PROVIDERS?.split(",")
-                .filter((pattern) => !!pattern)
-                ?.map((pattern) => {
-                    const url = new URL(pattern);
-                    return {
-                        protocol: url.protocol.includes("https")
-                            ? "https"
-                            : "http",
-                        hostname: url.hostname,
-                        port: url.port,
-                        pathname: "/**",
-                    };
-                }) ?? [],
+        /**
+         * Abre o portão a partir do que está em `IMAGE_PROVIDERS`, e não do
+         * `NODE_ENV`: rodar o build localmente (`yarn start`) mantém
+         * `NODE_ENV=production`, mas as imagens continuam vindo do mesmo
+         * backend local do `next dev` — com o portão fechado elas voltam 400
+         * (`"url" parameter is not allowed`). Um deploy de verdade, que aponta
+         * para um host público, mantém o portão fechado sem depender de
+         * ninguém lembrar de configurar nada.
+         */
+        dangerouslyAllowLocalIP: provedoresDeImagem.some((url) =>
+            ehHostLocal(url.hostname),
+        ),
+        remotePatterns: provedoresDeImagem.map((url) => ({
+            protocol: url.protocol.includes("https") ? "https" : "http",
+            hostname: url.hostname,
+            port: url.port,
+            pathname: "/**",
+        })),
     },
     experimental: {
         optimizePackageImports: ["@phosphor-icons/react"],
