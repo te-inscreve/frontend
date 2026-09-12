@@ -6,13 +6,18 @@ import { FunnelIcon } from "@phosphor-icons/react/dist/ssr/Funnel";
 import {
     Badge,
     Button,
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+    buttonVariants,
+    cn,
+    ExpandableDialog,
+    ExpandableDialogBody,
+    ExpandableDialogContent,
+    ExpandableDialogDescription,
+    ExpandableDialogFooter,
+    ExpandableDialogHeader,
+    ExpandableDialogIcon,
+    ExpandableDialogLabel,
+    ExpandableDialogTitle,
+    ExpandableDialogTrigger,
     Field,
     FieldError,
     FieldLabel,
@@ -35,6 +40,12 @@ interface Props {
  * O diálogo trabalha em rascunho e só devolve o filtro no "Aplicar". Filtrar a
  * cada clique não adiantaria nada aqui — a lista está atrás do overlay, e a
  * pessoa não veria o efeito enquanto escolhe.
+ *
+ * Expande a partir do próprio botão em vez de aparecer no centro: o rótulo dos
+ * dois lados é a mesma palavra, então o que abre não é outra coisa — é o
+ * "Filtros" da barra crescendo até caber as escolhas, e encolhendo de volta
+ * para o lugar de onde saiu. É o caso do `BotaoEditarCategoria` em
+ * `docs/animacoes.md`, e não o do formulário solto que um botão de barra abre.
  */
 export function DialogFiltros({ filtros, onChange }: Props) {
     const [aberto, setAberto] = useState(false);
@@ -69,36 +80,59 @@ export function DialogFiltros({ filtros, onChange }: Props) {
         });
 
     return (
-        <Dialog open={aberto} onOpenChange={abrir}>
-            <DialogTrigger asChild>
-                <Button type="button" variant="outline" className="h-10">
-                    <FunnelIcon aria-hidden="true" />
-                    Filtros
-                    {ativos > 0 && (
-                        <Badge variant="secondary" className="ml-1">
-                            {ativos}
-                        </Badge>
-                    )}
-                </Button>
-            </DialogTrigger>
+        <ExpandableDialog
+            id="filtros-integrantes"
+            open={aberto}
+            onOpenChange={abrir}
+        >
+            {/* `buttonVariants` em vez de `<Button asChild>`: o gatilho já é o
+                `button` do Radix sobre um `motion.button`, e embrulhar mais um
+                daria botão dentro de botão.
 
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle className="text-primary flex items-center">
-                        <FunnelIcon
-                            aria-hidden="true"
-                            className="mr-2"
-                            weight="bold"
-                        />
-                        Filtros
-                    </DialogTitle>
-                    <DialogDescription>
+                O `transition-colors` no fim não é enfeite: o botão vem com
+                `transition-all`, e aí o navegador passa a interpolar, com os
+                150ms dele, o `transform` que o Motion reescreve a cada quadro —
+                o gatilho fica para trás do modal. */}
+            <ExpandableDialogTrigger
+                className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "h-10 transition-colors",
+                )}
+            >
+                <FunilCompartilhado />
+                {/* `font-semibold` porque o rótulo padrão é `font-medium` e
+                    trocaria o peso do texto do botão; é também o peso do
+                    título, e o que viaja no morph é o tamanho, não a espessura. */}
+                <ExpandableDialogLabel className="font-semibold">
+                    Filtros
+                </ExpandableDialogLabel>
+                {/* A contagem não viaja: ela é do estado fechado, e some com o
+                    resto do botão assim que a caixa começa a crescer. */}
+                {ativos > 0 && (
+                    <Badge variant="secondary" className="ml-1">
+                        {ativos}
+                    </Badge>
+                )}
+            </ExpandableDialogTrigger>
+
+            <ExpandableDialogContent className="max-w-md!">
+                <ExpandableDialogHeader>
+                    <div className="flex items-center gap-2">
+                        <FunilCompartilhado />
+                        <ExpandableDialogTitle className="text-primary">
+                            Filtros
+                        </ExpandableDialogTitle>
+                    </div>
+                    <ExpandableDialogDescription>
                         Recorte a lista pela idade que define a categoria e pela
                         situação da matrícula.
-                    </DialogDescription>
-                </DialogHeader>
+                    </ExpandableDialogDescription>
+                </ExpandableDialogHeader>
 
-                <div className="flex flex-col gap-5">
+                {/* O rodapé vive dentro do corpo, e não ao lado dele: assim os
+                    botões entram na mesma aparição atrasada dos campos, em vez
+                    de já estarem lá enquanto a caixa ainda cresce. */}
+                <ExpandableDialogBody className="gap-5">
                     {/* Nenhuma ponta limita a outra enquanto se digita: com
                         `min` amarrado à mínima, o primeiro dígito da máxima
                         já cai abaixo do limite e o campo se apaga sozinho —
@@ -189,21 +223,38 @@ export function DialogFiltros({ filtros, onChange }: Props) {
                             renovar.
                         </p>
                     </div>
-                </div>
 
-                <DialogFooter className="border-t pt-4">
-                    <Button type="button" variant="ghost" onClick={limpar}>
-                        Limpar
-                    </Button>
-                    <Button
-                        type="button"
-                        onClick={aplicar}
-                        disabled={intervaloInvertido}
-                    >
-                        Aplicar filtros
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                    <ExpandableDialogFooter className="border-t pt-4">
+                        <Button type="button" variant="ghost" onClick={limpar}>
+                            Limpar
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={aplicar}
+                            disabled={intervaloInvertido}
+                        >
+                            Aplicar filtros
+                        </Button>
+                    </ExpandableDialogFooter>
+                </ExpandableDialogBody>
+            </ExpandableDialogContent>
+        </ExpandableDialog>
+    );
+}
+
+/**
+ * O funil que viaja do botão para o cabeçalho do modal — do mesmo tamanho e da
+ * mesma cor nos dois lados.
+ *
+ * Sem o disco do `ExpandableDialogIcon` padrão: o gatilho é um botão compacto,
+ * e um selo de 36px dentro dele estouraria a altura. Crescer no caminho também
+ * não serve — elemento compartilhado que muda de tamanho é escalado pelo
+ * Motion, e escala em ícone deforma.
+ */
+function FunilCompartilhado() {
+    return (
+        <ExpandableDialogIcon className="text-primary size-4 bg-transparent">
+            <FunnelIcon aria-hidden="true" weight="bold" />
+        </ExpandableDialogIcon>
     );
 }
