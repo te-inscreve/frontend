@@ -82,10 +82,16 @@ export function CartaoIntegranteSelecao({
                         : `Incluir ${nomeCompleto(integrante)} no grupo ${grupo}`
                 }
                 className={cn(
-                    "bg-card focus-visible:ring-ring/50 group flex w-full cursor-pointer items-center gap-3 border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                    "focus-visible:ring-ring/50 group flex w-full cursor-pointer items-center gap-3 border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                    // Claro nos dois lados, porque o corpo das duas mãos é a
+                    // mesma superfície afundada: o cartão contrasta com o painel
+                    // onde quer que esteja. O que muda de lado para lado é o que
+                    // o clique faz, e é o hover que diz — o verde de incluir na
+                    // cesta, o vermelho de tirar na formação.
+                    "bg-card border-border/70",
                     membro
                         ? "hover:border-destructive/50 hover:bg-destructive/5"
-                        : "hover:border-primary/50 hover:bg-muted/50",
+                        : "hover:border-primary/50 hover:bg-primary/5",
                 )}
             >
                 <AvatarUsuario

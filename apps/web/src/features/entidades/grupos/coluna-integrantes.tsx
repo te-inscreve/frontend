@@ -3,20 +3,17 @@
 import Link from "next/link";
 import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
 import { UserPlusIcon } from "@phosphor-icons/react/dist/ssr/UserPlus";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import { motion } from "motion/react";
 
 import { Button } from "@te-inscreve/components";
 
 import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/filtros-integrantes";
-import type { AoEditarIntegrante } from "~/features/entidades/integrantes/modal-integrante";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { BarraFiltros } from "~/features/entidades/integrantes/barra-filtros";
-import { CartaoIntegrante } from "~/features/entidades/integrantes/cartao-integrante";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
 import { temFiltroAtivo } from "~/features/entidades/integrantes/filtros-integrantes";
+import { LadoDaBancada } from "./bancada";
 import { CartaoIntegranteSelecao } from "./cartao-integrante-selecao";
-import { contagemIntegrantes } from "./grupo";
 
 /** Quantos esqueletos enquanto a primeira página não chega: uma coluna cheia. */
 const ESQUELETOS = 5;
@@ -24,7 +21,7 @@ const ESQUELETOS = 5;
 /** Onde o cadastro de integrante acontece — esta tela só aponta para lá. */
 const CADASTRO_DE_INTEGRANTE = "/admin/minha-entidade/integrantes?novo";
 
-interface Props extends AoEditarIntegrante {
+interface Props {
     integrantes: Integrante[];
     total: number;
     carregando: boolean;
@@ -34,34 +31,41 @@ interface Props extends AoEditarIntegrante {
     sentinelaRef: React.Ref<HTMLDivElement>;
     filtros: FiltrosIntegrantes;
     onFiltrosChange: (filtros: FiltrosIntegrantes) => void;
+    /** O nome do grupo sendo montado — para onde vai quem for clicado aqui. */
+    grupo: string;
     /**
-     * O grupo aberto, quando há um. É ele que põe a coluna em modo de seleção:
-     * sem grupo aberto, o cartão abre o detalhe da pessoa; com grupo aberto, o
-     * cartão inclui a pessoa nele.
+     * Se a entidade não tem integrante nenhum cadastrado. A cesta vazia tem duas
+     * causas opostas — ninguém cadastrado, ou todo mundo já dentro do grupo — e a
+     * contagem não as distingue: as duas dão zero disponíveis.
      */
-    grupoAberto: string | null;
+    entidadeVazia: boolean;
     onAlternarIntegrante: (integrante: Integrante) => void;
-    /** Manda para o grupo aberto todo mundo que a coluna está mostrando. */
-    onIncluirTodos: () => void;
+    className?: string;
 }
 
 /**
- * A coluna de integrantes da entidade, à esquerda da tela de grupos.
+ * A cesta de integrantes da entidade: o lado de onde se tira gente.
  *
- * Ela é a mesma lista em dois modos. Sem grupo aberto é consulta: os cartões são
- * os da tela de integrantes ({@link CartaoIntegrante}), e clicar abre o detalhe
- * da pessoa. Com um grupo aberto ela vira o lado de fora da formação — clicar
- * inclui, e quem entrou some da coluna para aparecer no grupo.
+ * Só existe com um grupo aberto, e é isso que a define. Ela não é a listagem de
+ * integrantes da entidade — essa tem tela própria, com detalhe e cadastro — mas
+ * o material de uma tarefa: cada cartão daqui é uma opção a mandar para o grupo,
+ * e quem entra no grupo some da cesta para aparecer do outro lado.
  *
- * A coluna não muda quando um grupo abre: é de propósito que ela fique parada
- * enquanto a outra metade da tela troca de assunto. Quem monta grupo passa o
- * tempo todo olhando esta lista, e recarregá-la a cada grupo aberto custaria a
- * rolagem e a busca que a pessoa já tinha feito.
+ * Fora de um grupo aberto ela não teria o que fazer. Os cartões não abrem o
+ * detalhe da pessoa (ver {@link CartaoIntegranteSelecao}), então, sem destino, a
+ * lista viraria uma cópia inerte da tela de integrantes ao lado da grade de
+ * grupos — ocupando a metade da tela sem responder a clique nenhum.
  *
- * A rolagem é da coluna, e não da página, para a lista de gente e o grupo aberto
- * andarem separados. O `layoutScroll` na caixa rolável é o que faz o cartão que
- * viaja até a formação sair do lugar certo mesmo com a coluna rolada — ver a
- * quinta armadilha de `docs/animacoes.md`.
+ * O recorte fica: buscar por nome e filtrar é justamente como se separa quem
+ * entra no grupo. Mandar de uma vez quem sobrou do filtro é da seta entre as
+ * duas mãos ({@link SetaDaBancada}), e não de um botão aqui dentro: a seta já
+ * anunciava o sentido, e um botão repetindo a mesma frase ficava entre o filtro
+ * e a lista sem precisar estar ali.
+ *
+ * A rolagem é da cesta, e não da página, para a lista de gente e a formação
+ * andarem separadas. O `layoutScroll` na caixa rolável é o que faz o cartão que
+ * viaja até o grupo sair do lugar certo mesmo com a cesta rolada — ver a quinta
+ * armadilha de `docs/animacoes.md`.
  *
  * O cadastro de integrante não mora aqui: o botão do fim leva à tela de
  * integrantes já com o formulário aberto (`?novo`). É uma tarefa de outra tela,
@@ -76,46 +80,31 @@ export function ColunaIntegrantes({
     sentinelaRef,
     filtros,
     onFiltrosChange,
-    grupoAberto,
+    grupo,
+    entidadeVazia,
     onAlternarIntegrante,
-    onIncluirTodos,
-    onEditar,
+    className,
 }: Props) {
     return (
-        <aside className="flex flex-col gap-3 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-5rem)]">
-            <div className="flex flex-col gap-1">
-                <h2 className="text-lg font-bold tracking-tight">
-                    Integrantes
-                </h2>
-                <p className="text-muted-foreground text-xs">
-                    {grupoAberto
-                        ? `Clique em alguém para incluir no grupo ${grupoAberto}.`
-                        : "Quem está cadastrado na entidade. Abra um grupo para montar a formação."}
-                </p>
-            </div>
-
+        <LadoDaBancada
+            titulo="Integrantes"
+            descricao={
+                <>
+                    Clique em alguém para incluir no grupo{" "}
+                    <span className="text-foreground font-semibold">
+                        {grupo}
+                    </span>
+                    .
+                </>
+            }
+            className={className}
+        >
             <BarraFiltros
                 filtros={filtros}
                 onChange={onFiltrosChange}
                 resultados={integrantes.length}
                 total={total}
             />
-
-            {/* O atalho do recorte: filtrar já é escolher quem entra, e depois
-                disso clicar um por um é refazer à mão o que o filtro fez. Só
-                aparece com um grupo aberto e alguém na lista — sem isso não há
-                para onde mandar ninguém. */}
-            {grupoAberto && integrantes.length > 0 && (
-                <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={onIncluirTodos}
-                    className="shrink-0"
-                >
-                    <UsersThreeIcon aria-hidden="true" />
-                    Incluir {contagemIntegrantes(integrantes.length)} no grupo
-                </Button>
-            )}
 
             {/* `layoutScroll`: o Motion mede posições em coordenadas de tela e
                 não sabe sozinho que este contêiner rolou. Sem o aviso, o cartão
@@ -124,14 +113,14 @@ export function ColunaIntegrantes({
                 layoutScroll
                 className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1"
             >
-                <ConteudoDaColuna
+                <ConteudoDaCesta
                     integrantes={integrantes}
                     carregando={carregando}
                     erro={erro}
                     temFiltro={temFiltroAtivo(filtros)}
-                    grupoAberto={grupoAberto}
+                    grupo={grupo}
+                    entidadeVazia={entidadeVazia}
                     onAlternarIntegrante={onAlternarIntegrante}
-                    onEditar={onEditar}
                 />
 
                 {isFetchingNextPage && (
@@ -150,29 +139,29 @@ export function ColunaIntegrantes({
                     Cadastrar integrante
                 </Link>
             </Button>
-        </aside>
+        </LadoDaBancada>
     );
 }
 
 /**
  * Carregando, falhar, vazio e a lista — decididos num lugar só, como na
- * {@link ListaIntegrantes}, para a mensagem não depender do modo da coluna.
+ * {@link ListaIntegrantes}, para a mensagem não se espalhar pelo painel.
  */
-function ConteudoDaColuna({
+function ConteudoDaCesta({
     integrantes,
     carregando,
     erro,
     temFiltro,
-    grupoAberto,
+    grupo,
+    entidadeVazia,
     onAlternarIntegrante,
-    onEditar,
 }: Pick<
     Props,
     | "integrantes"
     | "carregando"
     | "erro"
-    | "grupoAberto"
-    | "onEditar"
+    | "grupo"
+    | "entidadeVazia"
     | "onAlternarIntegrante"
 > & { temFiltro: boolean }) {
     if (carregando) {
@@ -199,32 +188,24 @@ function ConteudoDaColuna({
             <p className="text-muted-foreground rounded-xl border border-dashed p-4 text-sm">
                 {temFiltro
                     ? "Ninguém corresponde ao que você procurou."
-                    : grupoAberto
-                      ? `Todo mundo da entidade já está no grupo ${grupoAberto}.`
-                      : "Nenhum integrante cadastrado. Cadastre as pessoas da entidade para montar os grupos."}
+                    : entidadeVazia
+                      ? "Nenhum integrante cadastrado. Cadastre as pessoas da entidade para montar os grupos."
+                      : `Todo mundo da entidade já está no grupo ${grupo}.`}
             </p>
         );
     }
 
     return (
         <ul className="grid gap-3">
-            {integrantes.map((integrante) =>
-                grupoAberto ? (
-                    <CartaoIntegranteSelecao
-                        key={integrante.id}
-                        integrante={integrante}
-                        estado="disponivel"
-                        grupo={grupoAberto}
-                        onAlternar={onAlternarIntegrante}
-                    />
-                ) : (
-                    <CartaoIntegrante
-                        key={integrante.id}
-                        integrante={integrante}
-                        onEditar={onEditar}
-                    />
-                ),
-            )}
+            {integrantes.map((integrante) => (
+                <CartaoIntegranteSelecao
+                    key={integrante.id}
+                    integrante={integrante}
+                    estado="disponivel"
+                    grupo={grupo}
+                    onAlternar={onAlternarIntegrante}
+                />
+            ))}
         </ul>
     );
 }

@@ -1,13 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import {
-    useInfiniteQuery,
-    useMutation,
-    useQueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
-import type { FormIntegrante } from "@te-inscreve/schemas";
 import { proximaPagina } from "@te-inscreve/schemas";
 
 import type { FormGrupo, GrupoDetalhe } from "./grupo";
@@ -28,9 +23,9 @@ export const INTEGRANTES_POR_PAGINA = 20;
  * Todo o estado da tela de grupos: a coluna de integrantes, a lista de grupos e
  * o grupo aberto.
  *
- * Está num hook porque as duas metades da tela se cruzam — incluir alguém muda
- * de lado um cartão da esquerda, e o grupo aberto decide se a coluna marca ou
- * abre detalhe — e porque é aqui que a tela conversa com os dados.
+ * Está num hook porque as duas mãos da bancada se cruzam — incluir alguém tira
+ * o cartão de um lado e o põe no outro, e o grupo aberto decide se a cesta de
+ * integrantes existe — e porque é aqui que a tela conversa com os dados.
  *
  * As duas origens são diferentes de propósito. Os integrantes são de verdade:
  * `integrante.list`, query infinita, primeira página hidratada do servidor. Os
@@ -45,7 +40,6 @@ export const INTEGRANTES_POR_PAGINA = 20;
  */
 export function usePainelGrupos() {
     const trpc = useTRPC();
-    const queryClient = useQueryClient();
 
     const [grupos, setGrupos] = useState<GrupoDetalhe[]>(gruposMock);
     const [abertoId, setAbertoId] = useState<number | null>(null);
@@ -70,12 +64,12 @@ export function usePainelGrupos() {
     const total = lista.data?.pages[0]?.totalItems ?? 0;
 
     /**
-     * Quem a coluna da esquerda mostra.
+     * Quem a cesta da esquerda mostra.
      *
-     * Com um grupo aberto, quem já está nele sai da coluna: a pessoa está do
-     * outro lado da tela, na formação, e é de lá que ela volta. Ficar nos dois
-     * lugares ao mesmo tempo tiraria o sentido do clique — e faria duas caixas
-     * disputarem o mesmo `layoutId` da animação.
+     * Quem já está no grupo aberto sai da cesta: a pessoa está do outro lado da
+     * bancada, na formação, e é de lá que ela volta. Ficar nos dois lugares ao
+     * mesmo tempo tiraria o sentido do clique — e faria duas caixas disputarem o
+     * mesmo `layoutId` da animação.
      *
      * O recorte do filtro vem depois, para a contagem da barra falar do que
      * está à vista.
@@ -93,7 +87,7 @@ export function usePainelGrupos() {
      *
      * O desconto conta quem saiu *das páginas já carregadas*, e não a formação
      * inteira: o grupo pode ter gente que o backend ainda não devolveu, e
-     * descontá-la faria a contagem cair sem ninguém ter saído da coluna.
+     * descontá-la faria a contagem cair sem ninguém ter saído da cesta.
      */
     const totalDisponiveis = total - (integrantes.length - disponiveis.length);
 
@@ -106,31 +100,6 @@ export function usePainelGrupos() {
     const carregarMais = useCallback(() => {
         if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-    /**
-     * A edição de integrante que o detalhe da pessoa oferece — a única escrita
-     * desta tela que chega na API de verdade.
-     *
-     * É a mesma de `usePainelIntegrantes`: o modal é o mesmo componente, e sem
-     * isto ele abriria um formulário que não salva. `pathFilter`, e não
-     * `queryFilter`, para a invalidação casar com a chave da query infinita.
-     */
-    const editar = useMutation(trpc.integrante.update.mutationOptions());
-    const editarIntegrante = useCallback(
-        async (id: number, dados: FormIntegrante) => {
-            await editar.mutateAsync({ id, integrante: dados });
-
-            await Promise.all([
-                queryClient.invalidateQueries(
-                    trpc.integrante.list.pathFilter(),
-                ),
-                queryClient.invalidateQueries(
-                    trpc.integrante.getById.queryFilter({ id }),
-                ),
-            ]);
-        },
-        [editar, queryClient, trpc],
-    );
 
     /**
      * Cria o grupo e já o abre: quem acabou de nomear um grupo vazio tem uma
@@ -231,7 +200,7 @@ export function usePainelGrupos() {
      * depois disso é refazer à mão o trabalho que o filtro fez.
      *
      * Age sobre a lista visível, e não sobre a entidade inteira — sem filtro,
-     * "todos" é todo mundo que já carregou na coluna. Quem está no grupo nem
+     * "todos" é todo mundo que já carregou na cesta. Quem está no grupo nem
      * aparece lá, então não há o que duplicar.
      */
     const incluirVisiveis = useCallback(() => {
@@ -261,14 +230,19 @@ export function usePainelGrupos() {
         alternarIntegrante,
         incluirVisiveis,
         integrantes: visiveis,
-        /** Quantos a coluna mostraria sem o filtro — ver {@link totalDisponiveis}. */
+        /** Quantos a cesta mostraria sem o filtro — ver {@link totalDisponiveis}. */
         total: totalDisponiveis,
+        /**
+         * A entidade não tem ninguém cadastrado — diferente de "todo mundo já
+         * está no grupo", que também zera a cesta. Quem mostra a mensagem
+         * precisa distinguir as duas, e a contagem de disponíveis não basta.
+         */
+        entidadeVazia: total === 0,
         carregando: lista.isLoading,
         erro: lista.error,
         isFetchingNextPage,
         carregarMais,
         filtros,
         setFiltros,
-        editarIntegrante,
     };
 }

@@ -30,7 +30,12 @@ export default function GruposPage() {
     );
 
     return (
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
+        // `lg:h-full` em vez de altura natural: com um grupo aberto, a bancada
+        // precisa saber de quanta tela dispõe para caber sem empurrar a página.
+        // A conta não é daqui — o `layout` do admin já deixa esta caixa com a
+        // altura exata que sobrou do cabeçalho, e o `h-full` a herda. Assim
+        // ninguém precisa somar cabeçalho, padding e trilha num `calc`.
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8 lg:h-full lg:min-h-0">
             <HydrateClient>
                 <PainelGrupos />
             </HydrateClient>

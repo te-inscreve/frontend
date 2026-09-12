@@ -2,108 +2,130 @@
 
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
+import { motion } from "motion/react";
 
 import { Badge } from "@te-inscreve/components";
 
 import type { FormGrupo, GrupoDetalhe } from "./grupo";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
+import { LadoDaBancada } from "./bancada";
 import { CartaoIntegranteSelecao } from "./cartao-integrante-selecao";
 import { contagemIntegrantes, formatarDataCriacao } from "./grupo";
 import { MenuGrupo } from "./menu-grupo";
-import { TrilhaGrupo } from "./trilha-grupo";
 
 interface Props {
     grupo: GrupoDetalhe;
-    onVoltar: () => void;
     onEditar: (dados: FormGrupo) => Promise<void> | void;
     onExcluir: () => void;
     onAlternarIntegrante: (integrante: Integrante) => void;
+    className?: string;
 }
 
 /**
- * O detalhe de um grupo, no lugar da grade e sem tocar na coluna da esquerda.
+ * O grupo aberto: o balde da bancada, onde a formação se junta.
  *
- * É aqui que a formação se monta: a coluna entra em modo de seleção, e os dois
- * lados da tela passam a ser um par — quem sai de lá aparece aqui, e quem sai
- * daqui volta para lá. Por isso o detalhe não é um modal nem outra rota: o
- * trabalho depende de ver a entidade inteira ao lado do grupo.
+ * É o lado de chegada do gesto da tela — quem sai da cesta de integrantes
+ * aparece aqui, e quem sai daqui volta para lá. Por isso o detalhe não é um
+ * modal nem outra rota: o trabalho depende de ver a entidade inteira ao lado do
+ * grupo, e um modal cobriria justamente a metade de onde vem a gente.
  *
- * A viagem do cartão entre os dois lados não precisa de `AnimatePresence`: o
- * cartão não desaparece — ele é removido de uma lista e montado na outra no mesmo
- * render, e é o `layoutId` compartilhado que faz o Motion reconhecer os dois como
- * o mesmo elemento e animar o trajeto. Ver {@link CartaoIntegranteSelecao}.
+ * Tem a mesma moldura e a mesma altura da cesta ({@link LadoDaBancada}): as duas
+ * mãos são um par, e a que recebe não vale mais do que a que fornece. Com a
+ * superfície igual dos dois lados, o que marca a mudança de lado é o trajeto do
+ * cartão e o sinal que ele troca — `+` na cesta, `−` aqui.
+ *
+ * Essa viagem não precisa de `AnimatePresence`: o cartão não desaparece — ele é
+ * removido de uma lista e montado na outra no mesmo render, e é o `layoutId`
+ * compartilhado que faz o Motion reconhecer os dois como o mesmo elemento e
+ * animar o trajeto. Ver {@link CartaoIntegranteSelecao}.
+ *
+ * A volta para a lista de grupos é da trilha, que fica acima da bancada inteira
+ * — ver {@link PainelGrupos}. Ela diz em que estado a tela está, e não o que
+ * este painel é.
  */
 export function DetalheGrupo({
     grupo,
-    onVoltar,
     onEditar,
     onExcluir,
     onAlternarIntegrante,
+    className,
 }: Props) {
     return (
-        <section className="flex flex-col gap-4">
-            <TrilhaGrupo nome={grupo.nome} onVoltar={onVoltar} />
-
-            <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex min-w-0 flex-col gap-1.5">
-                    <h2 className="text-xl font-bold tracking-tight">
-                        {grupo.nome}
-                    </h2>
-
-                    {grupo.descricao ? (
-                        <p className="text-muted-foreground max-w-prose text-sm">
-                            {grupo.descricao}
-                        </p>
-                    ) : (
-                        <p className="text-muted-foreground/70 text-sm italic">
-                            Sem descrição
-                        </p>
-                    )}
-
-                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                        <Badge variant="secondary">
-                            <UsersThreeIcon aria-hidden="true" />
-                            {contagemIntegrantes(grupo.totalIntegrantes)}
-                        </Badge>
-
-                        {grupo.pendenciaCarteiraVencida && (
-                            <Badge variant="warning">
-                                <WarningIcon
-                                    aria-hidden="true"
-                                    weight="fill"
-                                    className="text-warning"
-                                />
-                                Matrícula vencida no grupo
-                            </Badge>
-                        )}
-
-                        <span className="text-muted-foreground text-xs">
-                            Criado em {formatarDataCriacao(grupo.dataCriacao)}
-                        </span>
-                    </div>
-                </div>
-
+        <LadoDaBancada
+            titulo={grupo.nome}
+            descricao={
+                grupo.descricao || <span className="italic">Sem descrição</span>
+            }
+            acoes={
                 <MenuGrupo
                     grupo={grupo}
                     onEditar={onEditar}
                     onExcluir={onExcluir}
                 />
+            }
+            className={className}
+        >
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <Badge variant="secondary">
+                    <UsersThreeIcon aria-hidden="true" />
+                    {contagemIntegrantes(grupo.totalIntegrantes)}
+                </Badge>
+
+                {grupo.pendenciaCarteiraVencida && (
+                    <Badge variant="warning">
+                        <WarningIcon
+                            aria-hidden="true"
+                            weight="fill"
+                            className="text-warning"
+                        />
+                        Matrícula vencida no grupo
+                    </Badge>
+                )}
+
+                <span className="text-muted-foreground ml-auto text-xs">
+                    Criado em {formatarDataCriacao(grupo.dataCriacao)}
+                </span>
             </div>
 
-            <div className="flex flex-col gap-3 border-t pt-4">
-                <h3 className="text-sm font-semibold">Formação</h3>
+            {/* A formação é o conteúdo do painel, mas ainda assim tem título: é
+                ele que dá nome à lista para quem navega por cabeçalhos, e o que
+                separa a gente do grupo dos selos logo acima. */}
+            <h3 className="shrink-0 border-t pt-3 text-sm font-semibold">
+                Formação
+            </h3>
 
+            {/* A formação rola por dentro, e não com a página: as duas mãos têm
+                a mesma altura, e é rolando separadas que elas continuam lado a
+                lado. `layoutScroll` porque o Motion mede em coordenadas de tela
+                e não sabe que esta caixa rolou — sem o aviso, o cartão que chega
+                da cesta nasceria deslocado. Ver a quinta armadilha de
+                `docs/animacoes.md`. */}
+            <motion.div
+                layoutScroll
+                className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1"
+            >
                 {grupo.integrantes.length === 0 ? (
-                    <p className="text-muted-foreground rounded-xl border border-dashed p-6 text-sm">
-                        O grupo ainda está vazio. Clique em alguém na lista de
-                        integrantes, ao lado, para incluir no grupo — e clique
-                        de novo, aqui, para tirar.
-                    </p>
+                    // O vazio é a própria área de chegada, tracejada como uma
+                    // vaga esperando conteúdo — e não um parágrafo avisando que
+                    // não há nada. Quem lê já está de frente para a cesta que a
+                    // preenche.
+                    <div className="text-muted-foreground flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center text-sm">
+                        <UsersThreeIcon
+                            aria-hidden="true"
+                            size={28}
+                            className="opacity-60"
+                        />
+                        <p className="max-w-sm">
+                            O grupo ainda está vazio. Clique em alguém na lista
+                            de integrantes, ao lado, para trazer para cá — e
+                            clique de novo, aqui, para devolver.
+                        </p>
+                    </div>
                 ) : (
                     // Uma coluna até o `2xl`: o cartão carrega nome, matrícula,
                     // idade e o aviso de vencida, e em duas colunas antes disso
                     // o nome trunca e o resumo quebra em três linhas — esta
-                    // metade da tela já divide espaço com a coluna de
+                    // metade da tela já divide espaço com a cesta de
                     // integrantes.
                     <ul className="grid gap-3 2xl:grid-cols-2">
                         {grupo.integrantes.map((integrante) => (
@@ -117,14 +139,14 @@ export function DetalheGrupo({
                         ))}
                     </ul>
                 )}
+            </motion.div>
 
-                {grupo.pendenciaCarteiraVencida && (
-                    <p className="text-muted-foreground text-xs">
-                        Quem está com a matrícula vencida precisa renovar antes
-                        de o grupo ser inscrito em um evento.
-                    </p>
-                )}
-            </div>
-        </section>
+            {grupo.pendenciaCarteiraVencida && (
+                <p className="text-muted-foreground shrink-0 text-xs">
+                    Quem está com a matrícula vencida precisa renovar antes de o
+                    grupo ser inscrito em um evento.
+                </p>
+            )}
+        </LadoDaBancada>
     );
 }
