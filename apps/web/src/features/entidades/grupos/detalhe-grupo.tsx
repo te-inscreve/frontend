@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
+import { FloppyDiskIcon } from "@phosphor-icons/react/dist/ssr/FloppyDisk";
+import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
 import { motion } from "motion/react";
 
-import { Badge } from "@te-inscreve/components";
+import { Badge, Button } from "@te-inscreve/components";
 
 import type { FormGrupo, GrupoDetalhe } from "./grupo";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
@@ -18,6 +21,9 @@ interface Props {
     onEditar: (dados: FormGrupo) => Promise<void> | void;
     onExcluir: () => void;
     onAlternarIntegrante: (integrante: Integrante) => void;
+    /** Se a formação em cena difere da última salva — só então há o que salvar. */
+    temMudancas: boolean;
+    onSalvar: () => Promise<void> | void;
     className?: string;
 }
 
@@ -42,14 +48,32 @@ interface Props {
  * A volta para a lista de grupos é da trilha, que fica acima da bancada inteira
  * — ver {@link PainelGrupos}. Ela diz em que estado a tela está, e não o que
  * este painel é.
+ *
+ * Salvar é o pé do painel, no lugar em que a cesta põe o "Cadastrar integrante":
+ * cada mão termina no que fazer depois de mexer nela. Aqui o botão é o cheio, e
+ * lá o de contorno — montar a formação é o trabalho desta tela, cadastrar gente
+ * é sair dela.
  */
 export function DetalheGrupo({
     grupo,
     onEditar,
     onExcluir,
     onAlternarIntegrante,
+    temMudancas,
+    onSalvar,
     className,
 }: Props) {
+    const [salvando, setSalvando] = useState(false);
+
+    const salvar = async () => {
+        setSalvando(true);
+        try {
+            await onSalvar();
+        } finally {
+            setSalvando(false);
+        }
+    };
+
     return (
         <LadoDaBancada
             titulo={grupo.nome}
@@ -147,6 +171,26 @@ export function DetalheGrupo({
                     grupo ser inscrito em um evento.
                 </p>
             )}
+
+            {/* Desligado enquanto não há o que salvar: incluir e tirar já
+                aparecem na tela na hora, então um botão sempre aceso não diria
+                se o que está em cena já foi guardado ou não. */}
+            <Button
+                type="button"
+                className="shrink-0"
+                disabled={!temMudancas || salvando}
+                onClick={() => void salvar()}
+            >
+                {salvando ? (
+                    <SpinnerGapIcon
+                        aria-hidden="true"
+                        className="animate-spin"
+                    />
+                ) : (
+                    <FloppyDiskIcon aria-hidden="true" />
+                )}
+                {salvando ? "Salvando…" : "Salvar formação"}
+            </Button>
         </LadoDaBancada>
     );
 }

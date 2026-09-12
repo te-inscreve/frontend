@@ -129,6 +129,8 @@ export function PainelGrupos() {
                         }
                         onExcluir={() => painel.excluirGrupo(grupoAberto.id)}
                         onAlternarIntegrante={painel.alternarIntegrante}
+                        temMudancas={painel.formacaoMudou}
+                        onSalvar={painel.salvarFormacao}
                         className="order-1 lg:order-3"
                     />
                 </div>

@@ -44,11 +44,68 @@ export function usePainelGrupos() {
     const [grupos, setGrupos] = useState<GrupoDetalhe[]>(gruposMock);
     const [abertoId, setAbertoId] = useState<number | null>(null);
     const [filtros, setFiltros] = useState<FiltrosIntegrantes>(filtrosVazios);
+    /**
+     * Os ids da formação como ela estava da última vez que foi salva.
+     *
+     * É o que diz se há o que salvar: mexer na formação muda a lista do grupo,
+     * e enquanto ela e esta aqui não baterem, existe mudança pendente. Guarda
+     * só os ids porque é só a composição que o botão salva — nome e descrição
+     * têm o diálogo do menu, que salva sozinho.
+     */
+    const [formacaoSalva, setFormacaoSalva] = useState<number[]>([]);
 
     const grupoAberto = useMemo(
         () => grupos.find((grupo) => grupo.id === abertoId) ?? null,
         [grupos, abertoId],
     );
+
+    /**
+     * Abre um grupo — ou volta para a grade, com `null`.
+     *
+     * Abrir é o marco zero do que há para salvar: a formação que está lá é a
+     * que veio da API, então nada está pendente até alguém mexer.
+     */
+    const abrirGrupo = useCallback(
+        (id: number | null) => {
+            setAbertoId(id);
+            setFormacaoSalva(
+                grupos
+                    .find((grupo) => grupo.id === id)
+                    ?.integrantes.map(({ id: integranteId }) => integranteId) ??
+                    [],
+            );
+        },
+        [grupos],
+    );
+
+    /**
+     * Se a formação do grupo aberto difere da última salva.
+     *
+     * Compara por conjunto, e não por posição: a ordem em que a gente entrou no
+     * grupo não é dado nenhum, e ordená-la só para comparar faria o botão
+     * acender por uma diferença que a tela não mostra.
+     */
+    const formacaoMudou = useMemo(() => {
+        if (!grupoAberto) return false;
+        if (grupoAberto.integrantes.length !== formacaoSalva.length)
+            return true;
+
+        const salvos = new Set(formacaoSalva);
+        return grupoAberto.integrantes.some(({ id }) => !salvos.has(id));
+    }, [grupoAberto, formacaoSalva]);
+
+    /**
+     * Salva a formação montada na bancada.
+     *
+     * Hoje só marca o que está em cena como salvo — é aqui que entra o
+     * `PATCH` da formação quando a rota tRPC existir, antes da marcação, com a
+     * invalidação da lista em seguida. Ver o cabeçalho deste arquivo: os grupos
+     * ainda são mock em memória, e nada disto sobrevive a um recarregamento.
+     */
+    const salvarFormacao = useCallback(() => {
+        if (!grupoAberto) return;
+        setFormacaoSalva(grupoAberto.integrantes.map(({ id }) => id));
+    }, [grupoAberto]);
 
     const lista = useInfiniteQuery(
         trpc.integrante.list.infiniteQueryOptions(
@@ -131,6 +188,8 @@ export function usePainelGrupos() {
 
             setGrupos((atuais) => [...atuais, novo]);
             setAbertoId(id);
+            // Nasce vazio e sem nada pendente — a formação começa aqui.
+            setFormacaoSalva([]);
         },
         [grupos],
     );
@@ -223,12 +282,14 @@ export function usePainelGrupos() {
     return {
         grupos,
         grupoAberto,
-        abrirGrupo: setAbertoId,
+        abrirGrupo,
         criarGrupo,
         editarGrupo,
         excluirGrupo,
         alternarIntegrante,
         incluirVisiveis,
+        formacaoMudou,
+        salvarFormacao,
         integrantes: visiveis,
         /** Quantos a cesta mostraria sem o filtro — ver {@link totalDisponiveis}. */
         total: totalDisponiveis,
