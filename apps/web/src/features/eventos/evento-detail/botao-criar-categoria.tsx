@@ -56,7 +56,7 @@ export function BotaoCriarCategoria({
         >
             <ExpandableDialogTrigger
                 className={cn(
-                    "text-muted-foreground hover:border-primary hover:text-primary focus-visible:ring-ring/50 focus-visible:outline-ring flex h-full shrink-0 flex-col items-center justify-center gap-2 border border-dashed p-4 text-center transition-colors focus-visible:ring-[3px] focus-visible:outline-1",
+                    "bg-card text-muted-foreground hover:border-primary hover:text-primary focus-visible:ring-ring/50 focus-visible:outline-ring flex h-full shrink-0 flex-col items-center justify-center gap-2 border border-dashed p-4 text-center transition-colors focus-visible:ring-[3px] focus-visible:outline-1",
                     sozinho ? "w-100" : "w-44",
                 )}
             >
