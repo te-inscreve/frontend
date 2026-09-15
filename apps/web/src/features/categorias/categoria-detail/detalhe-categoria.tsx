@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr/ClipboardText";
@@ -6,6 +7,7 @@ import { UserCheckIcon } from "@phosphor-icons/react/dist/ssr/UserCheck";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 
 import {
+    Button,
     Tabs,
     TabsContent,
     TabsList,
@@ -49,11 +51,18 @@ export async function DetalheCategoria({
     return (
         <>
             <header className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                    <h1 className="text-primary text-4xl font-bold">
+                <div className="flex flex-wrap items-start gap-3">
+                    <h1 className="text-primary mr-auto text-4xl font-bold">
                         {categoria.nome}
                     </h1>
 
+                    <Button asChild>
+                        <Link
+                            href={`/admin/eventos/${eventoId}/inscricoes/novo?modalidade=${modalidadeId}&categoria=${categoriaId}`}
+                        >
+                            Inscrever-se
+                        </Link>
+                    </Button>
                     <BotaoEditarCategoria
                         eventoId={eventoId}
                         modalidadeId={modalidadeId}
