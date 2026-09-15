@@ -8,8 +8,6 @@ import { ListaIntegrantes } from "./lista-integrantes";
 import { usePainelIntegrantes } from "./use-painel-integrantes";
 import { SeletorVisualizacao } from "./visualizacao";
 
-export { INTEGRANTES_POR_PAGINA } from "./use-painel-integrantes";
-
 /**
  * A tela de integrantes: listar, filtrar e cadastrar.
  *
@@ -21,8 +19,8 @@ export { INTEGRANTES_POR_PAGINA } from "./use-painel-integrantes";
  * ao entrar na tela, dispara o `fetchNextPage`. Enquanto a página chega, a
  * grade ganha uma linha de esqueletos — estrutura, e não spinner.
  */
-export function PainelIntegrantes() {
-    const painel = usePainelIntegrantes();
+export function PainelIntegrantes({ pageSize = 20 }: { pageSize?: number }) {
+    const painel = usePainelIntegrantes({ pageSize });
     const { triggerScrollRef } = useVerticalScroll({
         onScrollEnd: painel.carregarMais,
     });

@@ -86,8 +86,10 @@ export function integranteFormDefaults(
 }
 
 /**
- * Converte o formulário validado no que a rota tRPC envia. `grupos` vai
- * vazio: o backend aceita o campo, mas o cadastro ainda não vincula ninguém.
+ * Converte o formulário validado no que a rota tRPC envia.
+ *
+ * Sem `grupos`: o `update` é `PUT`, e mandar `[]` tiraria a pessoa de todos
+ * os grupos a cada edição do cadastro. A formação se muda pela tela de grupos.
  */
 export function integranteFormInput(
     valores: IntegranteFormValues,
@@ -110,6 +112,5 @@ export function integranteFormInput(
         matriculaMtg: dados.matriculaMtg,
         dataNascimento: paraISO(dataNascimento),
         validade: validade ? paraISO(validade) : null,
-        grupos: [],
     };
 }

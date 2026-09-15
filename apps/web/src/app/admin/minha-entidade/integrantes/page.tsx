@@ -1,15 +1,14 @@
 import { proximaPagina } from "@te-inscreve/schemas";
 
-import {
-    INTEGRANTES_POR_PAGINA,
-    PainelIntegrantes,
-} from "~/features/entidades/integrantes/painel-integrantes";
+import { PainelIntegrantes } from "~/features/entidades/integrantes/painel-integrantes";
 import { HydrateClient, prefetch, trpc } from "~/shared/api/trpc/server";
 
 export const metadata = {
     title: "Integrantes | Te Inscreve",
     description: "Cadastro e listagem dos integrantes da entidade",
 };
+
+const INTEGRANTES_POR_PAGINA = 10;
 
 /**
  * Tela de integrantes da entidade.
@@ -31,7 +30,7 @@ export default function IntegrantesPage() {
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
             <HydrateClient>
-                <PainelIntegrantes />
+                <PainelIntegrantes pageSize={INTEGRANTES_POR_PAGINA} />
             </HydrateClient>
         </div>
     );

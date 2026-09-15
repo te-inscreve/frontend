@@ -16,9 +16,6 @@ import type { Visualizacao } from "./visualizacao";
 import { useTRPC } from "~/shared/api/trpc/client";
 import { filtrosVazios } from "./filtros-integrantes";
 
-/** Quantos por página. O mesmo valor do `prefetch` da página, ou a hidratação não casa. */
-export const INTEGRANTES_POR_PAGINA = 20;
-
 /**
  * O parâmetro que já traz o cadastro aberto na chegada.
  *
@@ -51,7 +48,7 @@ const PARAM_NOVO = "novo";
  * Guardá-la exigiria o servidor saber da escolha antes do primeiro render, ou
  * a lista piscaria na visualização errada ao hidratar — ver `docs/fcp.md`.
  */
-export function usePainelIntegrantes() {
+export function usePainelIntegrantes({ pageSize }: { pageSize: number }) {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
@@ -85,7 +82,7 @@ export function usePainelIntegrantes() {
 
     const lista = useInfiniteQuery(
         trpc.integrante.list.infiniteQueryOptions(
-            { pageSize: INTEGRANTES_POR_PAGINA },
+            { pageSize },
             { getNextPageParam: proximaPagina },
         ),
     );

@@ -1,12 +1,10 @@
 /**
- * A vida do integrante fora do cadastro: os grupos de que ele faz parte e as
- * categorias em que já se inscreveu.
+ * A vida do integrante fora do cadastro: as categorias em que já se inscreveu.
  *
- * O integrante já vem da API, mas grupos e inscrições ainda não: o detalhe
- * devolve `grupos` sempre vazio e sem formato definido. Este arquivo é o mock
- * que sustenta o detalhe da pessoa até isso mudar, e é separado de
- * `integrantes.ts` justamente para ser fácil de apagar inteiro quando
- * acontecer: o que sobreviver vira consulta, não constante.
+ * O integrante e os grupos dele já vêm da API (`integrante.getById`); as
+ * inscrições ainda não. Este arquivo é o mock que sustenta essa seção do
+ * detalhe da pessoa até isso mudar, e é separado de `integrantes.ts`
+ * justamente para ser fácil de apagar inteiro quando acontecer.
  *
  * O mock é **derivado do id**, e não sorteado. Sorteio mudaria a cada
  * renderização, e o detalhe de uma pessoa passaria a contar uma história
@@ -15,15 +13,6 @@
 
 import type { Integrante } from "./integrantes";
 import { dataDeISO, idadeEm } from "./integrantes";
-
-/** Grupo artístico de que o integrante participa. */
-export interface GrupoDoIntegrante {
-    id: string;
-    nome: string;
-    modalidade: string;
-    /** Verdadeiro para o grupo que a pessoa puxa — muda o peso na lista. */
-    responsavel: boolean;
-}
 
 /** Uma inscrição que já aconteceu, com o resultado que ela teve. */
 export interface InscricaoPassada {
@@ -84,30 +73,6 @@ const RESULTADOS: NaoVazia<Resultado> = [
  */
 function escolher<T>(lista: NaoVazia<T>, id: number, posicao: number): T {
     return lista[(id * 7 + posicao * 5) % lista.length] ?? lista[0];
-}
-
-/** Os grupos do integrante. Alguns não têm nenhum — a tela precisa mostrar isso. */
-export function gruposDoIntegrante(
-    integrante: Integrante,
-): GrupoDoIntegrante[] {
-    // Um a cada quatro fica sem grupo: é o estado vazio, e ele existe de
-    // verdade em entidade que acabou de cadastrar as pessoas.
-    if (integrante.id % 4 === 0) return [];
-
-    const quantidade = 1 + (integrante.id % 2);
-
-    return Array.from({ length: quantidade }, (_, posicao) => {
-        const grupo = escolher(GRUPOS, integrante.id, posicao);
-
-        return {
-            id: `${integrante.id}-${posicao}`,
-            nome: grupo.nome,
-            modalidade: grupo.modalidade,
-            // A API não diz quem responde pelo grupo: um a cada três é
-            // responsável pelo primeiro, para a tela mostrar o selo.
-            responsavel: posicao === 0 && integrante.id % 3 === 0,
-        };
-    });
 }
 
 /**
