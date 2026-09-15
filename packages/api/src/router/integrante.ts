@@ -78,8 +78,11 @@ export const integranteRouter = {
     /**
      * `PUT`, ao contrário dos outros recursos: o backend não aceita `PATCH`
      * aqui ("Método PATCH não é permitido"). Por isso o corpo é o cadastro
-     * inteiro, e não um parcial — o formulário sempre manda todos os campos,
-     * `grupos` incluído.
+     * inteiro, e não um parcial — o formulário sempre manda todos os campos.
+     *
+     * Menos `grupos`: o formulário não o envia, para a edição do cadastro não
+     * zerar a formação. Quem muda de que grupos a pessoa faz parte é a rota
+     * `grupo` (`salvarFormacao` e `removerIntegrante`).
      */
     update: authenticatedProcedure
         .input(

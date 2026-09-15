@@ -24,28 +24,39 @@ export const integranteSchema = z.object({
 });
 
 /**
- * O detalhe de um integrante (`/minha-entidade/integrantes/{id}`).
- *
- * `grupos` ainda não está implementado no backend: chega sempre vazio, e o
- * formato de cada item não foi definido — daí `unknown`. Quem for usar o
- * conteúdo precisa fechar o formato com o backend antes.
+ * Um grupo visto de dentro do detalhe do integrante: só o que identifica o
+ * grupo. O resto — formação, pendência, data — é da tela de grupos.
+ */
+export const grupoDoIntegranteSchema = z.object({
+    id: z.number().int(),
+    nome: z.string(),
+    descricao: z.string(),
+});
+
+/**
+ * O detalhe de um integrante (`/minha-entidade/integrantes/{id}`) — a única
+ * leitura que diz de que grupos a pessoa faz parte.
  */
 export const integranteDetalheSchema = integranteSchema.extend({
-    grupos: z.array(z.unknown()),
+    grupos: z.array(grupoDoIntegranteSchema),
 });
 
 /**
  * O que o cadastro envia. Sai do mesmo schema sem o `id` — que é o recurso,
- * não um dado — e com os ids dos grupos, que o backend aceita mas ainda não
- * usa.
+ * não um dado.
+ *
+ * `grupos` é opcional, e o formulário não o manda: o `update` é `PUT`, e um
+ * `[]` ali tiraria a pessoa de todos os grupos a cada edição do cadastro. A
+ * formação se muda pela tela de grupos.
  */
 export const formIntegranteSchema = integranteSchema.omit({ id: true }).extend({
-    grupos: z.array(z.number().int()).default([]),
+    grupos: z.array(z.number().int()).optional(),
 });
 
 export const paginaIntegrantesSchema = paginadoSchema(integranteSchema);
 
 export type Integrante = z.infer<typeof integranteSchema>;
+export type GrupoDoIntegrante = z.infer<typeof grupoDoIntegranteSchema>;
 export type IntegranteDetalhe = z.infer<typeof integranteDetalheSchema>;
 export type FormIntegrante = z.infer<typeof formIntegranteSchema>;
 export type PaginaIntegrantes = z.infer<typeof paginaIntegrantesSchema>;

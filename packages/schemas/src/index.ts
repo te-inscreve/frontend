@@ -89,13 +89,30 @@ export type { Paginado } from "./paginacao";
 
 export {
     formIntegranteSchema,
+    grupoDoIntegranteSchema,
     integranteDetalheSchema,
     integranteSchema,
     paginaIntegrantesSchema,
 } from "./integrante";
 export type {
     FormIntegrante,
+    GrupoDoIntegrante,
     Integrante,
     IntegranteDetalhe,
     PaginaIntegrantes,
 } from "./integrante";
+
+export {
+    formacaoGrupoSchema,
+    formGrupoSchema,
+    grupoDetalheSchema,
+    grupoSchema,
+    paginaGruposSchema,
+} from "./grupo";
+export type {
+    FormacaoGrupo,
+    FormGrupo,
+    Grupo,
+    GrupoDetalhe,
+    PaginaGrupos,
+} from "./grupo";
