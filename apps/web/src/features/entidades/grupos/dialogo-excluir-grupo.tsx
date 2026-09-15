@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
 
 import {
@@ -32,6 +34,11 @@ import { contagemIntegrantes } from "./grupo";
  * se perde cadastro nenhum. O grupo é só o agrupamento, e as pessoas continuam
  * na entidade — é o que a descrição diz, para a confirmação não parecer mais
  * grave do que é.
+ *
+ * O botão segura o fechamento (`preventDefault`) até o `DELETE` responder:
+ * fechar antes deixaria a tela voltar para a grade com o grupo ainda lá, e um
+ * erro sem lugar para aparecer. Enquanto espera, o spinner — é ação, não
+ * estrutura.
  */
 export function DialogoExcluirGrupo({
     grupo,
@@ -42,8 +49,20 @@ export function DialogoExcluirGrupo({
     grupo: GrupoDetalhe;
     open: boolean;
     onOpenChange: (aberto: boolean) => void;
-    onExcluir: () => void;
+    onExcluir: () => Promise<void> | void;
 }) {
+    const [excluindo, setExcluindo] = useState(false);
+
+    const excluir = async () => {
+        setExcluindo(true);
+        try {
+            await onExcluir();
+            onOpenChange(false);
+        } finally {
+            setExcluindo(false);
+        }
+    };
+
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent className="sm:max-w-md">
@@ -64,15 +83,28 @@ export function DialogoExcluirGrupo({
                 </AlertDialogHeader>
 
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogCancel disabled={excluindo}>
+                        Cancelar
+                    </AlertDialogCancel>
                     <AlertDialogAction
                         className={cn(
                             buttonVariants({ variant: "destructive" }),
                         )}
-                        onClick={onExcluir}
+                        disabled={excluindo}
+                        onClick={(evento) => {
+                            evento.preventDefault();
+                            void excluir();
+                        }}
                     >
-                        <TrashIcon aria-hidden="true" />
-                        Excluir grupo
+                        {excluindo ? (
+                            <SpinnerGapIcon
+                                aria-hidden="true"
+                                className="animate-spin"
+                            />
+                        ) : (
+                            <TrashIcon aria-hidden="true" />
+                        )}
+                        {excluindo ? "Excluindo…" : "Excluir grupo"}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

@@ -1,42 +1,22 @@
 /**
- * O grupo da entidade: o que ele é, como a API o devolve e as contas que a
- * tela faz em cima dele.
+ * O grupo da entidade: as contas que a tela faz em cima dele.
  *
  * Grupo é um conjunto de integrantes montado só para organização. Ele não
  * pertence a modalidade nenhuma — quem amarra grupo e modalidade é a inscrição,
  * que manda o grupo para o backend saber quem relacionar na ficha.
  *
- * Os tipos abaixo são os do backend (`/minha-entidade/grupos`), já em
- * camelCase: `GrupoListSerializer` para a listagem e `GrupoDetailSerializer`
- * para o detalhe, que é o único que traz os integrantes. Enquanto a rota tRPC
- * não existe, os dados saem de `mock-grupos.ts` — ver o comentário de lá. Quando
- * existir, estes tipos viram schema em `packages/schemas`.
+ * O contrato mora em `@te-inscreve/schemas` (`grupoSchema`,
+ * `grupoDetalheSchema`, `formGrupoSchema`); aqui fica só o que é da tela —
+ * formatar a data, contar a formação, recalcular o resumo do rascunho.
  */
 
-import type { Integrante } from "~/features/entidades/shared/integrantes";
+import { TRPCClientError } from "@trpc/client";
+
+import type { Grupo, Integrante } from "@te-inscreve/schemas";
+
 import { matriculaVencida } from "~/features/entidades/shared/integrantes";
 
-/** O grupo como vem na listagem: o resumo, sem a formação. */
-export interface Grupo {
-    id: number;
-    nome: string;
-    /** Para que o grupo serve. Pode vir vazia — o backend não a exige. */
-    descricao: string;
-    totalIntegrantes: number;
-    /** Criação em ISO com hora (`DateTimeField`), e não a data seca. */
-    dataCriacao: string;
-    /**
-     * Se alguém do grupo está com a matrícula vencida. Vem pronta do backend
-     * porque a listagem não carrega a formação, e sem ela a tela não teria como
-     * descobrir — é o aviso de que a inscrição vai travar.
-     */
-    pendenciaCarteiraVencida: boolean;
-}
-
-/** O detalhe: o mesmo grupo com a formação inteira. */
-export interface GrupoDetalhe extends Grupo {
-    integrantes: Integrante[];
-}
+export type { FormGrupo, Grupo, GrupoDetalhe } from "@te-inscreve/schemas";
 
 /** "1 integrante" / "N integrantes" — o plural do número que a tela mostra. */
 export function contagemIntegrantes(total: number): string {
@@ -55,12 +35,12 @@ export function formatarDataCriacao(iso: string): string {
 }
 
 /**
- * Recalcula o resumo que o backend derivaria da formação.
+ * Recalcula o resumo que o backend deriva da formação.
  *
- * Existe porque a tela mexe na formação do grupo antes de qualquer ida à API:
- * incluir alguém com a matrícula vencida precisa acender o aviso na hora, e não
- * no próximo carregamento. Quando a rota tRPC existir, quem manda é a resposta
- * do `PATCH` — esta função sai junto com o mock.
+ * Existe porque a bancada mexe na formação antes de salvar: incluir alguém com
+ * a matrícula vencida precisa acender o aviso na hora, e não só depois do
+ * `PATCH`. Depois de salvar, o que vale é o detalhe que a API devolve — e ele
+ * traz os mesmos dois campos, pela mesma conta.
  */
 export function resumirFormacao(
     integrantes: Integrante[],
@@ -73,12 +53,6 @@ export function resumirFormacao(
     };
 }
 
-/** O que o formulário de grupo envia — o corpo do `POST` e do `PATCH`. */
-export interface FormGrupo {
-    nome: string;
-    descricao: string;
-}
-
 /**
  * Erro de regra que pertence a um campo do formulário, e não à tela inteira.
  *
@@ -88,7 +62,7 @@ export interface FormGrupo {
  */
 export class ErroDeCampoGrupo extends Error {
     constructor(
-        readonly campo: keyof FormGrupo,
+        readonly campo: "nome" | "descricao",
         message: string,
     ) {
         super(message);
@@ -97,21 +71,45 @@ export class ErroDeCampoGrupo extends Error {
 }
 
 /**
- * Dois grupos da mesma entidade não podem ter o mesmo nome — o backend tem a
- * restrição em banco (`grupo_nome_unico_por_entidade`), sem caixa e sem os
- * espaços das pontas.
+ * Traduz a recusa do backend para o campo do formulário a que ela pertence.
+ * Usada tanto para criar (`use-grade-grupos.ts`) quanto para editar
+ * (`use-detalhe-grupo.ts`) — as duas mutações passam por `formGrupoSchema`.
+ *
+ * `{"nome": ["..."]}` chega como `error.data.fieldErrors` (ver o
+ * `errorFormatter` de `@te-inscreve/api`). Só `nome` e `descricao` existem no
+ * formulário; qualquer outra coisa segue como veio, e o formulário mostra a
+ * mensagem genérica.
+ *
+ * O nome repetido é a exceção: a restrição é de (entidade, nome), e o DRF a
+ * devolve sem campo — `non_field_errors`, ou `attr: null` no envelope. É a
+ * única regra do grupo que não tem campo, então ela cai no nome, que é onde
+ * quem digitou precisa ler a mensagem.
  */
-export function nomeRepetido(
-    grupos: Grupo[],
-    nome: string,
-    /** O grupo em edição, que não conta como repetição de si mesmo. */
-    ignorarId?: number,
-): boolean {
-    const procurado = nome.trim().toLowerCase();
+export function relancarPorCampo(error: unknown): never {
+    if (error instanceof TRPCClientError) {
+        const fieldErrors = (
+            error.data as {
+                fieldErrors?: Record<string, string[]> | null;
+            } | null
+        )?.fieldErrors;
 
-    return grupos.some(
-        (grupo) =>
-            grupo.id !== ignorarId &&
-            grupo.nome.trim().toLowerCase() === procurado,
-    );
+        const porCampo = {
+            nome: ["nome", "nonFieldErrors", "non_field_errors", ""],
+            descricao: ["descricao"],
+        } as const;
+
+        for (const [campo, chaves] of Object.entries(porCampo) as [
+            keyof typeof porCampo,
+            readonly string[],
+        ][]) {
+            const mensagens = chaves.flatMap(
+                (chave) => fieldErrors?.[chave] ?? [],
+            );
+            if (mensagens.length) {
+                throw new ErroDeCampoGrupo(campo, mensagens.join(" "));
+            }
+        }
+    }
+
+    throw error;
 }

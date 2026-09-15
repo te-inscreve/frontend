@@ -21,7 +21,7 @@ import { DialogoExcluirGrupo } from "./dialogo-excluir-grupo";
 interface Props {
     grupo: GrupoDetalhe;
     onEditar: (dados: FormGrupo) => Promise<void> | void;
-    onExcluir: () => void;
+    onExcluir: () => Promise<void> | void;
 }
 
 /**

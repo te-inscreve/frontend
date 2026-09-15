@@ -19,7 +19,7 @@ import { MenuGrupo } from "./menu-grupo";
 interface Props {
     grupo: GrupoDetalhe;
     onEditar: (dados: FormGrupo) => Promise<void> | void;
-    onExcluir: () => void;
+    onExcluir: () => Promise<void> | void;
     onAlternarIntegrante: (integrante: Integrante) => void;
     /** Se a formação em cena difere da última salva — só então há o que salvar. */
     temMudancas: boolean;
@@ -45,9 +45,9 @@ interface Props {
  * compartilhado que faz o Motion reconhecer os dois como o mesmo elemento e
  * animar o trajeto. Ver {@link CartaoIntegranteSelecao}.
  *
- * A volta para a lista de grupos é da trilha, que fica acima da bancada inteira
- * — ver {@link PainelGrupos}. Ela diz em que estado a tela está, e não o que
- * este painel é.
+ * A volta para a grade é um botão "Voltar" na página do grupo, e não daqui —
+ * ver `grupos/[id]/page.tsx`. Ele não depende de nenhum dado desta bancada,
+ * então pinta com a casca da página, antes de o grupo chegar.
  *
  * Salvar é o pé do painel, no lugar em que a cesta põe o "Cadastrar integrante":
  * cada mão termina no que fazer depois de mexer nela. Aqui o botão é o cheio, e
