@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 import {
     Button,
@@ -15,12 +13,6 @@ import { cn } from "@te-inscreve/components/utils";
 
 import type { Periodo } from "./evento-form-schema";
 import { useDateRangeFormatter } from "~/shared/utils/format-date";
-
-/** "Agosto de 2026" — o padrão do react-day-picker sai como "agosto 2026". */
-function legendaDoMes(mes: Date) {
-    const legenda = format(mes, "MMMM 'de' yyyy", { locale: ptBR });
-    return legenda.charAt(0).toUpperCase() + legenda.slice(1);
-}
 
 interface CampoPeriodoProps {
     id: string;
@@ -77,12 +69,17 @@ export function CampoPeriodo({
                 </Button>
             </PopoverTrigger>
 
-            <PopoverContent align="start" className="w-auto p-0">
+            {/* `overflow-hidden` porque a grade do calendário desliza para
+                fora de si na troca de mês: sem o corte, o mês que sai aparece
+                por cima da borda do popover. */}
+            <PopoverContent
+                align="start"
+                className="w-auto overflow-hidden p-0"
+            >
                 <Calendar
                     autoFocus
                     mode="range"
-                    locale={ptBR}
-                    formatters={{ formatCaption: legendaDoMes }}
+                    captionLayout="dropdown"
                     defaultMonth={value.from ?? mesInicial}
                     selected={value}
                     onSelect={(intervalo) =>

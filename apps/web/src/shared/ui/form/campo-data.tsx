@@ -17,12 +17,6 @@ import {
 } from "@te-inscreve/components";
 import { cn } from "@te-inscreve/components/utils";
 
-/** "Agosto de 2026" — o padrão do react-day-picker sai como "agosto 2026". */
-function legendaDoMes(mes: Date) {
-    const legenda = format(mes, "MMMM 'de' yyyy", { locale: ptBR });
-    return legenda.charAt(0).toUpperCase() + legenda.slice(1);
-}
-
 /** "12 de março de 1998" — sem ambiguidade entre dia e mês, ao contrário de `12/03`. */
 function porExtenso(data: Date) {
     return format(data, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -162,9 +156,10 @@ export function CampoData<T extends FieldValues>({
 
                 <Calendar
                     mode="single"
-                    locale={ptBR}
+                    // Nascimento e validade ficam longe do mês corrente: a
+                    // legenda clicável abre a grade de meses e a de anos, e
+                    // tira a viagem de dezenas de cliques nas setas.
                     captionLayout="dropdown"
-                    formatters={{ formatCaption: legendaDoMes }}
                     month={mes}
                     onMonthChange={setMes}
                     startMonth={dataMinima}
