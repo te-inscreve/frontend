@@ -36,6 +36,14 @@ type PainelCalendario = "dias" | "meses" | "anos";
 const ANOS_POR_PAGINA = 12;
 
 /**
+ * A folga, em pixels, entre a grade e o corte da caixa que a esconde enquanto
+ * a altura anima — o `p-1`/`-m-1` da caixa, em número, porque a altura animada
+ * precisa contá-la. Sem a folga, o corte apararia o anel de foco de 3px dos
+ * dias das pontas.
+ */
+const FOLGA_DO_CORTE = 8;
+
+/**
  * A inércia da troca de conteúdo da grade. Mola, e não duração fixa, porque a
  * navegação por mês é repetida: quem segura a seta encadeia trocas, e a mola
  * absorve a interrupção sem reiniciar do zero.
@@ -692,6 +700,24 @@ function CalendarMonthGrid({
         setAnterior({ chave: chaveDoMes, painel, direcao });
     }
 
+    const medidor = React.useRef<HTMLDivElement>(null);
+    const [altura, setAltura] = React.useState<number>();
+
+    React.useLayoutEffect(() => {
+        const no = medidor.current;
+        if (!no) return;
+
+        // `ResizeObserver`, e não uma medida por render: a grade muda de altura
+        // entre meses de cinco e de seis semanas e entre os painéis, e o
+        // observador pega as duas coisas antes do primeiro quadro.
+        const medir = () => setAltura(no.offsetHeight + FOLGA_DO_CORTE);
+        const observador = new ResizeObserver(medir);
+        observador.observe(no);
+        medir();
+
+        return () => observador.disconnect();
+    }, []);
+
     const irPara = (data: Date) => {
         goToMonth(data);
         abrir("dias");
@@ -794,10 +820,31 @@ function CalendarMonthGrid({
     }[painel];
 
     return (
-        <motion.div layout className="relative w-full" transition={TRANSICAO}>
-            <AnimatePresence mode="popLayout" initial={false} custom={direcao}>
-                {conteudo}
-            </AnimatePresence>
+        // A altura é animada como altura, e não com `layout`: aquele anima a
+        // caixa escalando o elemento, e escala aplicada a texto é literalmente
+        // letra esticada — era o que deformava os nomes dos meses no meio da
+        // troca. Ver a seção 3 de `docs/animacoes.md`.
+        <motion.div
+            // `overflow-hidden` para a grade ser revelada junto com a altura,
+            // em vez de aparecer inteira por cima do que vem abaixo do
+            // calendário; o `p-1 -m-1` devolve o espaço do anel de foco sem
+            // mexer no lugar que a grade ocupa.
+            className="relative -m-1 w-full overflow-hidden p-1"
+            initial={false}
+            animate={altura === undefined ? {} : { height: altura }}
+            transition={TRANSICAO}
+        >
+            {/* Mede o conteúdo que entra: quem sai está fora do fluxo, por
+                conta do `popLayout`, e por isso não entra na conta. */}
+            <div ref={medidor}>
+                <AnimatePresence
+                    mode="popLayout"
+                    initial={false}
+                    custom={direcao}
+                >
+                    {conteudo}
+                </AnimatePresence>
+            </div>
         </motion.div>
     );
 }
