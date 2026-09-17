@@ -185,7 +185,7 @@ function ConteudoDaCesta({
 
     if (integrantes.length === 0) {
         return (
-            <p className="text-muted-foreground rounded-xl border border-dashed p-4 text-sm">
+            <p className="text-muted-foreground bg-card rounded-lg border border-dashed p-4 text-center text-sm">
                 {temFiltro
                     ? "Ninguém corresponde ao que você procurou."
                     : entidadeVazia

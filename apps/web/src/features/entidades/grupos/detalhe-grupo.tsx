@@ -133,16 +133,15 @@ export function DetalheGrupo({
                     // vaga esperando conteúdo — e não um parágrafo avisando que
                     // não há nada. Quem lê já está de frente para a cesta que a
                     // preenche.
-                    <div className="text-muted-foreground flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center text-sm">
+                    <div className="text-muted-foreground bg-card flex h-full w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center text-sm">
                         <UsersThreeIcon
                             aria-hidden="true"
-                            size={28}
+                            size={32}
                             className="opacity-60"
                         />
                         <p className="max-w-sm">
-                            O grupo ainda está vazio. Clique em alguém na lista
-                            de integrantes, ao lado, para trazer para cá — e
-                            clique de novo, aqui, para devolver.
+                            Nenhum integrante adicionado ainda. Clique em um
+                            integrante para adicioná-lo ao grupo.
                         </p>
                     </div>
                 ) : (

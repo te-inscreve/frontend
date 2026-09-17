@@ -1,3 +1,5 @@
+import { UserCircleDashedIcon } from "@phosphor-icons/react/dist/ssr/UserCircleDashed";
+
 import type { IntegranteDoGrupo } from "@te-inscreve/schemas";
 
 import { contagemIntegrantes } from "./grupo";
@@ -32,9 +34,10 @@ export function AvataresGrupo({
 }) {
     if (total === 0) {
         return (
-            <span className="text-muted-foreground text-xs">
-                Sem integrantes
-            </span>
+            <div className="text-muted-foreground flex items-center gap-1">
+                <UserCircleDashedIcon aria-hidden="true" size={24} />
+                <span className="text-xs">Sem integrantes</span>
+            </div>
         );
     }
 

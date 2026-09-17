@@ -13,6 +13,15 @@ interface Props {
     descricao?: React.ReactNode;
     /** O canto direito do cabeçalho — o menu do grupo, por exemplo. */
     acoes?: React.ReactNode;
+    /**
+     * A linha de abas embaixo do título, quando este lado lista mais de uma
+     * coisa. Fica no cabeçalho, e não no corpo, porque as abas dizem *o que
+     * este lado lista* — são etiqueta, como o título, e moram na mesma
+     * superfície clara dele. Quem passa a `TabsList` também envolve a
+     * bancada inteira no `Tabs`: o Radix exige que lista e conteúdo estejam
+     * sob o mesmo root.
+     */
+    abas?: React.ReactNode;
     /** Posição na grade e altura ficam com quem monta a bancada. */
     className?: string;
     children: React.ReactNode;
@@ -46,6 +55,7 @@ export function LadoDaBancada({
     titulo,
     descricao,
     acoes,
+    abas,
     className,
     children,
 }: Props) {
@@ -67,23 +77,36 @@ export function LadoDaBancada({
                 arredondada quadra as quinas de cima; e `shrink-0` porque as duas
                 mãos têm altura fixa: sem isso o cabeçalho cede espaço para a
                 lista antes de ela rolar. */}
-            <header className="bg-card flex shrink-0 items-start gap-3 rounded-t-xl border-b px-4 py-3">
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <h2
-                        id={tituloId}
-                        className="truncate text-lg font-bold tracking-tight"
-                    >
-                        {titulo}
-                    </h2>
+            <header
+                className={cn(
+                    "bg-card flex shrink-0 flex-col gap-2 rounded-t-xl border-b px-4 py-3",
+                    // Com abas, a `TabsList` encosta na borda de baixo do
+                    // cabeçalho: é a linha dela que o traço da aba ativa
+                    // sublinha, e um `pb-3` deixaria o traço solto no meio
+                    // da superfície.
+                    abas && "pb-0",
+                )}
+            >
+                <div className="flex items-start gap-3">
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <h2
+                            id={tituloId}
+                            className="truncate text-lg font-bold tracking-tight"
+                        >
+                            {titulo}
+                        </h2>
 
-                    {descricao && (
-                        <div className="text-muted-foreground text-xs">
-                            {descricao}
-                        </div>
-                    )}
+                        {descricao && (
+                            <div className="text-muted-foreground text-xs">
+                                {descricao}
+                            </div>
+                        )}
+                    </div>
+
+                    {acoes && <div className="shrink-0">{acoes}</div>}
                 </div>
 
-                {acoes && <div className="shrink-0">{acoes}</div>}
+                {abas}
             </header>
 
             <div className="flex min-h-0 flex-1 flex-col gap-3 p-3">
