@@ -5,7 +5,7 @@ import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
 import { Badge } from "@te-inscreve/components";
 import { cn } from "@te-inscreve/components/utils";
 
-import type { Grupo } from "./grupo";
+import type { GrupoComPrevia } from "./grupo";
 import { AvataresGrupo } from "./avatares-grupo";
 import { formatarDataCriacao } from "./grupo";
 
@@ -27,9 +27,9 @@ import { formatarDataCriacao } from "./grupo";
  * inscrição. A data de criação vai por último, miúda: serve para distinguir dois
  * grupos de nome parecido, e não para comparar grupos entre si.
  *
- * O tamanho da formação é uma pilha de avatares, e não mais um número num
- * badge — ver {@link AvataresGrupo} para o porquê de eles não retratarem
- * ninguém de verdade.
+ * O tamanho da formação é uma pilha de avatares com as iniciais dos três
+ * primeiros integrantes, e não mais um número num badge — ver
+ * {@link AvataresGrupo}.
  *
  * A `variante` muda só a moldura, não o conteúdo. `"cartao"` (padrão) é o
  * cartão solto da grade, com sua própria borda arredondada. `"linha"` é para
@@ -42,7 +42,7 @@ export function CartaoGrupo({
     grupo,
     variante = "cartao",
 }: {
-    grupo: Grupo;
+    grupo: GrupoComPrevia;
     variante?: "cartao" | "linha";
 }) {
     return (
@@ -77,7 +77,7 @@ export function CartaoGrupo({
 
             <div className="mt-auto flex flex-wrap items-center gap-2">
                 <AvataresGrupo
-                    grupoId={grupo.id}
+                    integrantes={grupo.firstThreeIntegrantes}
                     total={grupo.totalIntegrantes}
                 />
 

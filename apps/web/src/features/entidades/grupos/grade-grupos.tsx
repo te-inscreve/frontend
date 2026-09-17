@@ -5,7 +5,7 @@ import { AnimatePresence, motion, MotionConfig } from "motion/react";
 
 import { EXPANSION_TRANSITION } from "@te-inscreve/components";
 
-import type { FormGrupo, Grupo } from "./grupo";
+import type { FormGrupo, GrupoComPrevia } from "./grupo";
 import { BotaoCriarGrupo } from "./botao-criar-grupo";
 import { CartaoGrupo } from "./cartao-grupo";
 import { GradeGruposSkeleton } from "./cartao-grupo-skeleton";
@@ -14,7 +14,7 @@ import { GradeGruposSkeleton } from "./cartao-grupo-skeleton";
 const ESQUELETOS = 6;
 
 interface Props {
-    grupos: Grupo[];
+    grupos: GrupoComPrevia[];
     /** Quantos a entidade tem ao todo — a grade pode ainda não ter carregado todos. */
     total: number;
     /** Primeira página ainda no caminho. */

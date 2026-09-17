@@ -16,7 +16,12 @@ import type { Grupo, Integrante } from "@te-inscreve/schemas";
 
 import { matriculaVencida } from "~/features/entidades/shared/integrantes";
 
-export type { FormGrupo, Grupo, GrupoDetalhe } from "@te-inscreve/schemas";
+export type {
+    FormGrupo,
+    Grupo,
+    GrupoComPrevia,
+    GrupoDetalhe,
+} from "@te-inscreve/schemas";
 
 /** "1 integrante" / "N integrantes" — o plural do número que a tela mostra. */
 export function contagemIntegrantes(total: number): string {

@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 
-import type { Grupo } from "@te-inscreve/schemas";
+import type { GrupoComPrevia } from "@te-inscreve/schemas";
 
 import { CartaoGrupo } from "~/features/entidades/grupos/cartao-grupo";
 import { GRUPOS_NO_PAINEL } from "./lista-grupos-skeleton";
 
 interface Props {
     /** Só os primeiros — o painel resume, não lista tudo. */
-    grupos: Grupo[];
+    grupos: GrupoComPrevia[];
     /** Quantos a entidade tem ao todo, para o rodapé dizer o que ficou de fora. */
     total: number;
 }

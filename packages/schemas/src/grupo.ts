@@ -54,10 +54,32 @@ export const formacaoGrupoSchema = z.object({
     integrantes: z.array(z.number().int()),
 });
 
-export const paginaGruposSchema = paginadoSchema(grupoSchema);
+/**
+ * Um integrante visto de dentro da listagem de grupos: só o que o avatar do
+ * cartão precisa para mostrar as iniciais de verdade. O resto — matrícula,
+ * nascimento — é da tela de integrantes.
+ */
+export const integranteDoGrupoSchema = z.object({
+    id: z.number().int(),
+    nome: z.string(),
+    sobrenome: z.string(),
+});
+
+/**
+ * O grupo da listagem com a prévia da formação: os três primeiros
+ * integrantes, para o cartão preencher os avatares sem carregar a formação
+ * inteira.
+ */
+export const grupoComPreviaSchema = grupoSchema.extend({
+    firstThreeIntegrantes: z.array(integranteDoGrupoSchema).max(3),
+});
+
+export const paginaGruposSchema = paginadoSchema(grupoComPreviaSchema);
 
 export type Grupo = z.infer<typeof grupoSchema>;
 export type GrupoDetalhe = z.infer<typeof grupoDetalheSchema>;
 export type FormGrupo = z.infer<typeof formGrupoSchema>;
 export type FormacaoGrupo = z.infer<typeof formacaoGrupoSchema>;
+export type IntegranteDoGrupo = z.infer<typeof integranteDoGrupoSchema>;
+export type GrupoComPrevia = z.infer<typeof grupoComPreviaSchema>;
 export type PaginaGrupos = z.infer<typeof paginaGruposSchema>;

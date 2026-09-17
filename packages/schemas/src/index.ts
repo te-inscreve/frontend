@@ -105,14 +105,18 @@ export type {
 export {
     formacaoGrupoSchema,
     formGrupoSchema,
+    grupoComPreviaSchema,
     grupoDetalheSchema,
     grupoSchema,
+    integranteDoGrupoSchema,
     paginaGruposSchema,
 } from "./grupo";
 export type {
     FormacaoGrupo,
     FormGrupo,
     Grupo,
+    GrupoComPrevia,
     GrupoDetalhe,
+    IntegranteDoGrupo,
     PaginaGrupos,
 } from "./grupo";
