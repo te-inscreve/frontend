@@ -1,16 +1,8 @@
-import Link from "next/link";
-
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from "@te-inscreve/components";
 import { Skeleton } from "@te-inscreve/components/components/skeleton";
 
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
+import type { TrilhaPasso } from "~/shared/ui/trilha-builder";
+import { TrilhaBuilder } from "~/shared/ui/trilha-builder";
 
 interface Props {
     eventoId: number;
@@ -46,49 +38,24 @@ export async function TrilhaEvento({ eventoId, modalidadeId, atual }: Props) {
     // A modalidade é o último degrau quando não há página abaixo dela.
     const modalidadeEhAtual = modalidade !== undefined && atual === undefined;
 
-    return (
-        <Breadcrumb>
-            <BreadcrumbList>
-                <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                        <Link href={`/admin/eventos/${eventoId}`}>
-                            {evento.nome}
-                        </Link>
-                    </BreadcrumbLink>
-                </BreadcrumbItem>
+    const passos: TrilhaPasso[] = [
+        { label: evento.nome, href: `/admin/eventos/${eventoId}` },
+    ];
 
-                {modalidade !== undefined && (
-                    <>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            {modalidadeEhAtual ? (
-                                <BreadcrumbPage>
-                                    {modalidade.nome}
-                                </BreadcrumbPage>
-                            ) : (
-                                <BreadcrumbLink asChild>
-                                    <Link
-                                        href={`/admin/eventos/${eventoId}?modalidade=${modalidade.id}`}
-                                    >
-                                        {modalidade.nome}
-                                    </Link>
-                                </BreadcrumbLink>
-                            )}
-                        </BreadcrumbItem>
-                    </>
-                )}
+    if (modalidade !== undefined) {
+        passos.push({
+            label: modalidade.nome,
+            href: modalidadeEhAtual
+                ? undefined
+                : `/admin/eventos/${eventoId}?modalidade=${modalidade.id}`,
+        });
+    }
 
-                {atual !== undefined && (
-                    <>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbPage>{atual}</BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </>
-                )}
-            </BreadcrumbList>
-        </Breadcrumb>
-    );
+    if (atual !== undefined) {
+        passos.push({ label: atual });
+    }
+
+    return <TrilhaBuilder passos={passos} />;
 }
 
 /** Espaço reservado da trilha enquanto o evento não chega. */

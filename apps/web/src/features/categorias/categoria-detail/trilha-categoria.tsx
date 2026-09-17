@@ -1,5 +1,6 @@
+import type { TrilhaPasso } from "~/shared/ui/trilha-builder";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
-import { TrilhaEvento } from "~/shared/ui/trilha-evento";
+import { TrilhaBuilder } from "~/shared/ui/trilha-builder";
 
 interface Props {
     eventoId: number;
@@ -17,19 +18,43 @@ export async function TrilhaCategoria({
     modalidadeId,
     categoriaId,
 }: Props) {
-    const categoria = await getQueryClient().fetchQuery(
-        trpc.categoria.getById.queryOptions({
-            eventoId,
-            modalidadeId,
-            categoriaId,
-        }),
-    );
+    const [evento, categoria] = await Promise.all([
+        getQueryClient().fetchQuery(
+            trpc.evento.getById.queryOptions({ id: eventoId }),
+        ),
+        getQueryClient().fetchQuery(
+            trpc.categoria.getById.queryOptions({
+                eventoId,
+                modalidadeId,
+                categoriaId,
+            }),
+        ),
+    ]);
 
-    return (
-        <TrilhaEvento
-            eventoId={eventoId}
-            modalidadeId={modalidadeId}
-            atual={categoria?.nome}
-        />
-    );
+    if (!evento) return null;
+
+    const modalidade = evento.modalidades.find(({ id }) => id === modalidadeId);
+
+    // A modalidade é o último degrau quando a categoria não vem (id de link
+    // velho, ou ainda carregando).
+    const modalidadeEhAtual = modalidade !== undefined && categoria === null;
+
+    const passos: TrilhaPasso[] = [
+        { label: evento.nome, href: `/admin/eventos/${eventoId}` },
+    ];
+
+    if (modalidade !== undefined) {
+        passos.push({
+            label: modalidade.nome,
+            href: modalidadeEhAtual
+                ? undefined
+                : `/admin/eventos/${eventoId}?modalidade=${modalidadeId}`,
+        });
+    }
+
+    if (categoria !== null) {
+        passos.push({ label: categoria.nome });
+    }
+
+    return <TrilhaBuilder passos={passos} />;
 }
