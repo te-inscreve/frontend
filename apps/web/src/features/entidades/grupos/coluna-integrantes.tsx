@@ -111,7 +111,7 @@ export function ColunaIntegrantes({
                 que viaja para a formação nasceria deslocado. */}
             <motion.div
                 layoutScroll
-                className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1"
+                className="-mx-1 min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-1"
             >
                 <ConteudoDaCesta
                     integrantes={integrantes}

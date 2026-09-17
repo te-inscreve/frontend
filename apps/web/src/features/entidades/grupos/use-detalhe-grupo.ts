@@ -188,7 +188,7 @@ export function useDetalheGrupo({ id, integrantesPorPagina }: Opcoes) {
     );
 
     const { hasNextPage, isFetchingNextPage, fetchNextPage } = lista;
-    const carregarMais = useCallback(() => {
+    const carregarMaisIntegrantes = useCallback(() => {
         if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
@@ -245,7 +245,7 @@ export function useDetalheGrupo({ id, integrantesPorPagina }: Opcoes) {
         carregando: lista.isLoading,
         erro: lista.error,
         isFetchingNextPage,
-        carregarMais,
+        carregarMaisIntegrantes,
         filtros,
         setFiltros,
     };

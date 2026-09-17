@@ -57,7 +57,7 @@ export function DetalheGrupoPagina({ id, integrantesPorPagina }: Props) {
     const painel = useDetalheGrupo({ id, integrantesPorPagina });
     const { grupoAberto } = painel;
     const { triggerScrollRef } = useVerticalScroll({
-        onScrollEnd: painel.carregarMais,
+        onScrollEnd: painel.carregarMaisIntegrantes,
     });
 
     const nome = grupoAberto?.nome ?? "…";
