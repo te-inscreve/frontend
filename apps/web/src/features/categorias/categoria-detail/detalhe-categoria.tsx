@@ -58,7 +58,7 @@ export async function DetalheCategoria({
 
                     <Button asChild>
                         <Link
-                            href={`/admin/eventos/${eventoId}/categorias/${categoriaId}/inscricoes/novo?modalidade=${modalidadeId}`}
+                            href={`/admin/eventos/${eventoId}/categorias/${categoriaId}/inscricoes/criar?modalidade=${modalidadeId}`}
                         >
                             Inscrever-se
                         </Link>
