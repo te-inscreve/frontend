@@ -143,7 +143,6 @@ export function FormIntegrante({ integrante, onSalvar, onCancelar }: Props) {
                         <CampoData<IntegranteFormValues>
                             name="validade"
                             label="Validade da matrícula"
-                            ajuda="Costuma valer um ano a partir da renovação. Matrícula vencida impede a inscrição no evento."
                             mesInicial={HOJE}
                             dataMinima={VALIDADE_MAIS_ANTIGA}
                             dataMaxima={VALIDADE_MAIS_DISTANTE}
