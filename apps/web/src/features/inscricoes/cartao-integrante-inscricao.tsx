@@ -4,7 +4,7 @@ import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 import { MinusCircleIcon } from "@phosphor-icons/react/dist/ssr/MinusCircle";
 import { PlusCircleIcon } from "@phosphor-icons/react/dist/ssr/PlusCircle";
 
-import { Badge, cn } from "@te-inscreve/components";
+import { cn } from "@te-inscreve/components";
 
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import {
@@ -17,6 +17,7 @@ import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
 type Props = {
     integrante: Integrante;
     onAlternar: (integrante: Integrante) => void;
+    className?: string;
 } & (
     | {
           /** Na lista da entidade: o clique inclui, ou tira se já estiver. */
@@ -24,9 +25,8 @@ type Props = {
           selecionado: boolean;
       }
     | {
-          /** No ticket: o clique tira. A origem diz por onde a pessoa entrou. */
+          /** No ticket: o clique tira. */
           lado: "ticket";
-          origem: "grupo" | "individual";
       }
 );
 
@@ -34,7 +34,7 @@ type Props = {
  * Uma pessoa como cartão clicável, no modo de inscrever.
  *
  * Novo, e não o {@link CartaoIntegranteSelecao} da bancada de grupo: aquele
- * tem `layoutId` compartilhado entre as duas mãos e rótulos "do grupo", e
+ * tem `layoutId` compartilhado entre as duas mãos e rótulos de grupo, e
  * aqui o cartão **permanece na lista** (marcado) enquanto uma cópia aparece
  * no ticket — dois elementos com o mesmo `layoutId` ao mesmo tempo fazem o
  * Motion animar um para cima do outro. Por isso não há `layoutId` nenhum: o
@@ -49,7 +49,7 @@ type Props = {
  * vermelho: o próximo clique tira a pessoa, e o cartão avisa antes.
  */
 export function CartaoIntegranteInscricao(props: Props) {
-    const { integrante, onAlternar } = props;
+    const { integrante, onAlternar, className } = props;
     const nome = nomeCompleto(integrante);
     const marcado = props.lado === "ticket" || props.selecionado;
 
@@ -75,6 +75,7 @@ export function CartaoIntegranteInscricao(props: Props) {
                     : props.lado === "lista"
                       ? "border-primary bg-primary/5 hover:border-destructive/50 hover:bg-destructive/5"
                       : "bg-card border-border/70 hover:border-destructive/50 hover:bg-destructive/5",
+                className,
             )}
         >
             <AvatarUsuario nome={nome} size={36} alt="" />
@@ -85,12 +86,6 @@ export function CartaoIntegranteInscricao(props: Props) {
                 </span>
                 <ResumoIntegrante integrante={integrante} />
             </span>
-
-            {props.lado === "ticket" && props.origem === "grupo" && (
-                <Badge variant="outline" className="shrink-0">
-                    Do grupo
-                </Badge>
-            )}
 
             <AvisoMatricula integrante={integrante} />
 

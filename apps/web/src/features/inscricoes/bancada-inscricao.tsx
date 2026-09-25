@@ -2,6 +2,7 @@
 
 import { MotionConfig } from "motion/react";
 
+import { BilhetesIndividuais } from "./bilhetes-individuais";
 import { ColunaEntidade } from "./coluna-entidade";
 import { TicketInscricao } from "./ticket-inscricao";
 import { useInscricao } from "./use-inscricao";
@@ -21,8 +22,12 @@ interface Props {
  * Espelha a {@link DetalheGrupoPagina}: a mesma grade de três colunas, as
  * duas mãos com a mesma altura e cada uma rolando por dentro, a altura
  * herdada da página (`flex-1`+`min-h-0`) em vez de calculada. A coluna do
- * meio é só o tracejado — aqui não há "mandar todo mundo": escolher um grupo
- * já é o gesto de inscrever a formação inteira.
+ * meio é só o tracejado — aqui não há "mandar todo mundo": clicar num grupo
+ * já é o gesto de trazer a formação inteira.
+ *
+ * O lado direito depende da modalidade: em grupo, um bilhete só com todo
+ * mundo dentro ({@link TicketInscricao}); individual, um bilhete por pessoa
+ * ({@link BilhetesIndividuais}). O formulário e o payload são os mesmos.
  *
  * Em telas estreitas vira uma pilha com o bilhete por cima (`order`): sem
  * espaço para os dois lados, o assunto é a inscrição e a entidade é o
@@ -35,6 +40,12 @@ interface Props {
  */
 export function BancadaInscricao(props: Props) {
     const inscricao = useInscricao(props);
+    // Enquanto a modalidade não chega (na prática, nunca: ela vem do
+    // `prefetch`), vale o bilhete em grupo, que já sabe esperá-la.
+    const Inscricoes =
+        inscricao.modalidade?.isGrupo === false
+            ? BilhetesIndividuais
+            : TicketInscricao;
 
     return (
         <MotionConfig reducedMotion="user">
@@ -45,9 +56,9 @@ export function BancadaInscricao(props: Props) {
                     entidade={inscricao.entidade?.nome ?? null}
                     grupos={inscricao.grupos}
                     integrantes={inscricao.integrantes}
-                    grupoSelecionado={inscricao.selecao.grupo?.id ?? null}
+                    grupoAplicando={inscricao.grupoAplicando?.id ?? null}
                     selecionados={inscricao.selecionados}
-                    onEscolherGrupo={inscricao.escolherGrupo}
+                    onAplicarGrupo={inscricao.aplicarGrupo}
                     onAlternarIntegrante={inscricao.alternarIntegrante}
                     className="order-2 lg:order-1"
                 />
@@ -57,12 +68,13 @@ export function BancadaInscricao(props: Props) {
                     className="border-border/70 hidden border-l border-dashed lg:order-2 lg:block"
                 />
 
-                <TicketInscricao
+                <Inscricoes
                     categoria={inscricao.categoria}
                     modalidade={inscricao.modalidade}
-                    selecao={inscricao.selecao}
-                    linhas={inscricao.linhasDoTicket}
-                    carregandoGrupo={inscricao.grupoDetalhe.carregando}
+                    control={inscricao.form.control}
+                    integrantes={inscricao.integrantesInscritos}
+                    grupoAplicando={inscricao.grupoAplicando}
+                    erroAoAplicarGrupo={inscricao.erroAoAplicarGrupo}
                     onAlternarIntegrante={inscricao.alternarIntegrante}
                     onCriar={inscricao.criarInscricao}
                     ultimoEnvio={inscricao.ultimoEnvio}

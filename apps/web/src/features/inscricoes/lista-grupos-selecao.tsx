@@ -22,14 +22,14 @@ interface Props {
     carregarMais: () => void;
     filtros: FiltrosGrupos;
     onFiltrosChange: (filtros: FiltrosGrupos) => void;
-    /** O id do grupo desta inscrição, se houver. */
-    grupoSelecionado: number | null;
-    onEscolher: (grupo: GrupoComPrevia) => void;
+    /** O id do grupo cuja formação está a caminho do ticket, se houver. */
+    grupoAplicando: number | null;
+    onAplicar: (grupo: GrupoComPrevia) => void;
 }
 
 /**
  * A aba "Grupos" da coluna da entidade: a barra de recorte e a lista rolável
- * de grupos, cada um um cartão que marca o grupo para a inscrição.
+ * de grupos, cada um um cartão que copia a formação do grupo para a inscrição.
  *
  * Tem a estrutura da `ColunaIntegrantes` da bancada de grupo — barra,
  * caixa rolável, conteúdo decidido num lugar só, esqueletos da próxima
@@ -50,8 +50,8 @@ export function ListaGruposSelecao({
     carregarMais,
     filtros,
     onFiltrosChange,
-    grupoSelecionado,
-    onEscolher,
+    grupoAplicando,
+    onAplicar,
 }: Props) {
     const { triggerScrollRef } = useVerticalScroll({
         onScrollEnd: carregarMais,
@@ -72,8 +72,8 @@ export function ListaGruposSelecao({
                     carregando={carregando}
                     erro={erro}
                     temFiltro={temFiltroGrupoAtivo(filtros)}
-                    grupoSelecionado={grupoSelecionado}
-                    onEscolher={onEscolher}
+                    grupoAplicando={grupoAplicando}
+                    onAplicar={onAplicar}
                 />
 
                 {isFetchingNextPage && (
@@ -99,11 +99,11 @@ function ConteudoDaLista({
     carregando,
     erro,
     temFiltro,
-    grupoSelecionado,
-    onEscolher,
+    grupoAplicando,
+    onAplicar,
 }: Pick<
     Props,
-    "grupos" | "carregando" | "erro" | "grupoSelecionado" | "onEscolher"
+    "grupos" | "carregando" | "erro" | "grupoAplicando" | "onAplicar"
 > & { temFiltro: boolean }) {
     if (carregando) {
         return (
@@ -142,8 +142,8 @@ function ConteudoDaLista({
                 <CartaoGrupoSelecao
                     key={grupo.id}
                     grupo={grupo}
-                    selecionado={grupo.id === grupoSelecionado}
-                    onEscolher={onEscolher}
+                    aplicando={grupo.id === grupoAplicando}
+                    onAplicar={onAplicar}
                 />
             ))}
         </ul>

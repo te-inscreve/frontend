@@ -120,3 +120,6 @@ export type {
     IntegranteDoGrupo,
     PaginaGrupos,
 } from "./grupo";
+
+export { criarInscricaoSchema } from "./inscricao";
+export type { CriarInscricao } from "./inscricao";

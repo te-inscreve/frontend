@@ -1,23 +1,33 @@
 "use client";
 
+import type { Control } from "react-hook-form";
 import { useId } from "react";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import { AnimatePresence, motion } from "motion/react";
-
-import type { Categoria, ModalidadeDetalhe } from "@te-inscreve/schemas";
-import { Button, cn, EXPANSION_TRANSITION } from "@te-inscreve/components";
-import { Skeleton } from "@te-inscreve/components/skeleton";
+import { useFormState } from "react-hook-form";
 
 import type {
-    LinhaDoTicket,
-    PayloadInscricao,
-    SelecaoInscricao,
-} from "./selecao-inscricao";
+    Categoria,
+    CriarInscricao,
+    ModalidadeDetalhe,
+} from "@te-inscreve/schemas";
+import {
+    Button,
+    cn,
+    EXPANSION_TRANSITION,
+    FieldError,
+} from "@te-inscreve/components";
+import { Skeleton } from "@te-inscreve/components/skeleton";
+
+import type { InscricaoFormValues } from "./lib/inscricao-form-schema";
+import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { contagemIntegrantes } from "~/features/entidades/grupos/grupo";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
+import { CampoNomeConcorrente } from "./campo-nome-concorrente";
 import { CartaoIntegranteInscricao } from "./cartao-integrante-inscricao";
+import { RecorteDoTicket, RestricoesDaCategoria } from "./partes-do-ticket";
 
 /** Quantos esqueletos no máximo enquanto a formação do grupo não chega. */
 const MAXIMO_DE_ESQUELETOS = 6;
@@ -27,14 +37,17 @@ interface Props {
     categoria: Categoria | null;
     /** `null` enquanto a modalidade não chega — os limites viram esqueleto. */
     modalidade: ModalidadeDetalhe | null;
-    selecao: SelecaoInscricao;
-    linhas: LinhaDoTicket[];
-    /** Há grupo escolhido e `grupo.getById` ainda não respondeu. */
-    carregandoGrupo: boolean;
+    control: Control<InscricaoFormValues>;
+    /** Quem está na inscrição, na ordem em que entrou. */
+    integrantes: Integrante[];
+    /** O grupo cuja formação está a caminho — `grupo.getById` não respondeu. */
+    grupoAplicando: GrupoComPrevia | null;
+    erroAoAplicarGrupo: { message: string } | null;
     onAlternarIntegrante: (integrante: Integrante) => void;
-    onCriar: () => void;
+    /** O `handleSubmit` do formulário. */
+    onCriar: React.FormEventHandler<HTMLFormElement>;
     /** O último payload enviado (mock) — para a tela acusar o clique. */
-    ultimoEnvio: PayloadInscricao | null;
+    ultimoEnvio: CriarInscricao | null;
     className?: string;
 }
 
@@ -46,7 +59,7 @@ interface Props {
  * `bg-muted/40`, borda, raio), mesma altura, para os dois lados se lerem como
  * um par — mas com a forma de um ticket: três superfícies (cabeçalho, corpo,
  * rodapé) separadas por dois picotes. O cabeçalho diz *em que* se inscreve
- * (a categoria, e o grupo se houver); o corpo é a lista de quem vai; o rodapé
+ * (a categoria) e, na modalidade em grupo, *com que nome*; o corpo é a lista de quem vai; o rodapé
  * traz o que a categoria exige e o botão de criar. A forma não é enfeite: a
  * inscrição é o comprovante de que a entidade entra na categoria, e um
  * bilhete é o que a pessoa vai levar dali.
@@ -59,32 +72,39 @@ interface Props {
  * lista da esquerda: a pessoa continua lá, marcada, enquanto aparece aqui —
  * ver {@link CartaoIntegranteInscricao}.
  *
- * Enquanto `grupo.getById` carrega, o corpo mostra esqueletos no lugar da
- * formação — tantos quantos o cartão do grupo disse que são, para a lista
- * não pular quando os nomes chegarem — e as linhas avulsas já marcadas
- * ficam embaixo, onde vão continuar.
+ * Enquanto `grupo.getById` carrega, o corpo mostra esqueletos no fim da
+ * lista — onde a formação vai entrar, tantos quantos o cartão do grupo
+ * disse que são.
+ *
+ * É o próprio `form`: o botão do rodapé é o `submit`, e o nome do
+ * concorrente, no cabeçalho, é campo dele. Os cliques na coluna da entidade
+ * mexem no mesmo formulário por `setValue`, de fora.
  */
 export function TicketInscricao({
     categoria,
     modalidade,
-    selecao,
-    linhas,
-    carregandoGrupo,
+    control,
+    integrantes,
+    grupoAplicando,
+    erroAoAplicarGrupo,
     onAlternarIntegrante,
     onCriar,
     ultimoEnvio,
     className,
 }: Props) {
     const tituloId = useId();
-    const esqueletos = selecao.grupo
+    const { errors } = useFormState({ control, name: "integrantes" });
+    const esqueletos = grupoAplicando
         ? Math.min(
-              Math.max(selecao.grupo.totalIntegrantes, 1),
+              Math.max(grupoAplicando.totalIntegrantes, 1),
               MAXIMO_DE_ESQUELETOS,
           )
         : 0;
 
     return (
-        <section
+        <form
+            noValidate
+            onSubmit={onCriar}
             aria-labelledby={tituloId}
             className={cn(
                 // Sem `overflow-hidden`: os picotes saem 1,5px para fora da
@@ -102,20 +122,15 @@ export function TicketInscricao({
                         ? "…"
                         : `${modalidade.nome} ${categoria.nome.toLowerCase()}`}
                 </h2>
-                {selecao.grupo && (
-                    <p className="text-muted-foreground text-sm italic">
-                        Grupo selecionado:{" "}
-                        <span className="text-foreground">
-                            {selecao.grupo.nome}
-                        </span>
-                    </p>
+                {modalidade?.isGrupo && (
+                    <CampoNomeConcorrente control={control} />
                 )}
             </header>
 
             <RecorteDoTicket />
 
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
-                {linhas.length === 0 && !carregandoGrupo ? (
+                {integrantes.length === 0 && !grupoAplicando ? (
                     // O vazio é a própria área de chegada, tracejada como uma
                     // vaga esperando conteúdo — o mesmo desenho do grupo vazio
                     // na bancada de grupo.
@@ -127,23 +142,18 @@ export function TicketInscricao({
                         />
                         <p className="text-muted-foreground max-w-sm">
                             Nenhum integrante adicionado ainda. Clique em um
-                            grupo ou em um integrante para adicioná-lo à
-                            inscrição.
+                            grupo para trazer a formação dele, ou em um
+                            integrante para adicioná-lo à inscrição.
                         </p>
                     </div>
                 ) : (
                     <ul className="grid gap-3">
-                        {carregandoGrupo &&
-                            Array.from({ length: esqueletos }, (_, indice) => (
-                                <CartaoIntegranteSkeleton key={`s-${indice}`} />
-                            ))}
-
                         {/* `initial={false}`: o que já está no ticket na
                             primeira pintura não nasce animando. `popLayout`
                             tira a linha que sai do fluxo na hora, para as
                             vizinhas deslizarem sem esperar. */}
                         <AnimatePresence initial={false} mode="popLayout">
-                            {linhas.map(({ integrante, origem }) => (
+                            {integrantes.map((integrante) => (
                                 <motion.li
                                     key={integrante.id}
                                     // `min-w-0`: item de grade nasce com
@@ -160,12 +170,15 @@ export function TicketInscricao({
                                     <CartaoIntegranteInscricao
                                         integrante={integrante}
                                         lado="ticket"
-                                        origem={origem}
                                         onAlternar={onAlternarIntegrante}
                                     />
                                 </motion.li>
                             ))}
                         </AnimatePresence>
+
+                        {Array.from({ length: esqueletos }, (_, indice) => (
+                            <CartaoIntegranteSkeleton key={`s-${indice}`} />
+                        ))}
                     </ul>
                 )}
             </div>
@@ -178,73 +191,28 @@ export function TicketInscricao({
                     modalidade={modalidade}
                 />
 
+                {errors.integrantes && (
+                    <FieldError errors={[errors.integrantes]} />
+                )}
+                {erroAoAplicarGrupo && (
+                    <FieldError>
+                        Não foi possível trazer os integrantes do grupo.{" "}
+                        {erroAoAplicarGrupo.message}
+                    </FieldError>
+                )}
+
                 <p aria-live="polite" className="text-muted-foreground text-xs">
-                    {contagemIntegrantes(linhas.length)} na inscrição
+                    {contagemIntegrantes(integrantes.length)} na inscrição
                     {ultimoEnvio &&
                         " · o envio ainda não está ligado ao servidor; o payload foi registrado no console."}
                 </p>
 
-                <Button type="button" onClick={onCriar}>
+                <Button type="submit">
                     <TicketIcon aria-hidden="true" />
                     Criar inscrição
                 </Button>
             </footer>
-        </section>
-    );
-}
-
-/**
- * O que a categoria exige de quem se inscreve: a faixa de idade, e — na
- * modalidade em grupo — quantos por grupo.
- *
- * A linha "Por grupo" só aparece quando a modalidade é em grupo: fora dela
- * os dois limites são nulos por definição, e "mín. Sem limite · máx. Sem
- * limite" diria nada. Dentro dela, `null` é "Sem limite" — o organizador
- * pode fixar só uma das pontas.
- *
- * Esqueletos enquanto categoria e modalidade não chegam: as duas leituras
- * são hidratadas do `prefetch` da página, então na prática só piscam na
- * primeira visita.
- */
-function RestricoesDaCategoria({
-    categoria,
-    modalidade,
-}: Pick<Props, "categoria" | "modalidade">) {
-    const semLimite = (valor: number | null) =>
-        valor === null ? "Sem limite" : String(valor);
-
-    return (
-        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-            <div className="flex gap-1">
-                <dt className="text-muted-foreground">Idade:</dt>
-                <dd className="font-semibold">
-                    {categoria ? (
-                        `${categoria.idadeMinima} a ${categoria.idadeMaxima} anos`
-                    ) : (
-                        <Skeleton className="h-3.5 w-20" />
-                    )}
-                </dd>
-            </div>
-
-            {modalidade === null ? (
-                <div className="flex gap-1">
-                    <dt className="text-muted-foreground">Por grupo:</dt>
-                    <dd>
-                        <Skeleton className="h-3.5 w-28" />
-                    </dd>
-                </div>
-            ) : (
-                modalidade.isGrupo && (
-                    <div className="flex gap-1">
-                        <dt className="text-muted-foreground">Por grupo:</dt>
-                        <dd className="font-semibold">
-                            mín. {semLimite(modalidade.minInscritosPorGrupo)} ·
-                            máx. {semLimite(modalidade.maxInscritosPorGrupo)}
-                        </dd>
-                    </div>
-                )
-            )}
-        </dl>
+        </form>
     );
 }
 
@@ -288,57 +256,5 @@ export function TicketInscricaoSkeleton({ className }: { className?: string }) {
                 <Skeleton className="h-9 w-full rounded-md" />
             </footer>
         </section>
-    );
-}
-
-/**
- * O picote entre duas superfícies do bilhete: uma linha tracejada com um
- * semicírculo mordido em cada borda.
- *
- * `h-0` e `-translate-y-1/2` põem o picote exatamente sobre a linha em que
- * uma superfície acaba e a outra começa, sem ocupar altura. Os semicírculos
- * saem 1,5px para fora (`-translate-x-[1.5px]`) para cobrir a borda de 1px
- * da `section` — é isso que faz a mordida parecer cortada na borda, e não
- * desenhada por cima dela. Por isso a `section` não pode ter
- * `overflow-hidden`.
- */
-function RecorteDoTicket() {
-    return (
-        <div
-            aria-hidden="true"
-            className="relative flex h-0 shrink-0 items-center"
-        >
-            <Semicirculo className="absolute top-0 left-0 -translate-x-[1.5px] -translate-y-1/2" />
-            <span className="border-border mx-3 flex-1 border-t border-dashed" />
-            <Semicirculo className="absolute top-0 right-0 translate-x-[1.5px] -translate-y-1/2 rotate-180" />
-        </div>
-    );
-}
-
-/**
- * Meio disco mordido na borda esquerda; o da direita é o mesmo, girado.
- *
- * Dois caminhos: o disco cheio, sem traço, na cor do fundo da página
- * (`fill-background`) — é o "buraco" —, e o arco só de traço, na cor da
- * borda (`stroke-border`), que é a borda da `section` contornando a mordida.
- * Separados porque o lado reto do disco não pode ter traço: ele cairia fora
- * da borda, como um risco vertical.
- */
-function Semicirculo({ className }: { className: string }) {
-    return (
-        <svg
-            width="6"
-            height="12"
-            viewBox="0 0 6 12"
-            className={cn("fill-background stroke-border", className)}
-        >
-            <path d="M0 0.5A5.5 5.5 0 0 1 0 11.5Z" stroke="none" />
-            <path
-                d="M0 0.5A5.5 5.5 0 0 1 0 11.5"
-                fill="none"
-                strokeWidth="1"
-                strokeLinejoin="round"
-            />
-        </svg>
     );
 }

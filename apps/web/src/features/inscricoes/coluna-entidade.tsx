@@ -23,9 +23,10 @@ interface Props {
     entidade: string | null;
     grupos: Inscricao["grupos"];
     integrantes: Inscricao["integrantes"];
-    grupoSelecionado: number | null;
+    /** O id do grupo cuja formação está a caminho do ticket, se houver. */
+    grupoAplicando: number | null;
     selecionados: ReadonlySet<number>;
-    onEscolherGrupo: Inscricao["escolherGrupo"];
+    onAplicarGrupo: Inscricao["aplicarGrupo"];
     onAlternarIntegrante: Inscricao["alternarIntegrante"];
     className?: string;
 }
@@ -53,9 +54,9 @@ export function ColunaEntidade({
     entidade,
     grupos,
     integrantes,
-    grupoSelecionado,
+    grupoAplicando,
     selecionados,
-    onEscolherGrupo,
+    onAplicarGrupo,
     onAlternarIntegrante,
     className,
 }: Props) {
@@ -97,8 +98,8 @@ export function ColunaEntidade({
                         carregarMais={grupos.carregarMais}
                         filtros={grupos.filtros}
                         onFiltrosChange={grupos.setFiltros}
-                        grupoSelecionado={grupoSelecionado}
-                        onEscolher={onEscolherGrupo}
+                        grupoAplicando={grupoAplicando}
+                        onAplicar={onAplicarGrupo}
                     />
                 </TabsContent>
 
