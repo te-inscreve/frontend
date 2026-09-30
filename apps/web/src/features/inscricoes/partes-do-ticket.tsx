@@ -33,7 +33,7 @@ export function RestricoesDaCategoria({
         valor === null ? "Sem limite" : String(valor);
 
     return (
-        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
             <div className="flex gap-1">
                 <dt className="text-muted-foreground">Idade:</dt>
                 <dd className="font-semibold">
@@ -103,14 +103,14 @@ export function RecorteDoTicket() {
 function Semicirculo({ className }: { className: string }) {
     return (
         <svg
-            width="6"
-            height="12"
-            viewBox="0 0 6 12"
+            width="10"
+            height="20"
+            viewBox="0 0 10 20"
             className={cn("fill-background stroke-border", className)}
         >
-            <path d="M0 0.5A5.5 5.5 0 0 1 0 11.5Z" stroke="none" />
+            <path d="M0 0.5A9.5 9.5 0 0 1 0 19.5Z" stroke="none" />
             <path
-                d="M0 0.5A5.5 5.5 0 0 1 0 11.5"
+                d="M0 0.5A9.5 9.5 0 0 1 0 19.5"
                 fill="none"
                 strokeWidth="1"
                 strokeLinejoin="round"
@@ -147,14 +147,14 @@ export function PicoteVertical() {
 function SemicirculoDeTopo({ className }: { className: string }) {
     return (
         <svg
-            width="12"
-            height="6"
-            viewBox="0 0 12 6"
+            width="20"
+            height="10"
+            viewBox="0 0 20 10"
             className={cn("fill-background stroke-border", className)}
         >
-            <path d="M0.5 0A5.5 5.5 0 0 0 11.5 0Z" stroke="none" />
+            <path d="M0.5 0A9.5 9.5 0 0 0 19.5 0Z" stroke="none" />
             <path
-                d="M0.5 0A5.5 5.5 0 0 0 11.5 0"
+                d="M0.5 0A9.5 9.5 0 0 0 19.5 0"
                 fill="none"
                 strokeWidth="1"
                 strokeLinejoin="round"
