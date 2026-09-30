@@ -1,6 +1,8 @@
 "use client";
 
+import type { FieldPath } from "react-hook-form";
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
     useInfiniteQuery,
@@ -10,7 +12,6 @@ import {
 } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 
-import type { CriarInscricao } from "@te-inscreve/schemas";
 import { proximaPagina } from "@te-inscreve/schemas";
 
 import type { InscricaoFormValues } from "./lib/inscricao-form-schema";
@@ -30,6 +31,7 @@ import { useTRPC } from "~/shared/api/trpc/client";
 import {
     alternarIntegrante as alternar,
     aplicarFormacao,
+    exigeNomeConcorrente,
     inscricaoFormDefaults,
     inscricaoFormInput,
     inscricaoFormSchema,
@@ -64,9 +66,10 @@ interface Opcoes {
  * próprio filtro, e o filtro sobrevive à troca de aba porque mora aqui, não
  * na lista que desmonta.
  *
- * `criarInscricao` é mock: o backend ainda não expõe `inscricao.create`, então
- * o payload vai para o console e fica em `ultimoEnvio`. Quando a mutação
- * existir, é aqui que ela entra — a tela não muda.
+ * `criarInscricao` envia para `inscricao.create` e, dando certo, volta ao
+ * detalhe da categoria. Uma recusa do backend cai no campo a que se refere,
+ * quando há um; as de domínio (faixa etária, janela fechada, limite) não têm
+ * campo, e viram `erroAoCriar`, no rodapé.
  */
 export function useInscricao({
     eventoId,
@@ -77,12 +80,12 @@ export function useInscricao({
 }: Opcoes) {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
+    const router = useRouter();
 
     const [filtrosIntegrantes, setFiltrosIntegrantes] =
         useState<FiltrosIntegrantes>(filtrosVazios);
     const [filtrosGrupos, setFiltrosGrupos] =
         useState<FiltrosGrupos>(filtrosGruposVazios);
-    const [ultimoEnvio, setUltimoEnvio] = useState<CriarInscricao | null>(null);
 
     // ---- O contexto: entidade, categoria, modalidade ----------------------
 
@@ -97,21 +100,24 @@ export function useInscricao({
     const modalidade = useQuery(
         trpc.modalidade.getById.queryOptions({ eventoId, modalidadeId }),
     );
-    const isGrupo = modalidade.data?.isGrupo ?? false;
+    // `null` é o 404 da modalidade — sem ela, não há nome a exigir.
+    const exigeNome = modalidade.data
+        ? exigeNomeConcorrente(modalidade.data)
+        : false;
 
     // ---- O formulário -----------------------------------------------------
 
     // O RHF relê as opções a cada render, então o resolver acompanha a
     // modalidade quando ela chega.
     const resolver = useMemo(
-        () => zodResolver(inscricaoFormSchema(isGrupo)),
-        [isGrupo],
+        () => zodResolver(inscricaoFormSchema(exigeNome)),
+        [exigeNome],
     );
     const form = useForm<InscricaoFormValues>({
         resolver,
         defaultValues: inscricaoFormDefaults,
     });
-    const { getValues, setValue, formState } = form;
+    const { getValues, setValue, setError, formState } = form;
     const integrantesInscritos = useWatch({
         control: form.control,
         name: "integrantes",
@@ -204,8 +210,8 @@ export function useInscricao({
             definirIntegrantes(
                 aplicarFormacao(getValues("integrantes"), detalhe.integrantes),
             );
-            // Na modalidade individual não há concorrente a nomear.
-            if (isGrupo) {
+            // Só onde a modalidade pede nome há concorrente a nomear.
+            if (exigeNome) {
                 setValue("nomeConcorrente", detalhe.nome, {
                     shouldDirty: true,
                     shouldValidate: isSubmitted,
@@ -225,11 +231,41 @@ export function useInscricao({
         [definirIntegrantes, getValues],
     );
 
-    /** Mock até `inscricao.create` existir: registra o payload e o guarda. */
+    const [erroAoCriar, setErroAoCriar] = useState<string | null>(null);
+    const criacao = useMutation(
+        trpc.inscricao.create.mutationOptions({
+            onSuccess: () =>
+                router.push(
+                    `/admin/eventos/${eventoId}/categorias/${categoriaId}?modalidade=${modalidadeId}`,
+                ),
+            onError: (error) => {
+                let algumCampo = false;
+                const fieldErrors = error.data?.fieldErrors ?? {};
+                for (const [campo, mensagens] of Object.entries(fieldErrors)) {
+                    const campoDoFormulario = campoInscricaoForm(campo);
+                    if (!campoDoFormulario || !mensagens.length) continue;
+                    algumCampo = true;
+                    setError(campoDoFormulario, {
+                        type: "server",
+                        message: mensagens.join(" "),
+                    });
+                }
+                // Sem campo a apontar — recusa de domínio, permissão, rede —,
+                // a mensagem vai inteira para o rodapé.
+                if (!algumCampo) setErroAoCriar(error.message);
+            },
+        }),
+    );
+    const { mutate: criar } = criacao;
+
     const criarInscricao = form.handleSubmit((valores) => {
-        const payload = inscricaoFormInput(valores, isGrupo);
-        console.info("[inscricao] payload", payload);
-        setUltimoEnvio(payload);
+        setErroAoCriar(null);
+        criar({
+            eventoId,
+            modalidadeId,
+            categoriaId,
+            inscricao: inscricaoFormInput(valores, exigeNome),
+        });
     });
 
     return {
@@ -264,10 +300,30 @@ export function useInscricao({
         /** O grupo cuja formação está a caminho, enquanto `grupo.getById` responde. */
         grupoAplicando: aplicacao.isPending ? aplicacao.variables : null,
         erroAoAplicarGrupo: aplicacao.error,
-        ultimoEnvio,
+        // Até o `router.push` terminar, o sucesso também conta como envio:
+        // o botão não volta a ficar ativo na tela que está saindo.
+        criando: criacao.isPending || criacao.isSuccess,
+        erroAoCriar,
 
         aplicarGrupo,
         alternarIntegrante,
         criarInscricao,
     };
+}
+
+/**
+ * Nome do campo na resposta da API → campo do formulário. O backend responde
+ * em camelCase, mas o snake_case aparece nos erros que vêm do serializer sem
+ * passar pelo `djangorestframework-camel-case`.
+ */
+function campoInscricaoForm(
+    campoApi: string,
+): FieldPath<InscricaoFormValues> | null {
+    const campos: Record<string, FieldPath<InscricaoFormValues>> = {
+        nomeConcorrente: "nomeConcorrente",
+        nome_concorrente: "nomeConcorrente",
+        integrantes: "integrantes",
+    };
+
+    return campos[campoApi] ?? null;
 }

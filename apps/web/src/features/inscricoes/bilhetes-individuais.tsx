@@ -2,17 +2,14 @@
 
 import type { Control } from "react-hook-form";
 import { useId } from "react";
+import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { StackIcon } from "@phosphor-icons/react/dist/ssr/Stack";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UserIcon } from "@phosphor-icons/react/dist/ssr/User";
 import { AnimatePresence, motion } from "motion/react";
 import { useFormState } from "react-hook-form";
 
-import type {
-    Categoria,
-    CriarInscricao,
-    ModalidadeDetalhe,
-} from "@te-inscreve/schemas";
+import type { Categoria, ModalidadeDetalhe } from "@te-inscreve/schemas";
 import {
     Button,
     cn,
@@ -43,8 +40,10 @@ interface Props {
     onAlternarIntegrante: (integrante: Integrante) => void;
     /** O `handleSubmit` do formulário. */
     onCriar: React.FormEventHandler<HTMLFormElement>;
-    /** O último payload enviado (mock) — para a tela acusar o clique. */
-    ultimoEnvio: CriarInscricao | null;
+    /** Enquanto `inscricao.create` responde — o botão espera. */
+    criando: boolean;
+    /** A recusa do backend que não cabe em campo nenhum. */
+    erroAoCriar: string | null;
     className?: string;
 }
 
@@ -75,7 +74,8 @@ export function BilhetesIndividuais({
     erroAoAplicarGrupo,
     onAlternarIntegrante,
     onCriar,
-    ultimoEnvio,
+    criando,
+    erroAoCriar,
     className,
 }: Props) {
     const tituloId = useId();
@@ -165,20 +165,24 @@ export function BilhetesIndividuais({
                         {erroAoAplicarGrupo.message}
                     </FieldError>
                 )}
+                {erroAoCriar && <FieldError>{erroAoCriar}</FieldError>}
 
                 <p aria-live="polite" className="text-muted-foreground text-xs">
                     {contagemInscricoes(quantidade)}
-                    {ultimoEnvio &&
-                        " · o envio ainda não está ligado ao servidor; o payload foi registrado no console."}
                 </p>
 
-                <Button type="submit">
-                    {quantidade > 1 ? (
+                <Button type="submit" disabled={criando}>
+                    {criando ? (
+                        <CircleNotchIcon
+                            aria-hidden="true"
+                            className="animate-spin"
+                        />
+                    ) : quantidade > 1 ? (
                         <StackIcon aria-hidden="true" />
                     ) : (
                         <TicketIcon aria-hidden="true" />
                     )}
-                    {rotuloDoEnvio(quantidade)}
+                    {criando ? "Criando…" : rotuloDoEnvio(quantidade)}
                 </Button>
             </footer>
         </form>

@@ -77,7 +77,8 @@ export function BancadaInscricao(props: Props) {
                     erroAoAplicarGrupo={inscricao.erroAoAplicarGrupo}
                     onAlternarIntegrante={inscricao.alternarIntegrante}
                     onCriar={inscricao.criarInscricao}
-                    ultimoEnvio={inscricao.ultimoEnvio}
+                    criando={inscricao.criando}
+                    erroAoCriar={inscricao.erroAoCriar}
                     className="order-1 lg:order-3"
                 />
             </div>

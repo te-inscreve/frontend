@@ -2,16 +2,13 @@
 
 import type { Control } from "react-hook-form";
 import { useId } from "react";
+import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import { AnimatePresence, motion } from "motion/react";
 import { useFormState } from "react-hook-form";
 
-import type {
-    Categoria,
-    CriarInscricao,
-    ModalidadeDetalhe,
-} from "@te-inscreve/schemas";
+import type { Categoria, ModalidadeDetalhe } from "@te-inscreve/schemas";
 import {
     Button,
     cn,
@@ -46,8 +43,10 @@ interface Props {
     onAlternarIntegrante: (integrante: Integrante) => void;
     /** O `handleSubmit` do formulário. */
     onCriar: React.FormEventHandler<HTMLFormElement>;
-    /** O último payload enviado (mock) — para a tela acusar o clique. */
-    ultimoEnvio: CriarInscricao | null;
+    /** Enquanto `inscricao.create` responde — o botão espera. */
+    criando: boolean;
+    /** A recusa do backend que não cabe em campo nenhum. */
+    erroAoCriar: string | null;
     className?: string;
 }
 
@@ -89,7 +88,8 @@ export function TicketInscricao({
     erroAoAplicarGrupo,
     onAlternarIntegrante,
     onCriar,
-    ultimoEnvio,
+    criando,
+    erroAoCriar,
     className,
 }: Props) {
     const tituloId = useId();
@@ -122,7 +122,7 @@ export function TicketInscricao({
                         ? "…"
                         : `${modalidade.nome} ${categoria.nome.toLowerCase()}`}
                 </h2>
-                {modalidade?.isGrupo && (
+                {modalidade?.exibirNomeConcorrente && (
                     <CampoNomeConcorrente control={control} />
                 )}
             </header>
@@ -200,16 +200,22 @@ export function TicketInscricao({
                         {erroAoAplicarGrupo.message}
                     </FieldError>
                 )}
+                {erroAoCriar && <FieldError>{erroAoCriar}</FieldError>}
 
                 <p aria-live="polite" className="text-muted-foreground text-xs">
                     {contagemIntegrantes(integrantes.length)} na inscrição
-                    {ultimoEnvio &&
-                        " · o envio ainda não está ligado ao servidor; o payload foi registrado no console."}
                 </p>
 
-                <Button type="submit">
-                    <TicketIcon aria-hidden="true" />
-                    Criar inscrição
+                <Button type="submit" disabled={criando}>
+                    {criando ? (
+                        <CircleNotchIcon
+                            aria-hidden="true"
+                            className="animate-spin"
+                        />
+                    ) : (
+                        <TicketIcon aria-hidden="true" />
+                    )}
+                    {criando ? "Criando…" : "Criar inscrição"}
                 </Button>
             </footer>
         </form>

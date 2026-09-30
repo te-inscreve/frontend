@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import type { CriarInscricao } from "@te-inscreve/schemas";
+import type { CriarInscricao, ModalidadeDetalhe } from "@te-inscreve/schemas";
 import { integranteSchema } from "@te-inscreve/schemas";
 
 import type { Integrante } from "~/features/entidades/shared/integrantes";
@@ -14,10 +14,11 @@ import type { Integrante } from "~/features/entidades/shared/integrantes";
  * carregadas da lista. {@link inscricaoFormInput} reduz a lista aos ids na
  * hora de enviar.
  *
- * O nome do concorrente só é exigido na modalidade em grupo — por isso uma
- * fábrica, e não uma constante: quem decide é a modalidade.
+ * O nome do concorrente só é exigido quando a modalidade o pede — em grupo e
+ * com `exibirNomeConcorrente` (ver {@link exigeNomeConcorrente}) —, por isso
+ * uma fábrica, e não uma constante: quem decide é a modalidade.
  */
-export function inscricaoFormSchema(isGrupo: boolean) {
+export function inscricaoFormSchema(exigeNome: boolean) {
     const nome = z
         .string()
         .trim()
@@ -25,13 +26,24 @@ export function inscricaoFormSchema(isGrupo: boolean) {
         .max(255, "O nome pode ter no máximo 255 caracteres.");
 
     return z.object({
-        nomeConcorrente: isGrupo
+        nomeConcorrente: exigeNome
             ? nome.min(1, "Dê um nome ao concorrente.")
             : nome,
         integrantes: z
             .array(integranteSchema)
             .min(1, "Adicione ao menos um integrante à inscrição."),
     });
+}
+
+/**
+ * Se a inscrição leva nome de concorrente. O backend exige o nome nessas
+ * modalidades e o recusa em todas as outras — inclusive na modalidade em
+ * grupo que não o exibe —, então a regra é uma só, aqui.
+ */
+export function exigeNomeConcorrente(
+    modalidade: Pick<ModalidadeDetalhe, "isGrupo" | "exibirNomeConcorrente">,
+) {
+    return modalidade.isGrupo && modalidade.exibirNomeConcorrente;
 }
 
 export type InscricaoFormValues = z.infer<
@@ -44,16 +56,16 @@ export const inscricaoFormDefaults: InscricaoFormValues = {
 };
 
 /**
- * Converte o formulário validado no corpo que a API recebe. Fora da
- * modalidade em grupo o nome não vai, mesmo que um grupo aplicado o tenha
- * preenchido.
+ * Converte o formulário validado no corpo que a API recebe. Onde a
+ * modalidade não pede nome, ele não vai, mesmo que um grupo aplicado o tenha
+ * preenchido — o backend recusaria o campo.
  */
 export function inscricaoFormInput(
     valores: InscricaoFormValues,
-    isGrupo: boolean,
+    exigeNome: boolean,
 ): CriarInscricao {
     return {
-        ...(isGrupo && { nomeConcorrente: valores.nomeConcorrente.trim() }),
+        ...(exigeNome && { nomeConcorrente: valores.nomeConcorrente.trim() }),
         integrantes: valores.integrantes.map(({ id }) => id),
     };
 }
