@@ -121,5 +121,15 @@ export type {
     PaginaGrupos,
 } from "./grupo";
 
-export { criarInscricaoSchema } from "./inscricao";
-export type { CriarInscricao } from "./inscricao";
+export {
+    criarInscricaoSchema,
+    inscricaoGrupoSchema,
+    inscricaoIndividualSchema,
+    inscricoesCriadasSchema,
+} from "./inscricao";
+export type {
+    CriarInscricao,
+    InscricaoGrupo,
+    InscricaoIndividual,
+    InscricoesCriadas,
+} from "./inscricao";

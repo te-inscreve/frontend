@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import { integranteSchema } from "./integrante";
+
 /**
  * O corpo que `inscricao.create` vai receber: quem se apresenta na categoria.
  *
@@ -8,8 +10,8 @@ import { z } from "zod/v4";
  * de onde elas vieram.
  *
  * `nomeConcorrente` é o nome com que a formação se apresenta, e só existe nas
- * modalidades em grupo (`isGrupo`) — nas individuais o concorrente é a própria
- * pessoa, e o campo não vai.
+ * modalidades em grupo que o exibem (`isGrupo` e `exibirNomeConcorrente`) —
+ * aí ele é obrigatório; em qualquer outra, o backend recusa o campo.
  */
 export const criarInscricaoSchema = z.object({
     nomeConcorrente: z.string().trim().min(1).max(255).optional(),
@@ -17,3 +19,53 @@ export const criarInscricaoSchema = z.object({
 });
 
 export type CriarInscricao = z.infer<typeof criarInscricaoSchema>;
+
+/**
+ * A entidade como ela vem dentro de uma inscrição (`EntidadeInscricaoSerializer`):
+ * só a identidade pública e a cidade.
+ */
+const entidadeDaInscricaoSchema = z.object({
+    id: z.number().int(),
+    nome: z.string(),
+    cidade: z.string(),
+});
+
+/**
+ * Inscrição na modalidade individual: o concorrente é uma pessoa só.
+ *
+ * `concorrente` é `null` só num estado que o backend não deveria produzir —
+ * uma inscrição sem integrante —, mas o serializer o admite.
+ */
+export const inscricaoIndividualSchema = z.object({
+    id: z.number().int(),
+    dataCriacao: z.string(),
+    entidade: entidadeDaInscricaoSchema,
+    concorrente: integranteSchema.nullable(),
+});
+
+/**
+ * Inscrição na modalidade em grupo, como vem na listagem: a formação é só a
+ * contagem. `nomeConcorrente` só vem quando a modalidade o exibe
+ * (`exibirNomeConcorrente`).
+ */
+export const inscricaoGrupoSchema = z.object({
+    id: z.number().int(),
+    dataCriacao: z.string(),
+    entidade: entidadeDaInscricaoSchema,
+    nomeConcorrente: z.string().optional(),
+    totalIntegrantes: z.number().int(),
+});
+
+/**
+ * O que `POST .../inscricoes/` devolve: sempre uma lista. Na modalidade
+ * individual, uma inscrição por pessoa enviada — o envio é um lote atômico;
+ * na modalidade em grupo, uma só, a do grupo.
+ */
+export const inscricoesCriadasSchema = z.union([
+    z.array(inscricaoIndividualSchema),
+    z.array(inscricaoGrupoSchema),
+]);
+
+export type InscricaoIndividual = z.infer<typeof inscricaoIndividualSchema>;
+export type InscricaoGrupo = z.infer<typeof inscricaoGrupoSchema>;
+export type InscricoesCriadas = z.infer<typeof inscricoesCriadasSchema>;
