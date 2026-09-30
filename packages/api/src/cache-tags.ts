@@ -35,6 +35,9 @@ export const tagCategoriasDaModalidade = (modalidadeId: number) =>
 
 export const tagCategoria = (categoriaId: number) => `categoria-${categoriaId}`;
 
+export const tagInscricoesDaCategoria = (categoriaId: number) =>
+    `categoria-${categoriaId}-inscricoes`;
+
 /**
  * Os conjuntos que cada leitura grava, do geral para o específico — é o que
  * vai no `next: { tags }` de cada `fetch`.
@@ -64,6 +67,11 @@ export const tagsCategorias = (modalidadeId: number) => [
 export const tagsCategoria = (modalidadeId: number, categoriaId: number) => [
     ...tagsCategorias(modalidadeId),
     tagCategoria(categoriaId),
+];
+
+export const tagsInscricoes = (categoriaId: number) => [
+    "inscricoes",
+    tagInscricoesDaCategoria(categoriaId),
 ];
 
 export const tagsEntidades = () => ["entidades"];

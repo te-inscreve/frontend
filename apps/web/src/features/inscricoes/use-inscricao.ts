@@ -17,7 +17,7 @@ import { proximaPagina } from "@te-inscreve/schemas";
 import type { InscricaoFormValues } from "./lib/inscricao-form-schema";
 import type { FiltrosGrupos } from "~/features/entidades/grupos/filtros-grupos";
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
-import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/filtros-integrantes";
+import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/lib/filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import {
     filtrarGrupos,
@@ -26,7 +26,8 @@ import {
 import {
     filtrarIntegrantes,
     filtrosVazios,
-} from "~/features/entidades/integrantes/filtros-integrantes";
+} from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import { revalidarInscricoes } from "~/shared/api/revalidar";
 import { useTRPC } from "~/shared/api/trpc/client";
 import {
     alternarIntegrante as alternar,
@@ -234,10 +235,14 @@ export function useInscricao({
     const [erroAoCriar, setErroAoCriar] = useState<string | null>(null);
     const criacao = useMutation(
         trpc.inscricao.create.mutationOptions({
-            onSuccess: () =>
+            onSuccess: async () => {
+                // Antes do `push`: a aba de inscritos lê do Data Cache, e sem
+                // isto a inscrição recém-criada só apareceria em 30 segundos.
+                await revalidarInscricoes(categoriaId);
                 router.push(
                     `/admin/eventos/${eventoId}/categorias/${categoriaId}?modalidade=${modalidadeId}`,
-                ),
+                );
+            },
             onError: (error) => {
                 let algumCampo = false;
                 const fieldErrors = error.data?.fieldErrors ?? {};

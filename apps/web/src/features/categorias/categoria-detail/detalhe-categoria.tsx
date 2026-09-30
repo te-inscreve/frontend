@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
@@ -14,8 +15,10 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 
+import { ListaInscricoesSkeleton } from "~/features/inscricoes/lista-inscricoes";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { BotaoEditarCategoria } from "./botao-editar-categoria";
+import { InscricoesDaCategoria } from "./inscricoes-da-categoria";
 import { PainelNaoImplementado } from "./painel-nao-implementado";
 
 interface Props {
@@ -103,17 +106,17 @@ export async function DetalheCategoria({
                 estreito; empilhados, o principal vem primeiro. */}
             <div className="grid gap-4 lg:grid-cols-3">
                 <Tabs
-                    defaultValue="cronograma"
+                    defaultValue="inscritos"
                     className="lg:order-1 lg:col-span-2"
                 >
                     <TabsList variant="line" className="w-full justify-start">
-                        <TabsTrigger value="cronograma" className="flex-none">
-                            <CalendarDotsIcon />
-                            Cronograma
-                        </TabsTrigger>
                         <TabsTrigger value="inscritos" className="flex-none">
                             <UsersThreeIcon />
                             Inscritos
+                        </TabsTrigger>
+                        <TabsTrigger value="cronograma" className="flex-none">
+                            <CalendarDotsIcon />
+                            Cronograma
                         </TabsTrigger>
                     </TabsList>
 
@@ -123,9 +126,13 @@ export async function DetalheCategoria({
                         </PainelNaoImplementado>
                     </TabsContent>
                     <TabsContent value="inscritos" className="mt-4">
-                        <PainelNaoImplementado>
-                            Inscritos da categoria
-                        </PainelNaoImplementado>
+                        <Suspense fallback={<ListaInscricoesSkeleton />}>
+                            <InscricoesDaCategoria
+                                eventoId={eventoId}
+                                modalidadeId={modalidadeId}
+                                categoriaId={categoriaId}
+                            />
+                        </Suspense>
                     </TabsContent>
                 </Tabs>
 

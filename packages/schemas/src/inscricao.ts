@@ -66,6 +66,13 @@ export const inscricoesCriadasSchema = z.union([
     z.array(inscricaoGrupoSchema),
 ]);
 
+/**
+ * O que `GET .../inscricoes/` devolve: as inscrições da categoria, no formato
+ * da modalidade — todas individuais ou todas em grupo, nunca misturadas.
+ */
+export const inscricoesDaCategoriaSchema = inscricoesCriadasSchema;
+
 export type InscricaoIndividual = z.infer<typeof inscricaoIndividualSchema>;
 export type InscricaoGrupo = z.infer<typeof inscricaoGrupoSchema>;
 export type InscricoesCriadas = z.infer<typeof inscricoesCriadasSchema>;
+export type InscricoesDaCategoria = z.infer<typeof inscricoesDaCategoriaSchema>;

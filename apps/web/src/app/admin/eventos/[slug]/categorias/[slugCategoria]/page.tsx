@@ -38,6 +38,14 @@ export default function CategoriaDetailPage({
             categoriaId,
         }),
     );
+    // As inscrições descem para a aba de inscritos, atrás do próprio boundary.
+    void prefetch(
+        trpc.inscricao.getAll.queryOptions({
+            eventoId,
+            modalidadeId,
+            categoriaId,
+        }),
+    );
     // O evento também: é dele que a trilha tira o nome do evento e o da
     // modalidade da query.
     void prefetch(trpc.evento.getById.queryOptions({ id: eventoId }));

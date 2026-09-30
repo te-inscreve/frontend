@@ -6,6 +6,7 @@ import {
     tagCategoria,
     tagCategoriasDaModalidade,
     tagEvento,
+    tagInscricoesDaCategoria,
     tagModalidade,
     tagModalidadesDoEvento,
     tagsEntidades,
@@ -73,6 +74,11 @@ export async function revalidarCategoria(
 ) {
     await revalidarModalidade(eventoId, modalidadeId);
     updateTag(tagCategoria(categoriaId));
+}
+
+/** Depois de criar inscrições: a aba de inscritos da categoria envelheceu. */
+export async function revalidarInscricoes(categoriaId: number) {
+    updateTag(tagInscricoesDaCategoria(categoriaId));
 }
 
 /**

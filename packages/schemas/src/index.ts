@@ -126,10 +126,12 @@ export {
     inscricaoGrupoSchema,
     inscricaoIndividualSchema,
     inscricoesCriadasSchema,
+    inscricoesDaCategoriaSchema,
 } from "./inscricao";
 export type {
     CriarInscricao,
     InscricaoGrupo,
     InscricaoIndividual,
     InscricoesCriadas,
+    InscricoesDaCategoria,
 } from "./inscricao";
