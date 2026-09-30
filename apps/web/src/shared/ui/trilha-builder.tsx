@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Fragment } from "react";
 import Link from "next/link";
 
@@ -14,6 +15,12 @@ export interface TrilhaPasso {
     label: string;
     /** Sem `href`, o passo é o degrau atual: texto puro, sem link. */
     href?: string;
+    /**
+     * Desenha o degrau no lugar do texto ou do link — para quando ele faz
+     * mais do que navegar, como abrir um seletor. `label` continua sendo a
+     * chave do passo.
+     */
+    conteudo?: ReactNode;
 }
 
 interface Props {
@@ -33,13 +40,13 @@ export function TrilhaBuilder({ passos }: Props) {
                     <Fragment key={`${index}-${passo.label}`}>
                         {index > 0 && <BreadcrumbSeparator />}
                         <BreadcrumbItem>
-                            {passo.href === undefined ? (
+                            {passo.conteudo !== undefined ? (
+                                passo.conteudo
+                            ) : passo.href === undefined ? (
                                 <BreadcrumbPage>{passo.label}</BreadcrumbPage>
                             ) : (
                                 <BreadcrumbLink asChild>
-                                    <Link href={passo.href}>
-                                        {passo.label}
-                                    </Link>
+                                    <Link href={passo.href}>{passo.label}</Link>
                                 </BreadcrumbLink>
                             )}
                         </BreadcrumbItem>

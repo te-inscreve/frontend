@@ -1,6 +1,7 @@
 import type { TrilhaPasso } from "~/shared/ui/trilha-builder";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { TrilhaBuilder } from "~/shared/ui/trilha-builder";
+import { SeletorCategoria } from "./seletor-categoria";
 
 interface Props {
     eventoId: number;
@@ -53,7 +54,17 @@ export async function TrilhaCategoria({
     }
 
     if (categoria !== null) {
-        passos.push({ label: categoria.nome });
+        passos.push({
+            label: categoria.nome,
+            conteudo: (
+                <SeletorCategoria
+                    eventoId={eventoId}
+                    modalidadeId={modalidadeId}
+                    categoriaId={categoriaId}
+                    nome={categoria.nome}
+                />
+            ),
+        });
     }
 
     return <TrilhaBuilder passos={passos} />;
