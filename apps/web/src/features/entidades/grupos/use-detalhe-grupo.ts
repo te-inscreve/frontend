@@ -12,12 +12,12 @@ import {
 import type { FormGrupo, GrupoDetalhe } from "@te-inscreve/schemas";
 import { proximaPagina } from "@te-inscreve/schemas";
 
-import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/filtros-integrantes";
+import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/lib/filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import {
     filtrarIntegrantes,
     filtrosVazios,
-} from "~/features/entidades/integrantes/filtros-integrantes";
+} from "~/features/entidades/integrantes/lib/filtros-integrantes";
 import { useTRPC } from "~/shared/api/trpc/client";
 import { relancarPorCampo, resumirFormacao } from "./grupo";
 import { patchGrupoNaGrade, removerGrupoDaGrade } from "./grupo-cache";

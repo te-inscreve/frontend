@@ -28,7 +28,7 @@ import {
     nomeCompleto,
 } from "~/features/entidades/shared/integrantes";
 import { DialogEditarIntegrante } from "./dialog-editar-integrante";
-import { useDetalheIntegrante } from "./use-detalhe-integrante";
+import { useDetalheIntegrante } from "./lib/use-detalhe-integrante";
 
 interface Props extends AoEditarIntegrante {
     integrante: Integrante;

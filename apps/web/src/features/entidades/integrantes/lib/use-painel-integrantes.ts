@@ -11,8 +11,8 @@ import {
 import type { FormIntegrante } from "@te-inscreve/schemas";
 import { proximaPagina } from "@te-inscreve/schemas";
 
+import type { Visualizacao } from "../visualizacao";
 import type { FiltrosIntegrantes } from "./filtros-integrantes";
-import type { Visualizacao } from "./visualizacao";
 import { useTRPC } from "~/shared/api/trpc/client";
 import { filtrosVazios } from "./filtros-integrantes";
 

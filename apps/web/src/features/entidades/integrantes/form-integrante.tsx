@@ -12,7 +12,7 @@ import type { FormIntegrante, Integrante } from "@te-inscreve/schemas";
 import { Button, FieldError, FieldGroup } from "@te-inscreve/components";
 import { FormProvider } from "@te-inscreve/components/components/field";
 
-import type { IntegranteFormValues } from "./integrante-form-schema";
+import type { IntegranteFormValues } from "./lib/integrante-form-schema";
 import type { PresetData } from "~/shared/ui/form/campo-data";
 import { CampoData } from "~/shared/ui/form/campo-data";
 import { CampoTexto } from "~/shared/ui/form/campo-texto";
@@ -20,7 +20,7 @@ import {
     integranteFormDefaults,
     integranteFormInput,
     integranteFormSchema,
-} from "./integrante-form-schema";
+} from "./lib/integrante-form-schema";
 
 interface Props {
     /** Integrante em edição. Ausente quando o formulário está cadastrando. */

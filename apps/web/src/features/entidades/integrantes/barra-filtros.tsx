@@ -5,9 +5,9 @@ import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 
 import { Button, Input } from "@te-inscreve/components";
 
-import type { FiltrosIntegrantes } from "./filtros-integrantes";
+import type { FiltrosIntegrantes } from "./lib/filtros-integrantes";
 import { DialogFiltros } from "./dialog-filtros";
-import { filtrosVazios, temFiltroAtivo } from "./filtros-integrantes";
+import { filtrosVazios, temFiltroAtivo } from "./lib/filtros-integrantes";
 
 interface Props {
     filtros: FiltrosIntegrantes;

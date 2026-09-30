@@ -25,9 +25,9 @@ import {
     Switch,
 } from "@te-inscreve/components";
 
-import type { FiltrosIntegrantes } from "./filtros-integrantes";
+import type { FiltrosIntegrantes } from "./lib/filtros-integrantes";
 import { NumberInput } from "~/shared/ui/number-input";
-import { filtrosAvancadosAtivos } from "./filtros-integrantes";
+import { filtrosAvancadosAtivos } from "./lib/filtros-integrantes";
 
 interface Props {
     filtros: FiltrosIntegrantes;

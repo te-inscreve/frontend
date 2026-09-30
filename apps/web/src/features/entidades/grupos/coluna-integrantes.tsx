@@ -7,11 +7,11 @@ import { motion } from "motion/react";
 
 import { Button } from "@te-inscreve/components";
 
-import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/filtros-integrantes";
+import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/lib/filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { BarraFiltros } from "~/features/entidades/integrantes/barra-filtros";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
-import { temFiltroAtivo } from "~/features/entidades/integrantes/filtros-integrantes";
+import { temFiltroAtivo } from "~/features/entidades/integrantes/lib/filtros-integrantes";
 import { LadoDaBancada } from "./bancada";
 import { CartaoIntegranteSelecao } from "./cartao-integrante-selecao";
 

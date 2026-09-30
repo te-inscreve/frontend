@@ -4,8 +4,8 @@ import { useVerticalScroll } from "~/shared/utils/use-vertical-scroll";
 import { BarraFiltros } from "./barra-filtros";
 import { GradeIntegrantesSkeleton } from "./cartao-integrante-skeleton";
 import { DialogIntegrante } from "./dialog-integrante";
+import { usePainelIntegrantes } from "./lib/use-painel-integrantes";
 import { ListaIntegrantes } from "./lista-integrantes";
-import { usePainelIntegrantes } from "./use-painel-integrantes";
 import { SeletorVisualizacao } from "./visualizacao";
 
 /**
