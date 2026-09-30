@@ -16,6 +16,7 @@
         "./card": "./src/components/card.tsx",
         "./checkbox": "./src/components/checkbox.tsx",
         "./collapsible": "./src/components/collapsible.tsx",
+        "./command": "./src/components/command.tsx",
         "./dialog": "./src/components/dialog.tsx",
         "./expandable-dialog": "./src/components/expandable-dialog.tsx",
         "./input": "./src/components/input.tsx",
@@ -46,6 +47,7 @@
     "dependencies": {
         "@phosphor-icons/react": "^2.1.10",
         "class-variance-authority": "^0.7.1",
+        "cmdk": "^1.1.1",
         "motion": "^13.2.0",
         "radix-ui": "^1.4.3",
         "react-day-picker": "^10.0.1",

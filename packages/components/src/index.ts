@@ -41,6 +41,17 @@ export {
     CollapsibleTrigger,
 } from "./components/collapsible";
 export {
+    Command,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+    CommandShortcut,
+} from "./components/command";
+export {
     Dialog,
     DialogClose,
     DialogContent,
