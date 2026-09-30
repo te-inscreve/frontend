@@ -7,6 +7,7 @@ import "~/app/styles.css";
 import { cn } from "@te-inscreve/components";
 
 import { IconProvider } from "~/shared/ui/icon-provider";
+import { ThemeProvider } from "~/shared/ui/theme-provider";
 
 export const metadata: Metadata = {
     title: "te inscreve",
@@ -49,9 +50,11 @@ export default function RootLayout(props: { children: React.ReactNode }) {
                     "bg-background min-h-screen font-sans antialiased",
                 )}
             >
-                <TRPCReactProvider>
-                    <IconProvider>{props.children}</IconProvider>
-                </TRPCReactProvider>
+                <ThemeProvider>
+                    <TRPCReactProvider>
+                        <IconProvider>{props.children}</IconProvider>
+                    </TRPCReactProvider>
+                </ThemeProvider>
             </body>
         </html>
     );
