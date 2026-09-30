@@ -27,4 +27,4 @@ Aplica-se a toda tela escrita em `frontend/apps/web`.
 - Dispare os dados com `void prefetch(trpc....queryOptions(...))` no topo da página e consuma com `await getQueryClient().fetchQuery(...)` no filho suspenso: o query client é `cache`ado por request, então é a mesma requisição, não duas.
 - O boundary fica o mais fundo possível — um por unidade de espera independente — e o fallback tem a geometria do conteúdo final. Skeleton para carregamento de estrutura, spinner só para ação localizada.
 - Exceções são pontuais e justificadas por comentário no próprio arquivo: `defaultValues` de formulário, portão que decide se a página existe, leitura de `cookies()`. Elas justificam um `await`, não a página inteira.
-- `app/admin/eventos/[slug]/page.tsx` é o exemplo canônico. Leia `docs/fcp.md` antes de criar uma tela nova ou de acrescentar uma espera a uma existente.
+- `app/admin/eventos/[slug]/modalidades/[slugModalidade]/page.tsx` é o exemplo canônico. Leia `docs/fcp.md` antes de criar uma tela nova ou de acrescentar uma espera a uma existente.

@@ -43,7 +43,7 @@ export function FormEdicaoModalidade({ eventoId, modalidade, trilha }: Props) {
     const router = useRouter();
 
     // O lugar de chegada é a aba da modalidade no evento, de onde se veio.
-    const voltarPara = `/admin/eventos/${eventoId}?modalidade=${modalidade.id}`;
+    const voltarPara = `/admin/eventos/${eventoId}/modalidades/${modalidade.id}`;
 
     const { form, salvamento, salvar, erro } = useFormEdicaoModalidade({
         eventoId,

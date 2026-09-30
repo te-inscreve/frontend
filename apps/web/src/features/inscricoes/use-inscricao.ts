@@ -240,7 +240,7 @@ export function useInscricao({
                 // isto a inscrição recém-criada só apareceria em 30 segundos.
                 await revalidarInscricoes(categoriaId);
                 router.push(
-                    `/admin/eventos/${eventoId}/categorias/${categoriaId}?modalidade=${modalidadeId}`,
+                    `/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoriaId}`,
                 );
             },
             onError: (error) => {

@@ -27,9 +27,9 @@ const INTEGRANTES_POR_PAGINA = 20;
  * se apresenta na categoria — um grupo (com exclusões) e/ou integrantes
  * avulsos.
  *
- * Os três ids vêm da URL (`?modalidade=` porque a modalidade não é segmento
- * da rota); um que não é inteiro é 404 na hora, sem esperar rede — é
- * checagem de parâmetro, e cabe no corpo síncrono da página (`docs/fcp.md`).
+ * Os três ids vêm dos segmentos da rota; um que não é inteiro é 404 na hora,
+ * sem esperar rede — é checagem de parâmetro, e cabe no corpo síncrono da
+ * página (`docs/fcp.md`).
  *
  * Seis `prefetch`, todos antes do portão: evento e categoria (a trilha),
  * modalidade (os limites no pé do bilhete), entidade (o título da coluna) e
@@ -47,17 +47,17 @@ const INTEGRANTES_POR_PAGINA = 20;
  */
 export default function NovaInscricaoPage({
     params,
-    searchParams,
 }: {
-    params: Promise<{ slug: string; slugCategoria: string }>;
-    searchParams: Promise<Record<string, string | string[] | undefined>>;
+    params: Promise<{
+        slug: string;
+        slugModalidade: string;
+        slugCategoria: string;
+    }>;
 }) {
-    const [{ slug, slugCategoria }, query] = use(
-        Promise.all([params, searchParams]),
-    );
+    const { slug, slugModalidade, slugCategoria } = use(params);
     const eventoId = parseInteger(slug);
+    const modalidadeId = parseInteger(slugModalidade);
     const categoriaId = parseInteger(slugCategoria);
-    const modalidadeId = parseInteger(query.modalidade);
 
     if (!eventoId || !categoriaId || !modalidadeId) notFound();
 

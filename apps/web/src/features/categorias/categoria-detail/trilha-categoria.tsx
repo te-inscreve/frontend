@@ -49,7 +49,7 @@ export async function TrilhaCategoria({
             label: modalidade.nome,
             href: modalidadeEhAtual
                 ? undefined
-                : `/admin/eventos/${eventoId}?modalidade=${modalidadeId}`,
+                : `/admin/eventos/${eventoId}/modalidades/${modalidadeId}`,
         });
     }
 

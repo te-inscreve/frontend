@@ -40,8 +40,11 @@ export function FormModalidade({ eventoId, trilha }: Props) {
     const router = useRouter();
     const { form, salvamento, salvar, erro } = useFormModalidade({
         eventoId,
-        onSuccess: () => {
-            router.push(`/admin/eventos/${eventoId}`);
+        onSuccess: (modalidade) => {
+            // Abre na aba da modalidade recém-criada, como no cadastro rápido.
+            router.push(
+                `/admin/eventos/${eventoId}/modalidades/${modalidade.id}`,
+            );
             router.refresh();
         },
     });

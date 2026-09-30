@@ -38,7 +38,7 @@ export function FormModalidadeRapida({ eventoId, onCriada }: Props) {
                 // A modalidade recém-criada é a aba que abre — é nela que o
                 // organizador vai cadastrar as categorias.
                 router.push(
-                    `/admin/eventos/${eventoId}?modalidade=${modalidade.id}`,
+                    `/admin/eventos/${eventoId}/modalidades/${modalidade.id}`,
                 );
                 router.refresh();
                 onCriada();

@@ -45,24 +45,21 @@ a próxima ação". Uma tela branca não conduz ninguém a lugar nenhum.
 
 ## 3. A receita
 
-`apps/web/src/app/admin/eventos/[slug]/page.tsx` é o exemplo canônico. Vale ler
-inteiro antes de escrever uma tela nova:
+`apps/web/src/app/admin/eventos/[slug]/modalidades/[slugModalidade]/page.tsx` é o
+exemplo canônico. Vale ler inteiro antes de escrever uma tela nova:
 
 ```tsx
-export default function EventoDetailPage({ params, searchParams }: Props) {
+export default function ModalidadeDetailPage({ params }: Props) {
     // 1. `use()` em vez de `await`: a página continua síncrona.
-    const [{ slug }, query] = use(Promise.all([params, searchParams]));
+    const { slug, slugModalidade } = use(params);
     const idEvento = parseInteger(slug);
-    const idModalidade = parseInteger(query.modalidade);
+    const idModalidade = parseInteger(slugModalidade);
 
-    if (!idEvento) notFound();
+    if (!idEvento || !idModalidade) notFound();
 
     // 2. `void prefetch`: dispara a requisição e segue em frente.
     void prefetch(trpc.evento.getById.queryOptions({ id: idEvento }));
-
-    if (idModalidade) {
-        void prefetch(trpc.modalidade.getById.queryOptions({ ... }));
-    }
+    void prefetch(trpc.modalidade.getById.queryOptions({ ... }));
 
     return (
         <div className="flex min-h-screen flex-col gap-4 px-4 py-6 md:px-6 md:py-8">
@@ -112,7 +109,7 @@ Um `<Suspense>` por **unidade de espera independente**, não um por página. Tr�
 formas, todas em uso:
 
 **Boundaries irmãos.** Em
-`app/admin/eventos/[slug]/categorias/[slugCategoria]/page.tsx`, a trilha e o
+`app/admin/eventos/[slug]/modalidades/[slugModalidade]/categorias/[slugCategoria]/page.tsx`, a trilha e o
 detalhe têm boundaries separados. Uma requisição lenta do evento não segura o
 detalhe da categoria, e vice-versa:
 

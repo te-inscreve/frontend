@@ -60,7 +60,7 @@ export function SeletorCategoria({
         setAberto(false);
         if (id === categoriaId) return;
         router.push(
-            `/admin/eventos/${eventoId}/categorias/${id}?modalidade=${modalidadeId}`,
+            `/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${id}`,
         );
     };
 

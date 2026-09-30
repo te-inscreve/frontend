@@ -15,19 +15,17 @@ export const metadata = {
 
 export default function CategoriaDetailPage({
     params,
-    searchParams,
 }: {
-    params: Promise<{ slug: string; slugCategoria: string }>;
-    searchParams: Promise<Record<string, string | string[] | undefined>>;
+    params: Promise<{
+        slug: string;
+        slugModalidade: string;
+        slugCategoria: string;
+    }>;
 }) {
-    const [{ slug, slugCategoria }, query] = use(
-        Promise.all([params, searchParams]),
-    );
+    const { slug, slugModalidade, slugCategoria } = use(params);
     const eventoId = parseInteger(slug);
+    const modalidadeId = parseInteger(slugModalidade);
     const categoriaId = parseInteger(slugCategoria);
-    // O recurso é aninhado na modalidade, mas ela não está na rota — vem na
-    // query, posta pelo cartão que trouxe até aqui.
-    const modalidadeId = parseInteger(query.modalidade);
 
     if (!eventoId || !categoriaId || !modalidadeId) notFound();
 
@@ -47,13 +45,13 @@ export default function CategoriaDetailPage({
         }),
     );
     // O evento também: é dele que a trilha tira o nome do evento e o da
-    // modalidade da query.
+    // modalidade.
     void prefetch(trpc.evento.getById.queryOptions({ id: eventoId }));
 
     return (
         <div className="flex min-h-screen flex-col gap-4 px-4 py-6 md:px-6 md:py-8">
             {/* <GoBackButton
-                href={`/admin/eventos/${eventoId}?modalidade=${modalidadeId}`}
+                href={`/admin/eventos/${eventoId}/modalidades/${modalidadeId}`}
             /> */}
 
             <Suspense fallback={<TrilhaEventoSkeleton />}>

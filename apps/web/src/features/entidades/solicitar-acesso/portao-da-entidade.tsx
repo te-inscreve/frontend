@@ -14,10 +14,10 @@ import { SolicitarAcesso } from "./solicitar-acesso";
  * vínculo, deixar passar exibiria as listas de mock como se fossem de alguém.
  *
  * Saiu do layout para um arquivo próprio quando a inscrição numa categoria
- * (`eventos/[slug]/categorias/[slugCategoria]/inscricoes/criar`) passou a
- * precisar do mesmo portão: ela lista grupos e integrantes da entidade de
- * quem está logado, fora do segmento `/minha-entidade`, e o critério de quem
- * pode vê-los é um só.
+ * (`eventos/[slug]/modalidades/[slugModalidade]/categorias/[slugCategoria]/inscricoes/criar`)
+ * passou a precisar do mesmo portão: ela lista grupos e integrantes da
+ * entidade de quem está logado, fora do segmento `/minha-entidade`, e o
+ * critério de quem pode vê-los é um só.
  *
  * O vínculo vem do perfil, e não de um 403 do `/minha-entidade`: o backend
  * responde 403 tanto para quem não tem entidade quanto para quem não tem

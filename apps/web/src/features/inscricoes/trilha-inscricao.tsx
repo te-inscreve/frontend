@@ -42,14 +42,14 @@ export async function TrilhaInscricao({
     if (modalidade !== undefined) {
         passos.push({
             label: modalidade.nome,
-            href: `/admin/eventos/${eventoId}?modalidade=${modalidadeId}`,
+            href: `/admin/eventos/${eventoId}/modalidades/${modalidadeId}`,
         });
     }
 
     if (categoria !== null) {
         passos.push({
             label: categoria.nome,
-            href: `/admin/eventos/${eventoId}/categorias/${categoriaId}?modalidade=${modalidadeId}`,
+            href: `/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoriaId}`,
         });
     }
 

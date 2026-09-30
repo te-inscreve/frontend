@@ -30,7 +30,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
     }, [categoria.maxInscricoes]);
     return (
         <Link
-            href={`/admin/eventos/${eventoId}/categorias/${categoria.id}?modalidade=${modalidadeId}`}
+            href={`/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoria.id}`}
             // A borda é o fundo desta camada, e o conteúdo é a de dentro: um
             // `border` comum não acompanharia a troca de cor no hover com a
             // mesma suavidade. O anel de foco fica de fora porque o

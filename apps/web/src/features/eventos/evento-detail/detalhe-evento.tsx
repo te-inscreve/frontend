@@ -19,7 +19,10 @@ import { TabCriarModalidade } from "./tab-criar-modalidade";
 
 interface Props {
     id: number;
-    /** Aba escolhida na URL. Ausente na primeira visita à página. */
+    /**
+     * Modalidade do segmento `modalidades/[slugModalidade]`. Ausente na rota do
+     * evento puro, que abre na primeira aba.
+     */
     modalidadeAtiva?: number;
 }
 
@@ -46,10 +49,14 @@ export async function DetalheEvento({ id, modalidadeAtiva }: Props) {
     // As abas saem do próprio evento: `modalidades` já vem com id e nome.
     const modalidades = evento.modalidades;
 
-    // Buscar em vez de confiar no parâmetro: um `?modalidade=` de link antigo
-    // aponta para modalidade que já não existe, e aí a primeira aba vale.
+    // A modalidade é segmento da rota, então uma que não é deste evento (ou
+    // que já não existe) é 404, como seria com qualquer outro recurso.
     const ativa =
-        modalidades.find(({ id }) => id === modalidadeAtiva) ?? modalidades[0];
+        modalidadeAtiva === undefined
+            ? modalidades[0]
+            : modalidades.find(({ id }) => id === modalidadeAtiva);
+
+    if (modalidadeAtiva !== undefined && ativa === undefined) notFound();
 
     return (
         <>
@@ -111,7 +118,7 @@ export async function DetalheEvento({ id, modalidadeAtiva }: Props) {
                                 <Link
                                     replace
                                     scroll={false}
-                                    href={`/admin/eventos/${id}?modalidade=${modalidade.id}`}
+                                    href={`/admin/eventos/${id}/modalidades/${modalidade.id}`}
                                 >
                                     {modalidade.nome}
                                 </Link>

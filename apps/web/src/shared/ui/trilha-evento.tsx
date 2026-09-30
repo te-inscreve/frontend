@@ -1,14 +1,14 @@
 import { Skeleton } from "@te-inscreve/components/components/skeleton";
 
-import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import type { TrilhaPasso } from "~/shared/ui/trilha-builder";
+import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { TrilhaBuilder } from "~/shared/ui/trilha-builder";
 
 interface Props {
     eventoId: number;
     /**
-     * Modalidade em que a página está. Vem da query `?modalidade=`, já que ela
-     * não faz parte da rota — o nome sai das modalidades do próprio evento.
+     * Modalidade em que a página está, do segmento `modalidades/[slugModalidade]`.
+     * O nome sai das modalidades do próprio evento.
      */
     modalidadeId?: number;
     /**
@@ -47,7 +47,7 @@ export async function TrilhaEvento({ eventoId, modalidadeId, atual }: Props) {
             label: modalidade.nome,
             href: modalidadeEhAtual
                 ? undefined
-                : `/admin/eventos/${eventoId}?modalidade=${modalidade.id}`,
+                : `/admin/eventos/${eventoId}/modalidades/${modalidade.id}`,
         });
     }
 
