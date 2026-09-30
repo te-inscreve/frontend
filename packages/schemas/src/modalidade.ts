@@ -20,6 +20,7 @@ export const modalidadeSchema = z.object({
     minInscritosPorGrupo: z.number().int().nullable(),
     maxInscritosPorGrupo: z.number().int().nullable(),
     maxInscricoesEntidadePorCategoria: z.number().int().nullable(),
+    exibirNomeConcorrente: z.boolean(),
 });
 
 /**

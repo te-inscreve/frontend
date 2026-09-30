@@ -125,6 +125,7 @@ export function useFormEdicaoModalidade({
             maxInscritosPorGrupo: modalidade.maxInscritosPorGrupo,
             maxInscricoesEntidadePorCategoria:
                 modalidade.maxInscricoesEntidadePorCategoria,
+            exibirNomeConcorrente: modalidade.exibirNomeConcorrente,
         },
         mode: "onTouched",
     });

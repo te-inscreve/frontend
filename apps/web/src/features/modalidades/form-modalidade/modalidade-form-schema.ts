@@ -44,6 +44,7 @@ const camposModalidadeSchema = z.object({
     maxInscricoesEntidadePorCategoria: inteiroPositivoOpcional(
         "O limite por entidade precisa ser um número inteiro maior que zero.",
     ),
+    exibirNomeConcorrente: z.boolean(),
 });
 
 export type ModalidadeCamposValues = z.infer<typeof camposModalidadeSchema>;
@@ -122,6 +123,7 @@ export const modalidadeCamposDefaults: ModalidadeCamposValues = {
     minInscritosPorGrupo: null,
     maxInscritosPorGrupo: null,
     maxInscricoesEntidadePorCategoria: null,
+    exibirNomeConcorrente: false,
 };
 
 export const modalidadeFormDefaults: ModalidadeFormValues = {

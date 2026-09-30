@@ -15,6 +15,10 @@ import { CampoNumero } from "~/shared/ui/form/campo-numero";
 export function IsGrupoField() {
     const { control } = useFormContext<ModalidadeCamposValues>();
     const { field } = useController({ name: "isGrupo", control });
+    const { field: exibirNomeField } = useController({
+        name: "exibirNomeConcorrente",
+        control,
+    });
 
     return (
         <div className="flex flex-col gap-4 border-t pt-4">
@@ -47,6 +51,22 @@ export function IsGrupoField() {
                         min={1}
                         placeholder="Ex.: 8"
                     />
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <Switch
+                                id="exibirNomeConcorrente"
+                                checked={exibirNomeField.value}
+                                onCheckedChange={exibirNomeField.onChange}
+                            />
+                            <Label htmlFor="exibirNomeConcorrente">
+                                Exibir nome do concorrente
+                            </Label>
+                        </div>
+                        <p className="text-muted-foreground mt-1.5 max-w-md text-xs">
+                            Ative quando a inscrição for feita por um conjunto
+                            de participantes, não por uma pessoa.
+                        </p>
+                    </div>
                 </div>
             )}
         </div>
