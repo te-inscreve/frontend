@@ -2,16 +2,17 @@
 
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
+import { Controller } from "react-hook-form";
 
 import { Button, Input } from "@te-inscreve/components";
 
-import type { FiltrosGrupos } from "./filtros-grupos";
+import type { FiltrosGruposForm } from "./use-filtros-grupos";
 import { DialogFiltrosGrupos } from "./dialog-filtros-grupos";
 import { filtrosGruposVazios, temFiltroGrupoAtivo } from "./filtros-grupos";
 
 interface Props {
-    filtros: FiltrosGrupos;
-    onChange: (filtros: FiltrosGrupos) => void;
+    /** O recorte em uso — ver `useFiltrosGrupos`. */
+    filtros: FiltrosGruposForm;
     /** Quantos entraram no recorte — a resposta ao filtro, logo abaixo dele. */
     resultados: number;
     total: number;
@@ -26,13 +27,9 @@ interface Props {
  * mora na outra aba da mesma tela: só uma está montada por vez, mas ids
  * iguais num mesmo documento continuam sendo ids iguais.
  */
-export function BarraFiltrosGrupos({
-    filtros,
-    onChange,
-    resultados,
-    total,
-}: Props) {
-    const ativo = temFiltroGrupoAtivo(filtros);
+export function BarraFiltrosGrupos({ filtros, resultados, total }: Props) {
+    const { form, valores } = filtros;
+    const ativo = temFiltroGrupoAtivo(valores);
 
     return (
         <div className="flex flex-col gap-2">
@@ -42,27 +39,30 @@ export function BarraFiltrosGrupos({
                         aria-hidden="true"
                         className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
                     />
-                    <Input
-                        id="filtro-nome-grupos"
-                        value={filtros.nome}
-                        onChange={(evento) =>
-                            onChange({ ...filtros, nome: evento.target.value })
-                        }
-                        placeholder="Buscar por nome"
-                        aria-label="Buscar grupo por nome"
-                        className="bg-card h-10 pl-9"
-                        autoComplete="off"
+                    <Controller
+                        control={form.control}
+                        name="nome"
+                        render={({ field }) => (
+                            <Input
+                                {...field}
+                                id="filtro-nome-grupos"
+                                placeholder="Buscar por nome"
+                                aria-label="Buscar grupo por nome"
+                                className="bg-card h-10 pl-9"
+                                autoComplete="off"
+                            />
+                        )}
                     />
                 </div>
 
-                <DialogFiltrosGrupos filtros={filtros} onChange={onChange} />
+                <DialogFiltrosGrupos filtros={filtros} />
 
                 {ativo && (
                     <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => onChange(filtrosGruposVazios)}
+                        onClick={() => form.reset(filtrosGruposVazios)}
                     >
                         <XIcon aria-hidden="true" />
                         Limpar filtros

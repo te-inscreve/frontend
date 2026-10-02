@@ -2,7 +2,7 @@
 
 import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
 
-import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import type { FiltrosIntegrantesForm } from "~/features/entidades/integrantes/lib/use-filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { BarraFiltros } from "~/features/entidades/integrantes/barra-filtros";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
@@ -20,8 +20,7 @@ interface Props {
     erro: { message: string } | null;
     isFetchingNextPage: boolean;
     carregarMais: () => void;
-    filtros: FiltrosIntegrantes;
-    onFiltrosChange: (filtros: FiltrosIntegrantes) => void;
+    filtros: FiltrosIntegrantesForm;
     /** Ids de quem está no ticket — pelo grupo ou avulso. */
     selecionados: ReadonlySet<number>;
     onAlternar: (integrante: Integrante) => void;
@@ -49,7 +48,6 @@ export function ListaIntegrantesSelecao({
     isFetchingNextPage,
     carregarMais,
     filtros,
-    onFiltrosChange,
     selecionados,
     onAlternar,
 }: Props) {
@@ -61,7 +59,6 @@ export function ListaIntegrantesSelecao({
         <>
             <BarraFiltros
                 filtros={filtros}
-                onChange={onFiltrosChange}
                 resultados={integrantes.length}
                 total={total}
             />
@@ -71,7 +68,7 @@ export function ListaIntegrantesSelecao({
                     integrantes={integrantes}
                     carregando={carregando}
                     erro={erro}
-                    temFiltro={temFiltroAtivo(filtros)}
+                    temFiltro={temFiltroAtivo(filtros.valores)}
                     selecionados={selecionados}
                     onAlternar={onAlternar}
                 />

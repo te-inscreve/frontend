@@ -97,7 +97,6 @@ export function ColunaEntidade({
                         isFetchingNextPage={grupos.isFetchingNextPage}
                         carregarMais={grupos.carregarMais}
                         filtros={grupos.filtros}
-                        onFiltrosChange={grupos.setFiltros}
                         grupoAplicando={grupoAplicando}
                         onAplicar={onAplicarGrupo}
                     />
@@ -115,7 +114,6 @@ export function ColunaEntidade({
                         isFetchingNextPage={integrantes.isFetchingNextPage}
                         carregarMais={integrantes.carregarMais}
                         filtros={integrantes.filtros}
-                        onFiltrosChange={integrantes.setFiltros}
                         selecionados={selecionados}
                         onAlternar={onAlternarIntegrante}
                     />

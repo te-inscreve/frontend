@@ -2,8 +2,8 @@
 
 import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
 
-import type { FiltrosGrupos } from "~/features/entidades/grupos/filtros-grupos";
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
+import type { FiltrosGruposForm } from "~/features/entidades/grupos/use-filtros-grupos";
 import { BarraFiltrosGrupos } from "~/features/entidades/grupos/barra-filtros-grupos";
 import { CartaoGrupoSkeleton } from "~/features/entidades/grupos/cartao-grupo-skeleton";
 import { temFiltroGrupoAtivo } from "~/features/entidades/grupos/filtros-grupos";
@@ -20,8 +20,7 @@ interface Props {
     erro: { message: string } | null;
     isFetchingNextPage: boolean;
     carregarMais: () => void;
-    filtros: FiltrosGrupos;
-    onFiltrosChange: (filtros: FiltrosGrupos) => void;
+    filtros: FiltrosGruposForm;
     /** O id do grupo cuja formação está a caminho do ticket, se houver. */
     grupoAplicando: number | null;
     onAplicar: (grupo: GrupoComPrevia) => void;
@@ -49,7 +48,6 @@ export function ListaGruposSelecao({
     isFetchingNextPage,
     carregarMais,
     filtros,
-    onFiltrosChange,
     grupoAplicando,
     onAplicar,
 }: Props) {
@@ -61,7 +59,6 @@ export function ListaGruposSelecao({
         <>
             <BarraFiltrosGrupos
                 filtros={filtros}
-                onChange={onFiltrosChange}
                 resultados={grupos.length}
                 total={total}
             />
@@ -71,7 +68,7 @@ export function ListaGruposSelecao({
                     grupos={grupos}
                     carregando={carregando}
                     erro={erro}
-                    temFiltro={temFiltroGrupoAtivo(filtros)}
+                    temFiltro={temFiltroGrupoAtivo(filtros.valores)}
                     grupoAplicando={grupoAplicando}
                     onAplicar={onAplicar}
                 />

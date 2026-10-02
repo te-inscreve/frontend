@@ -1,17 +1,17 @@
 "use client";
 
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
-import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
+import { Controller } from "react-hook-form";
 
-import { Button, Input } from "@te-inscreve/components";
+import { Input } from "@te-inscreve/components";
 
-import type { FiltrosIntegrantes } from "./lib/filtros-integrantes";
+import type { FiltrosIntegrantesForm } from "./lib/use-filtros-integrantes";
 import { DialogFiltros } from "./dialog-filtros";
-import { filtrosVazios, temFiltroAtivo } from "./lib/filtros-integrantes";
+import { temFiltroAtivo } from "./lib/filtros-integrantes";
 
 interface Props {
-    filtros: FiltrosIntegrantes;
-    onChange: (filtros: FiltrosIntegrantes) => void;
+    /** O recorte em uso — ver `useFiltrosIntegrantes`. */
+    filtros: FiltrosIntegrantesForm;
     /** Quantos entraram no recorte — a resposta ao filtro, logo abaixo dele. */
     resultados: number;
     total: number;
@@ -34,53 +34,39 @@ interface Props {
  * resposta ao que foi digitado, e se lê embaixo do campo em vez de na outra
  * ponta da tela. O lugar que ela deixou é das ações.
  *
- * Controlada de ponta a ponta: quem guarda o filtro é o painel, que também
- * segura a refiltragem por um instante — assim o campo de nome responde a cada
- * tecla sem que a lista inteira seja recalculada junto.
+ * Quem guarda o filtro é o formulário de quem lista (`useFiltrosIntegrantes`):
+ * a busca escreve nele a cada tecla, o diálogo despeja nele o que foi
+ * aplicado, e "Limpar filtros" o devolve ao vazio.
  */
-export function BarraFiltros({
-    filtros,
-    onChange,
-    resultados,
-    total,
-    acoes,
-}: Props) {
-    const ativo = temFiltroAtivo(filtros);
+export function BarraFiltros({ filtros, resultados, total, acoes }: Props) {
+    const { form, valores } = filtros;
+    const ativo = temFiltroAtivo(valores);
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-nowrap items-center gap-2">
                 <div className="relative min-w-52 flex-1 sm:max-w-xs">
                     <MagnifyingGlassIcon
                         aria-hidden="true"
                         className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
                     />
-                    <Input
-                        id="filtro-nome"
-                        value={filtros.nome}
-                        onChange={(evento) =>
-                            onChange({ ...filtros, nome: evento.target.value })
-                        }
-                        placeholder="Buscar por nome"
-                        aria-label="Buscar por nome"
-                        className="bg-card h-10 pl-9"
-                        autoComplete="off"
+                    <Controller
+                        control={form.control}
+                        name="nome"
+                        render={({ field }) => (
+                            <Input
+                                {...field}
+                                id="filtro-nome"
+                                placeholder="Buscar por nome"
+                                aria-label="Buscar por nome"
+                                className="bg-card h-10 pl-9"
+                                autoComplete="off"
+                            />
+                        )}
                     />
                 </div>
 
-                <DialogFiltros filtros={filtros} onChange={onChange} />
-
-                {ativo && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onChange(filtrosVazios)}
-                    >
-                        <XIcon aria-hidden="true" />
-                        Limpar filtros
-                    </Button>
-                )}
+                <DialogFiltros filtros={filtros} />
 
                 {acoes && <div className="ml-auto">{acoes}</div>}
             </div>

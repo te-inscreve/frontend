@@ -12,9 +12,9 @@ import type { FormIntegrante } from "@te-inscreve/schemas";
 import { proximaPagina } from "@te-inscreve/schemas";
 
 import type { Visualizacao } from "../visualizacao";
-import type { FiltrosIntegrantes } from "./filtros-integrantes";
 import { useTRPC } from "~/shared/api/trpc/client";
 import { filtrosVazios } from "./filtros-integrantes";
+import { useFiltrosIntegrantes } from "./use-filtros-integrantes";
 
 /**
  * O parâmetro que já traz o cadastro aberto na chegada.
@@ -42,7 +42,8 @@ const PARAM_NOVO = "novo";
  * rebusca as páginas já abertas, na ordem, e a pessoa aparece onde a API a
  * colocou.
  *
- * O filtro ainda é só estado: ver `filtros-integrantes.ts`.
+ * O filtro é um formulário (`useFiltrosIntegrantes`) que ainda não chega à
+ * API: ver `filtros-integrantes.ts`.
  *
  * A visualização não é lembrada entre visitas: a tela sempre abre em cartões.
  * Guardá-la exigiria o servidor saber da escolha antes do primeiro render, ou
@@ -52,7 +53,8 @@ export function usePainelIntegrantes({ pageSize }: { pageSize: number }) {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
-    const [filtros, setFiltros] = useState<FiltrosIntegrantes>(filtrosVazios);
+    const filtros = useFiltrosIntegrantes();
+    const { reset: limparFiltros } = filtros.form;
     const [visualizacao, setVisualizacao] = useState<Visualizacao>("cartoes");
     // A URL é lida uma vez, na montagem: depois disso quem manda no diálogo é
     // o estado, e o parâmetro já saiu de cena.
@@ -129,10 +131,17 @@ export function usePainelIntegrantes({ pageSize }: { pageSize: number }) {
 
             // Sem limpar o filtro, o cadastro pareceria não ter funcionado:
             // a pessoa recém-criada quase nunca casa com o recorte em uso.
-            setFiltros(filtrosVazios);
+            limparFiltros(filtrosVazios);
             setFormAberto(false);
         },
-        [criar, invalidarLista, queryClient, trpc, setFormAberto],
+        [
+            criar,
+            invalidarLista,
+            queryClient,
+            trpc,
+            limparFiltros,
+            setFormAberto,
+        ],
     );
 
     /** Edita e rebusca: a lista e o detalhe repintam com o que a API guardou. */
@@ -158,7 +167,6 @@ export function usePainelIntegrantes({ pageSize }: { pageSize: number }) {
         isFetchingNextPage,
         carregarMais,
         filtros,
-        setFiltros,
         visualizacao,
         setVisualizacao,
         formAberto,

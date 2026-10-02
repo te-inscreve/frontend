@@ -82,7 +82,6 @@ export function DetalheGrupoPagina({ id, integrantesPorPagina }: Props) {
                     isFetchingNextPage={painel.isFetchingNextPage}
                     sentinelaRef={triggerScrollRef}
                     filtros={painel.filtros}
-                    onFiltrosChange={painel.setFiltros}
                     grupo={nome}
                     onAlternarIntegrante={painel.alternarIntegrante}
                     className="order-2 lg:order-1"

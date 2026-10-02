@@ -15,18 +15,16 @@ import { useForm, useWatch } from "react-hook-form";
 import { proximaPagina } from "@te-inscreve/schemas";
 
 import type { InscricaoFormValues } from "./lib/inscricao-form-schema";
-import type { FiltrosGrupos } from "~/features/entidades/grupos/filtros-grupos";
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
 import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/lib/filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import {
-    filtrarGrupos,
-    filtrosGruposVazios,
-} from "~/features/entidades/grupos/filtros-grupos";
+import { filtrarGrupos } from "~/features/entidades/grupos/filtros-grupos";
+import { useFiltrosGrupos } from "~/features/entidades/grupos/use-filtros-grupos";
 import {
     filtrarIntegrantes,
     filtrosVazios,
 } from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import { useFiltrosIntegrantes } from "~/features/entidades/integrantes/lib/use-filtros-integrantes";
 import { revalidarInscricoes } from "~/shared/api/revalidar";
 import { useTRPC } from "~/shared/api/trpc/client";
 import {
@@ -63,9 +61,11 @@ interface Opcoes {
  * (`variables`) dizer qual grupo está chegando sem a tela guardá-lo.
  *
  * Busca e filtros são do navegador, sobre as páginas já carregadas: nem
- * `grupo.list` nem `integrante.list` aceitam `search`. Cada aba guarda o
- * próprio filtro, e o filtro sobrevive à troca de aba porque mora aqui, não
- * na lista que desmonta.
+ * `grupo.list` nem `integrante.list` aceitam `search`. Cada aba tem o próprio
+ * formulário de filtro, e ele sobrevive à troca de aba porque mora aqui, não
+ * na lista que desmonta. O de integrantes já nasce na faixa de idade da
+ * categoria: é a pergunta que a tela responde — quem pode ir —, e quem
+ * quiser ver a entidade inteira limpa o filtro.
  *
  * `criarInscricao` envia para `inscricao.create` e, dando certo, volta ao
  * detalhe da categoria. Uma recusa do backend cai no campo a que se refere,
@@ -83,11 +83,6 @@ export function useInscricao({
     const queryClient = useQueryClient();
     const router = useRouter();
 
-    const [filtrosIntegrantes, setFiltrosIntegrantes] =
-        useState<FiltrosIntegrantes>(filtrosVazios);
-    const [filtrosGrupos, setFiltrosGrupos] =
-        useState<FiltrosGrupos>(filtrosGruposVazios);
-
     // ---- O contexto: entidade, categoria, modalidade ----------------------
 
     const entidade = useQuery(trpc.entidade.minha.queryOptions());
@@ -101,6 +96,22 @@ export function useInscricao({
     const modalidade = useQuery(
         trpc.modalidade.getById.queryOptions({ eventoId, modalidadeId }),
     );
+
+    // ---- Os filtros -------------------------------------------------------
+
+    const faixaDaCategoria = useMemo<FiltrosIntegrantes | undefined>(
+        () =>
+            categoria.data
+                ? {
+                      ...filtrosVazios,
+                      idadeMinima: categoria.data.idadeMinima,
+                      idadeMaxima: categoria.data.idadeMaxima,
+                  }
+                : undefined,
+        [categoria.data],
+    );
+    const filtrosIntegrantes = useFiltrosIntegrantes(faixaDaCategoria);
+    const filtrosGrupos = useFiltrosGrupos();
     // `null` é o 404 da modalidade — sem ela, não há nome a exigir.
     const exigeNome = modalidade.data
         ? exigeNomeConcorrente(modalidade.data)
@@ -154,8 +165,8 @@ export function useInscricao({
         [listaGrupos.data],
     );
     const gruposVisiveis = useMemo(
-        () => filtrarGrupos(grupos, filtrosGrupos),
-        [grupos, filtrosGrupos],
+        () => filtrarGrupos(grupos, filtrosGrupos.valores),
+        [grupos, filtrosGrupos.valores],
     );
     // Desestruturados para o `useCallback` ter dependências estáveis: o
     // objeto da query muda a cada render, e a sentinela da lista observa o
@@ -182,8 +193,8 @@ export function useInscricao({
         [listaIntegrantes.data],
     );
     const integrantesVisiveis = useMemo(
-        () => filtrarIntegrantes(integrantes, filtrosIntegrantes),
-        [integrantes, filtrosIntegrantes],
+        () => filtrarIntegrantes(integrantes, filtrosIntegrantes.valores),
+        [integrantes, filtrosIntegrantes.valores],
     );
     const {
         hasNextPage: temMaisIntegrantes,
@@ -286,7 +297,6 @@ export function useInscricao({
             isFetchingNextPage: buscandoMaisGrupos,
             carregarMais: carregarMaisGrupos,
             filtros: filtrosGrupos,
-            setFiltros: setFiltrosGrupos,
         },
         integrantes: {
             itens: integrantesVisiveis,
@@ -296,7 +306,6 @@ export function useInscricao({
             isFetchingNextPage: buscandoMaisIntegrantes,
             carregarMais: carregarMaisIntegrantes,
             filtros: filtrosIntegrantes,
-            setFiltros: setFiltrosIntegrantes,
         },
 
         form,

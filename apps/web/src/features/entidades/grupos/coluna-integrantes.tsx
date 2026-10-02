@@ -7,7 +7,7 @@ import { motion } from "motion/react";
 
 import { Button } from "@te-inscreve/components";
 
-import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import type { FiltrosIntegrantesForm } from "~/features/entidades/integrantes/lib/use-filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { BarraFiltros } from "~/features/entidades/integrantes/barra-filtros";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
@@ -29,8 +29,7 @@ interface Props {
     isFetchingNextPage: boolean;
     /** A sentinela do fim da lista liga aqui; ver {@link useVerticalScroll}. */
     sentinelaRef: React.Ref<HTMLDivElement>;
-    filtros: FiltrosIntegrantes;
-    onFiltrosChange: (filtros: FiltrosIntegrantes) => void;
+    filtros: FiltrosIntegrantesForm;
     /** O nome do grupo sendo montado — para onde vai quem for clicado aqui. */
     grupo: string;
     /**
@@ -79,7 +78,6 @@ export function ColunaIntegrantes({
     isFetchingNextPage,
     sentinelaRef,
     filtros,
-    onFiltrosChange,
     grupo,
     entidadeVazia,
     onAlternarIntegrante,
@@ -101,7 +99,6 @@ export function ColunaIntegrantes({
         >
             <BarraFiltros
                 filtros={filtros}
-                onChange={onFiltrosChange}
                 resultados={integrantes.length}
                 total={total}
             />
@@ -117,7 +114,7 @@ export function ColunaIntegrantes({
                     integrantes={integrantes}
                     carregando={carregando}
                     erro={erro}
-                    temFiltro={temFiltroAtivo(filtros)}
+                    temFiltro={temFiltroAtivo(filtros.valores)}
                     grupo={grupo}
                     entidadeVazia={entidadeVazia}
                     onAlternarIntegrante={onAlternarIntegrante}

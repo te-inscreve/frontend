@@ -1,24 +1,17 @@
+import type { FiltrosGrupos } from "./filtros-grupos-schema";
 import type { GrupoComPrevia } from "./grupo";
 
 /**
- * Os recortes da lista de grupos na inscrição.
+ * Os recortes da lista de grupos na inscrição. O formato mora no schema
+ * (`filtros-grupos-schema.ts`); aqui ficam o vazio e o recorte em si.
  *
  * Espelha `filtros-integrantes.ts`: `grupo.list` não aceita parâmetros, então
  * quem recorta é o navegador, sobre as páginas já carregadas — as seguintes
  * entram no filtro à medida que a rolagem as pede. Quando o backend aceitar
  * `search`, o que muda é o hook passar estes campos à query; a UI já está
  * pronta.
- *
- * Só dois recortes por enquanto: o nome, que é o filtro de todo dia, e a
- * pendência de matrícula, que é o que trava a inscrição — o motivo de a lista
- * existir nesta tela.
  */
-export interface FiltrosGrupos {
-    /** Trecho do nome. Vazio não filtra nada. */
-    nome: string;
-    /** Só grupos com alguém de matrícula vencida — os que não podem se inscrever. */
-    somenteComPendencia: boolean;
-}
+export type { FiltrosGrupos };
 
 export const filtrosGruposVazios: FiltrosGrupos = {
     nome: "",

@@ -1,3 +1,4 @@
+import type { FiltrosIntegrantes } from "./filtros-integrantes-schema";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import {
     idadeEm,
@@ -6,7 +7,8 @@ import {
 } from "~/features/entidades/shared/integrantes";
 
 /**
- * Os recortes da listagem.
+ * Os recortes da listagem. O formato e as regras moram no schema
+ * (`filtros-integrantes-schema.ts`); aqui ficam o vazio e o recorte em si.
  *
  * A listagem de `/minha-entidade/integrantes` ainda não aceita parâmetros, e
  * por isso quem recorta é o navegador: na tela de integrantes o filtro é só
@@ -14,20 +16,8 @@ import {
  * {@link filtrarIntegrantes} sobre as páginas já carregadas. Quando o backend
  * aceitar, o que muda é o hook passar estes campos ao `integrante.list` — a UI
  * já está pronta.
- *
- * O recorte é por idade, e não por data de nascimento: a pergunta que a
- * entidade faz é "quem se enquadra na categoria", e categoria se define por
- * idade. Converter uma na outra é conta que ninguém deveria ter de fazer.
  */
-export interface FiltrosIntegrantes {
-    /** Trecho do nome. Vazio não filtra nada. */
-    nome: string;
-    /** Faixa de idade em anos completos; cada ponta filtra sozinha. */
-    idadeMinima: number | null;
-    idadeMaxima: number | null;
-    /** Só quem está com a matrícula vencida — o que trava a inscrição. */
-    somenteVencidas: boolean;
-}
+export type { FiltrosIntegrantes };
 
 export const filtrosVazios: FiltrosIntegrantes = {
     nome: "",

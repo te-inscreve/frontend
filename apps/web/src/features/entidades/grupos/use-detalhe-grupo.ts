@@ -12,12 +12,9 @@ import {
 import type { FormGrupo, GrupoDetalhe } from "@te-inscreve/schemas";
 import { proximaPagina } from "@te-inscreve/schemas";
 
-import type { FiltrosIntegrantes } from "~/features/entidades/integrantes/lib/filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import {
-    filtrarIntegrantes,
-    filtrosVazios,
-} from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import { filtrarIntegrantes } from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import { useFiltrosIntegrantes } from "~/features/entidades/integrantes/lib/use-filtros-integrantes";
 import { useTRPC } from "~/shared/api/trpc/client";
 import { relancarPorCampo, resumirFormacao } from "./grupo";
 import { patchGrupoNaGrade, removerGrupoDaGrade } from "./grupo-cache";
@@ -54,7 +51,7 @@ export function useDetalheGrupo({ id, integrantesPorPagina }: Opcoes) {
     const queryClient = useQueryClient();
     const router = useRouter();
 
-    const [filtros, setFiltros] = useState<FiltrosIntegrantes>(filtrosVazios);
+    const filtros = useFiltrosIntegrantes();
     /** O rascunho da formação; `null` enquanto ninguém mexeu. */
     const [formacao, setFormacao] = useState<Integrante[] | null>(null);
 
@@ -183,8 +180,8 @@ export function useDetalheGrupo({ id, integrantesPorPagina }: Opcoes) {
     const totalDisponiveis = total - (integrantes.length - disponiveis.length);
 
     const visiveis = useMemo(
-        () => filtrarIntegrantes(disponiveis, filtros),
-        [disponiveis, filtros],
+        () => filtrarIntegrantes(disponiveis, filtros.valores),
+        [disponiveis, filtros.valores],
     );
 
     const { hasNextPage, isFetchingNextPage, fetchNextPage } = lista;
@@ -247,6 +244,5 @@ export function useDetalheGrupo({ id, integrantesPorPagina }: Opcoes) {
         isFetchingNextPage,
         carregarMaisIntegrantes,
         filtros,
-        setFiltros,
     };
 }

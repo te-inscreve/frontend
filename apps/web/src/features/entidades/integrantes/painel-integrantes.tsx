@@ -44,7 +44,6 @@ export function PainelIntegrantes({ pageSize = 20 }: { pageSize?: number }) {
                 atenção com o "Novo integrante", que é a ação da tela. */}
             <BarraFiltros
                 filtros={painel.filtros}
-                onChange={painel.setFiltros}
                 resultados={painel.integrantes.length}
                 total={painel.total}
                 acoes={
