@@ -374,8 +374,12 @@ function Calendar({
                             "text-muted-foreground aria-selected:text-muted-foreground",
                             defaultClassNames.outside,
                         ),
+                        // O risco no número diz "indisponível" sem depender só
+                        // do esmaecido, que some em tela com pouco contraste.
+                        // Vai no botão porque o `inline-flex` dele não herda a
+                        // decoração do `td`.
                         disabled: cn(
-                            "text-muted-foreground opacity-50",
+                            "text-muted-foreground opacity-50 [&>button]:line-through",
                             defaultClassNames.disabled,
                         ),
                         hidden: cn("invisible", defaultClassNames.hidden),

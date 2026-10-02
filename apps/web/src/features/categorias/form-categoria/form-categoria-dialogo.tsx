@@ -12,6 +12,7 @@ import {
 } from "@te-inscreve/components";
 import { FormProvider } from "@te-inscreve/components/components/field";
 
+import type { PeriodoEvento } from "./campos-categoria";
 import { CamposCategoria } from "./campos-categoria";
 import { useFormCategoria } from "./use-form-categoria";
 
@@ -21,6 +22,8 @@ interface Props {
     modalidadeId: number;
     /** Categoria em edição. Ausente quando o diálogo está criando. */
     categoria?: Categoria;
+    /** Limita o dia da apresentação aos dias do evento. */
+    periodoEvento?: PeriodoEvento;
     onSalva: () => void;
 }
 
@@ -39,6 +42,7 @@ export function FormCategoriaDialogo({
     eventoId,
     modalidadeId,
     categoria,
+    periodoEvento,
     onSalva,
 }: Props) {
     const router = useRouter();
@@ -65,7 +69,7 @@ export function FormCategoriaDialogo({
                 onSubmit={form.handleSubmit(salvar)}
                 className="flex flex-col gap-4"
             >
-                <CamposCategoria />
+                <CamposCategoria periodoEvento={periodoEvento} />
 
                 {erro && (
                     <p role="alert" className="text-destructive text-sm">

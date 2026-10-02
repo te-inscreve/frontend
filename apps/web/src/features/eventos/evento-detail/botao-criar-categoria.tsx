@@ -16,11 +16,14 @@ import {
     ExpandableDialogTrigger,
 } from "@te-inscreve/components";
 
+import type { PeriodoEvento } from "~/features/categorias/form-categoria/campos-categoria";
 import { FormCategoriaDialogo } from "~/features/categorias/form-categoria/form-categoria-dialogo";
 
 interface Props {
     eventoId: number;
     modalidadeId: number;
+    /** A apresentação da categoria só pode cair num dos dias do evento. */
+    periodoEvento: PeriodoEvento;
     /**
      * Sem nenhuma categoria o atalho ocupa a largura de um cartão e explica o
      * vazio; ao lado de cartões ele encolhe e vira só o "mais" da fila.
@@ -42,6 +45,7 @@ interface Props {
 export function BotaoCriarCategoria({
     eventoId,
     modalidadeId,
+    periodoEvento,
     sozinho,
 }: Props) {
     const [aberto, setAberto] = useState(false);
@@ -92,6 +96,7 @@ export function BotaoCriarCategoria({
                     <FormCategoriaDialogo
                         eventoId={eventoId}
                         modalidadeId={modalidadeId}
+                        periodoEvento={periodoEvento}
                         onSalva={() => setAberto(false)}
                     />
                 </ExpandableDialogBody>

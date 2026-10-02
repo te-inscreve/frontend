@@ -1,11 +1,28 @@
 "use client";
 
-import { addYears } from "date-fns";
+import { addYears, startOfDay } from "date-fns";
 
 import type { CategoriaFormValues } from "./categoria-form-schema";
 import { CampoData } from "~/shared/ui/form/campo-data";
 import { CampoNumero } from "~/shared/ui/form/campo-numero";
 import { CampoTexto } from "~/shared/ui/form/campo-texto";
+
+/**
+ * Primeiro e último instante do evento, em ISO — como a API os devolve. Strings
+ * e não `Date` porque atravessam a fronteira do Server Component.
+ */
+export interface PeriodoEvento {
+    inicio: string;
+    fim: string;
+}
+
+interface Props {
+    /**
+     * Com o período, o calendário da apresentação só aceita os dias do evento
+     * e abre no mês em que ele começa. Sem ele, qualquer dia vale.
+     */
+    periodoEvento?: PeriodoEvento;
+}
 
 /**
  * Os campos da categoria, sem nenhum invólucro: a página os põe dentro de um
@@ -17,7 +34,14 @@ import { CampoTexto } from "~/shared/ui/form/campo-texto";
  * Lê o formulário do contexto (`FormProvider`), então quem chama já precisa
  * estar dentro de um.
  */
-export function CamposCategoria() {
+export function CamposCategoria({ periodoEvento }: Props) {
+    // `startOfDay` porque o início guarda um horário: o dia em que o evento
+    // começa precisa continuar escolhível.
+    const inicio = periodoEvento
+        ? startOfDay(new Date(periodoEvento.inicio))
+        : undefined;
+    const fim = periodoEvento ? new Date(periodoEvento.fim) : undefined;
+
     return (
         <div className="grid gap-4 sm:grid-cols-6">
             <CampoTexto<CategoriaFormValues>
@@ -52,9 +76,11 @@ export function CamposCategoria() {
                 name="diaApresentacao"
                 label="Dia da apresentação"
                 opcional
+                mesInicial={inicio}
+                dataMinima={inicio}
                 // Sem limite superior o calendário não passa do fim do ano
                 // corrente — e há evento cadastrado com mais antecedência.
-                dataMaxima={addYears(new Date(), 2)}
+                dataMaxima={fim ?? addYears(new Date(), 2)}
                 className="col-span-4"
             />
             <CampoTexto<CategoriaFormValues>

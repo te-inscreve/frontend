@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import type { CategoriaAninhada } from "@te-inscreve/schemas";
 
+import type { PeriodoEvento } from "~/features/categorias/form-categoria/campos-categoria";
 import { HorizontalScrollList } from "~/shared/ui/horizontal-scroll-list";
 import { BotaoCriarCategoria } from "./botao-criar-categoria";
 import { CardCategoria } from "./card-categoria";
@@ -12,6 +13,7 @@ interface Props {
     /** Nome da modalidade, usado só para rotular a lista. */
     modalidadeNome: string;
     categorias: CategoriaAninhada[];
+    periodoEvento: PeriodoEvento;
 }
 
 /**
@@ -26,6 +28,7 @@ export function ListCategorias({
     modalidadeId,
     modalidadeNome,
     categorias,
+    periodoEvento,
 }: Props) {
     const sortedCategorias = useMemo(
         () =>
@@ -43,6 +46,7 @@ export function ListCategorias({
             <BotaoCriarCategoria
                 eventoId={eventoId}
                 modalidadeId={modalidadeId}
+                periodoEvento={periodoEvento}
                 sozinho={categorias.length === 0}
             />
             {sortedCategorias.map((categoria) => (

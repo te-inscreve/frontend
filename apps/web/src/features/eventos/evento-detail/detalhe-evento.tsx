@@ -145,6 +145,10 @@ export async function DetalheEvento({ id, modalidadeAtiva }: Props) {
                                 eventoId={id}
                                 modalidadeId={ativa.id}
                                 modalidadeNome={ativa.nome}
+                                periodoEvento={{
+                                    inicio: evento.dataInicio,
+                                    fim: evento.dataFim,
+                                }}
                             />
                         </Suspense>
                     </TabsContent>

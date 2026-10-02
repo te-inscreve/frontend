@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import type { PeriodoEvento } from "~/features/categorias/form-categoria/campos-categoria";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { ListCategorias } from "./list-categorias";
 import { ResumoModalidade } from "./resumo-modalidade";
@@ -9,6 +10,8 @@ interface Props {
     modalidadeId: number;
     /** Nome já conhecido pela aba — evita um título vazio antes da resposta. */
     modalidadeNome: string;
+    /** Repassado ao cadastro de categoria, que limita a apresentação a ele. */
+    periodoEvento: PeriodoEvento;
 }
 
 /**
@@ -22,6 +25,7 @@ export async function DetalheModalidade({
     eventoId,
     modalidadeId,
     modalidadeNome,
+    periodoEvento,
 }: Props) {
     const modalidade = await getQueryClient().fetchQuery(
         trpc.modalidade.getById.queryOptions({ eventoId, modalidadeId }),
@@ -44,6 +48,7 @@ export async function DetalheModalidade({
                 modalidadeId={modalidadeId}
                 modalidadeNome={modalidadeNome}
                 categorias={modalidade.categorias}
+                periodoEvento={periodoEvento}
             />
         </div>
     );
