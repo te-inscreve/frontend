@@ -113,15 +113,19 @@ export function TicketInscricao({
                 className,
             )}
         >
-            <header className="bg-card flex shrink-0 flex-col gap-0.5 rounded-t-xl px-4 py-3">
+            <header className="bg-card flex shrink-0 flex-col gap-0 rounded-t-xl px-4 py-3">
                 <h2
                     id={tituloId}
-                    className="truncate text-lg font-bold tracking-tight"
+                    className="mb-1 truncate text-lg font-bold tracking-tight"
                 >
                     {modalidade === null || categoria === null
                         ? "…"
                         : `${modalidade.nome} ${categoria.nome.toLowerCase()}`}
                 </h2>
+                <RestricoesDaCategoria
+                    categoria={categoria}
+                    modalidade={modalidade}
+                />
                 {modalidade?.exibirNomeConcorrente && (
                     <CampoNomeConcorrente control={control} />
                 )}
@@ -147,50 +151,53 @@ export function TicketInscricao({
                         </p>
                     </div>
                 ) : (
-                    <ul className="grid gap-3">
-                        {/* `initial={false}`: o que já está no ticket na
+                    <div className="flex flex-col gap-2">
+                        <p
+                            aria-live="polite"
+                            className="text-muted-foreground text-xs"
+                        >
+                            Listando {contagemIntegrantes(integrantes.length)}
+                        </p>
+                        <ul className="grid gap-3">
+                            {/* `initial={false}`: o que já está no ticket na
                             primeira pintura não nasce animando. `popLayout`
                             tira a linha que sai do fluxo na hora, para as
                             vizinhas deslizarem sem esperar. */}
-                        <AnimatePresence initial={false} mode="popLayout">
-                            {integrantes.map((integrante) => (
-                                <motion.li
-                                    key={integrante.id}
-                                    // `min-w-0`: item de grade nasce com
-                                    // `min-width: auto` e não encolhe abaixo
-                                    // do conteúdo — em tela estreita o nome
-                                    // empurrava o ícone para fora do bilhete.
-                                    className="min-w-0"
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    transition={EXPANSION_TRANSITION}
-                                >
-                                    <CartaoIntegranteInscricao
-                                        integrante={integrante}
-                                        lado="ticket"
-                                        onAlternar={onAlternarIntegrante}
-                                    />
-                                </motion.li>
-                            ))}
-                        </AnimatePresence>
+                            <AnimatePresence initial={false} mode="popLayout">
+                                {integrantes.map((integrante) => (
+                                    <motion.li
+                                        key={integrante.id}
+                                        // `min-w-0`: item de grade nasce com
+                                        // `min-width: auto` e não encolhe abaixo
+                                        // do conteúdo — em tela estreita o nome
+                                        // empurrava o ícone para fora do bilhete.
+                                        className="min-w-0"
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        transition={EXPANSION_TRANSITION}
+                                    >
+                                        <CartaoIntegranteInscricao
+                                            integrante={integrante}
+                                            lado="ticket"
+                                            onAlternar={onAlternarIntegrante}
+                                        />
+                                    </motion.li>
+                                ))}
+                            </AnimatePresence>
 
-                        {Array.from({ length: esqueletos }, (_, indice) => (
-                            <CartaoIntegranteSkeleton key={`s-${indice}`} />
-                        ))}
-                    </ul>
+                            {Array.from({ length: esqueletos }, (_, indice) => (
+                                <CartaoIntegranteSkeleton key={`s-${indice}`} />
+                            ))}
+                        </ul>
+                    </div>
                 )}
             </div>
 
             <RecorteDoTicket />
 
             <footer className="bg-card flex shrink-0 flex-col gap-3 rounded-b-xl px-4 py-3">
-                <RestricoesDaCategoria
-                    categoria={categoria}
-                    modalidade={modalidade}
-                />
-
                 {errors.integrantes && (
                     <FieldError errors={[errors.integrantes]} />
                 )}
@@ -201,10 +208,6 @@ export function TicketInscricao({
                     </FieldError>
                 )}
                 {erroAoCriar && <FieldError>{erroAoCriar}</FieldError>}
-
-                <p aria-live="polite" className="text-muted-foreground text-xs">
-                    {contagemIntegrantes(integrantes.length)} na inscrição
-                </p>
 
                 <Button type="submit" disabled={criando}>
                     {criando ? (

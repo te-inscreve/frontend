@@ -95,7 +95,7 @@ export function BilhetesIndividuais({
             aria-labelledby={tituloId}
             className={cn("flex min-w-0 flex-col gap-3", className)}
         >
-            <header className="flex shrink-0 flex-col gap-1 px-1">
+            <header className="flex shrink-0 flex-col gap-1 px-0">
                 <h2
                     id={tituloId}
                     className="truncate text-lg font-bold tracking-tight"
@@ -125,33 +125,44 @@ export function BilhetesIndividuais({
                         </p>
                     </div>
                 ) : (
-                    <ul className="grid gap-3">
-                        {/* O mesmo arranjo das linhas do bilhete em grupo:
-                            ver o comentário em `ticket-inscricao.tsx`. */}
-                        <AnimatePresence initial={false} mode="popLayout">
-                            {integrantes.map((integrante, indice) => (
-                                <motion.li
-                                    key={integrante.id}
-                                    className="min-w-0"
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    transition={EXPANSION_TRANSITION}
-                                >
-                                    <BilheteIndividual
-                                        integrante={integrante}
-                                        numero={indice + 1}
-                                        onAlternar={onAlternarIntegrante}
-                                    />
-                                </motion.li>
-                            ))}
-                        </AnimatePresence>
+                    <div className="flex flex-col gap-2">
+                        <p
+                            aria-live="polite"
+                            className="text-muted-foreground text-xs"
+                        >
+                            {contagemInscricoes(quantidade)}
+                        </p>
 
-                        {Array.from({ length: esqueletos }, (_, indice) => (
-                            <BilheteIndividualSkeleton key={`s-${indice}`} />
-                        ))}
-                    </ul>
+                        <ul className="grid gap-3">
+                            {/* O mesmo arranjo das linhas do bilhete em grupo:
+                            ver o comentário em `ticket-inscricao.tsx`. */}
+                            <AnimatePresence initial={false} mode="popLayout">
+                                {integrantes.map((integrante, indice) => (
+                                    <motion.li
+                                        key={integrante.id}
+                                        className="min-w-0"
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        transition={EXPANSION_TRANSITION}
+                                    >
+                                        <BilheteIndividual
+                                            integrante={integrante}
+                                            numero={indice + 1}
+                                            onAlternar={onAlternarIntegrante}
+                                        />
+                                    </motion.li>
+                                ))}
+                            </AnimatePresence>
+
+                            {Array.from({ length: esqueletos }, (_, indice) => (
+                                <BilheteIndividualSkeleton
+                                    key={`s-${indice}`}
+                                />
+                            ))}
+                        </ul>
+                    </div>
                 )}
             </div>
 
@@ -166,10 +177,6 @@ export function BilhetesIndividuais({
                     </FieldError>
                 )}
                 {erroAoCriar && <FieldError>{erroAoCriar}</FieldError>}
-
-                <p aria-live="polite" className="text-muted-foreground text-xs">
-                    {contagemInscricoes(quantidade)}
-                </p>
 
                 <Button type="submit" disabled={criando}>
                     {criando ? (

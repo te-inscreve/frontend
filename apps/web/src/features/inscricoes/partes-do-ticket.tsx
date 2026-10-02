@@ -33,10 +33,10 @@ export function RestricoesDaCategoria({
         valor === null ? "Sem limite" : String(valor);
 
     return (
-        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-            <div className="flex gap-1">
+        <dl className="flex h-7 flex-wrap gap-x-4 gap-y-1 text-sm">
+            <div className="flex items-center justify-center gap-1">
                 <dt className="text-muted-foreground">Idade:</dt>
-                <dd className="font-semibold">
+                <dd className="text-foreground">
                     {categoria ? (
                         `${categoria.idadeMinima} a ${categoria.idadeMaxima} anos`
                     ) : (
@@ -46,19 +46,20 @@ export function RestricoesDaCategoria({
             </div>
 
             {modalidade === null ? (
-                <div className="flex gap-1">
+                <div className="flex items-center gap-1">
                     <dt className="text-muted-foreground">Por grupo:</dt>
-                    <dd>
+                    <dd className="text-muted-foreground font-semibold">
                         <Skeleton className="h-3.5 w-28" />
                     </dd>
                 </div>
             ) : (
                 modalidade.isGrupo && (
-                    <div className="flex gap-1">
+                    <div className="flex items-center gap-1">
                         <dt className="text-muted-foreground">Por grupo:</dt>
-                        <dd className="font-semibold">
-                            mín. {semLimite(modalidade.minInscritosPorGrupo)} ·
-                            máx. {semLimite(modalidade.maxInscritosPorGrupo)}
+                        <dd className="text-foreground">
+                            {semLimite(modalidade.minInscritosPorGrupo)} a{" "}
+                            {semLimite(modalidade.maxInscritosPorGrupo)}{" "}
+                            inscritos
                         </dd>
                     </div>
                 )

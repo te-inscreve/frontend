@@ -70,11 +70,7 @@ export function CartaoIntegranteInscricao(props: Props) {
                 // Três estados, duas cores: verde para quem vai entrar,
                 // vermelho no hover de quem vai sair. Marcado na lista é o
                 // único que já nasce tingido — é a resposta ao clique.
-                props.lado === "lista" && !props.selecionado
-                    ? "bg-card border-border/70 hover:border-primary/50 hover:bg-primary/5"
-                    : props.lado === "lista"
-                      ? "border-primary bg-primary/5 hover:border-destructive/50 hover:bg-destructive/5"
-                      : "bg-card border-border/70 hover:border-destructive/50 hover:bg-destructive/5",
+                "bg-card border-border/70 hover:bg-card/50",
                 className,
             )}
         >
@@ -102,18 +98,26 @@ function Sinal({ lado, marcado }: { lado: Props["lado"]; marcado: boolean }) {
                 aria-hidden="true"
                 size={20}
                 weight="bold"
-                className="text-muted-foreground group-hover:text-destructive shrink-0 transition-colors"
+                className="text-destructive hidden shrink-0 group-hover:block"
             />
         );
     }
 
     return marcado ? (
-        <CheckCircleIcon
-            aria-hidden="true"
-            size={20}
-            weight="fill"
-            className="text-primary group-hover:text-destructive shrink-0 transition-colors"
-        />
+        <>
+            <CheckCircleIcon
+                aria-hidden="true"
+                size={20}
+                weight="fill"
+                className="text-primary shrink-0 group-hover:hidden"
+            />
+            <MinusCircleIcon
+                aria-hidden="true"
+                size={20}
+                weight="fill"
+                className="text-destructive hidden shrink-0 group-hover:block"
+            />
+        </>
     ) : (
         <PlusCircleIcon
             aria-hidden="true"

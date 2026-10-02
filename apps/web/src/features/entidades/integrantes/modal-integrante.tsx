@@ -113,14 +113,15 @@ export function AvisoMatricula({ integrante }: { integrante: Integrante }) {
         <span className="flex shrink-0 items-center gap-2">
             <Badge
                 variant={"warning"}
+                className="aspect-square"
                 title={`Matrícula vencida em ${formatarDataISO(integrante.validade)}`}
             >
                 <WarningIcon
                     aria-hidden="true"
                     weight="fill"
+                    size={24}
                     className="text-warning"
                 />
-                Vencida
             </Badge>
         </span>
     );
