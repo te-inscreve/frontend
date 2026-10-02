@@ -1,7 +1,7 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export function timeAgo(date: Date): string {
+function timeAgo(date: Date): string {
     return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
 }
 
@@ -9,7 +9,7 @@ export function timeAgo(date: Date): string {
  * Formata um intervalo omitindo o que as duas pontas têm em comum. Função pura
  * para poder ser chamada também de um Server Component, onde hooks não existem.
  */
-export function formatDateRange(start: Date, end: Date): string {
+function formatDateRange(start: Date, end: Date): string {
     const sameDay = start.getTime() === end.getTime();
 
     const sameMonth =
@@ -38,7 +38,7 @@ export function formatDateRange(start: Date, end: Date): string {
 }
 
 /** Mantido para os componentes de cliente que já consomem o formatador. */
-export function useDateRangeFormatter() {
+function useDateRangeFormatter() {
     return { formatDateRange };
 }
 
@@ -77,3 +77,9 @@ const formatDifferentYears = (start: Date, end: Date) => {
 
     return `${capitalize(startStr)} – ${capitalize(endStr)}`;
 };
+
+const formatDateTime = (date: Date) => {
+    return `${format(date, "d", { locale: ptBR })} de ${capitalize(format(date, "MMMM", { locale: ptBR }))}`;
+};
+
+export { formatDateRange, formatDateTime, timeAgo, useDateRangeFormatter };

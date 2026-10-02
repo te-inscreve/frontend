@@ -1,12 +1,13 @@
-import { useMemo } from "react";
 import Link from "next/link";
+import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { CheckIcon } from "@phosphor-icons/react/dist/ssr/Check";
 import { FlagCheckeredIcon } from "@phosphor-icons/react/dist/ssr/FlagCheckered";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
-import { UserCheckIcon } from "@phosphor-icons/react/dist/ssr/UserCheck";
 
 import type { CategoriaAninhada } from "@te-inscreve/schemas";
 import { Badge } from "@te-inscreve/components";
+
+import { formatDateTime } from "~/shared/utils/format-date";
 
 interface Props {
     categoria: CategoriaAninhada;
@@ -21,13 +22,7 @@ interface Props {
 export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
     const situacao = sortearSituacao();
     const estilo = ESTILOS[situacao];
-    const totalInscritos = useMemo(() => {
-        // eslint-disable-next-line react-hooks/purity
-        const ramdomAssNumber = Math.random();
-        return categoria.maxInscricoes
-            ? Math.floor(ramdomAssNumber * categoria.maxInscricoes)
-            : 0;
-    }, [categoria.maxInscricoes]);
+
     return (
         <Link
             href={`/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoria.id}`}
@@ -48,7 +43,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                 // `overflow-hidden` é o que faz o canhoto respeitar o
                 // arredondado: ele encosta nas quatro bordas e é o recorte
                 // desta camada que arredonda as pontas dele.
-                className="bg-card relative flex h-full w-full flex-col gap-3 overflow-hidden rounded-r-xl p-4 transition-colors"
+                className="bg-card relative flex h-full w-full flex-col gap-2 overflow-hidden rounded-r-xl p-4 transition-colors"
             >
                 <div className="flex items-start justify-between gap-2">
                     <h5 className="text-base leading-tight font-bold">
@@ -65,18 +60,20 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                         // total de inscritos ainda não vem da API.
                         valor={
                             categoria.maxInscricoes === null
-                                ? totalInscritos.toString()
-                                : `${totalInscritos} / ${categoria.maxInscricoes}`
+                                ? categoria.countInscricoes.toString()
+                                : `${categoria.countInscricoes} / ${categoria.maxInscricoes}`
                         }
                     />
                     <Dado
-                        icone={<UserCheckIcon size={24} />}
-                        termo="Avaliadores"
-                        // Nulo é categoria sem avaliador definido, não zero.
+                        icone={<CalendarDotsIcon size={24} />}
+                        termo="Início em"
+                        // Nulo é categoria ainda fora do cronograma.
                         valor={
-                            categoria.avaliadores === null
-                                ? "A definir"
-                                : String(categoria.avaliadores)
+                            categoria.dataApresentacao === null
+                                ? null
+                                : formatDateTime(
+                                      new Date(categoria.dataApresentacao),
+                                  )
                         }
                     />
                 </dl>
@@ -112,29 +109,27 @@ function CanhotoIdade({
             <span className="text-sm">anos</span>
             <span
                 aria-hidden="true"
-                className={`${estilo.serrilha} absolute right-0 h-full border-l-2 border-dashed`}
+                className={`border-border absolute right-0 h-full border-l`}
             />
         </div>
     );
 }
 
 function Dado({
-    icone,
     termo,
     valor,
 }: {
     icone: React.ReactNode;
     termo: string;
-    valor: string;
+    valor: string | null;
 }) {
     return (
         <div className="flex flex-col [&_svg]:size-4">
             <dt className="text-muted-foreground text-sm">{termo}</dt>
             <div className="flex items-center gap-2">
-                <span className="text-primary shrink-0" aria-hidden="true">
-                    {icone}
-                </span>
-                <dd className="truncate text-base font-normal">{valor}</dd>
+                <dd className="truncate text-sm font-normal">
+                    {valor ?? "A definir"}
+                </dd>
             </div>
         </div>
     );
@@ -170,8 +165,6 @@ interface Estilo {
     badgeExtra: string;
     /** Fundo e cor do texto do canhoto. */
     canhoto: string;
-    /** Cor da serrilha que separa o canhoto do miolo. */
-    serrilha: string;
 }
 
 const ESTILOS: Record<Situacao, Estilo> = {
@@ -188,7 +181,6 @@ const ESTILOS: Record<Situacao, Estilo> = {
         badge: "destructive",
         badgeExtra: "font-bold",
         canhoto: "bg-muted text-muted-foreground",
-        serrilha: "border-border",
     },
     abertas: {
         rotulo: "Inscrições abertas",
@@ -197,7 +189,6 @@ const ESTILOS: Record<Situacao, Estilo> = {
         badgeExtra:
             "text-warning-foreground bg-warning border-warning border-transparent font-bold",
         canhoto: "bg-muted text-muted-foreground",
-        serrilha: "border-border",
     },
     comeca: {
         rotulo: "Inscrições fechadas",
@@ -205,7 +196,6 @@ const ESTILOS: Record<Situacao, Estilo> = {
         badge: "default",
         badgeExtra: "font-bold",
         canhoto: "bg-muted text-muted-foreground",
-        serrilha: "border-border",
     },
     encerrado: {
         rotulo: "Encerrado",
@@ -213,7 +203,6 @@ const ESTILOS: Record<Situacao, Estilo> = {
         badge: "secondary",
         badgeExtra: "",
         canhoto: "bg-muted text-muted-foreground",
-        serrilha: "border-border",
     },
 };
 

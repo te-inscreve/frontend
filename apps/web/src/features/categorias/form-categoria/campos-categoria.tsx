@@ -1,6 +1,9 @@
 "use client";
 
+import { addYears } from "date-fns";
+
 import type { CategoriaFormValues } from "./categoria-form-schema";
+import { CampoData } from "~/shared/ui/form/campo-data";
 import { CampoNumero } from "~/shared/ui/form/campo-numero";
 import { CampoTexto } from "~/shared/ui/form/campo-texto";
 
@@ -43,6 +46,22 @@ export function CamposCategoria() {
                 label="Idade máxima"
                 placeholder="Ex.: 17"
                 className="col-span-3"
+            />
+
+            <CampoData<CategoriaFormValues>
+                name="diaApresentacao"
+                label="Dia da apresentação"
+                opcional
+                // Sem limite superior o calendário não passa do fim do ano
+                // corrente — e há evento cadastrado com mais antecedência.
+                dataMaxima={addYears(new Date(), 2)}
+                className="col-span-4"
+            />
+            <CampoTexto<CategoriaFormValues>
+                name="horaApresentacao"
+                label="Horário"
+                type="time"
+                className="col-span-2 self-start"
             />
         </div>
     );

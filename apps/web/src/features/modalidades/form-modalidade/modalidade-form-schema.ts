@@ -5,6 +5,7 @@ import type { CreateModalidade, EditModalidade } from "@te-inscreve/schemas";
 
 import {
     categoriaFormDefaults,
+    categoriaFormInput,
     categoriaFormSchema,
 } from "~/features/categorias/form-categoria/categoria-form-schema";
 import {
@@ -145,6 +146,9 @@ export function modalidadeFormInput(
     return {
         ...dados,
         evento: eventoId,
+        // Cada categoria troca o dia e o horário da apresentação pelo
+        // instante que a API espera.
+        categorias: dados.categorias.map(categoriaFormInput),
         ...limitesDeGrupo(dados),
     };
 }

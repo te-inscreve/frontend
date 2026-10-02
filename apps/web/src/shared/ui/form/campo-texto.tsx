@@ -17,6 +17,8 @@ interface Props<T extends FieldValues> {
      */
     mask?: (valor: string) => string;
     inputMode?: React.ComponentProps<typeof Input>["inputMode"];
+    /** `time` dá o seletor de horário nativo, que já devolve `HH:mm`. */
+    type?: "text" | "time";
 }
 
 /**
@@ -31,6 +33,7 @@ export function CampoTexto<T extends FieldValues>({
     helpText,
     mask,
     inputMode,
+    type = "text",
 }: Props<T>) {
     const { control } = useFormContext<T>();
     const { field, fieldState } = useController({ name, control });
@@ -49,6 +52,7 @@ export function CampoTexto<T extends FieldValues>({
                     )
                 }
                 id={name}
+                type={type}
                 inputMode={inputMode}
                 // `bg-card` e não o transparente do `Input`: nos cartões e
                 // nas faixas de categoria o campo precisa se destacar do

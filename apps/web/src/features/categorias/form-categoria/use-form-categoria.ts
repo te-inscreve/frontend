@@ -18,6 +18,7 @@ import {
     categoriaFormDefaults,
     categoriaFormInput,
     categoriaFormSchema,
+    categoriaFormValues,
 } from "./categoria-form-schema";
 
 interface Props {
@@ -50,12 +51,7 @@ export function useFormCategoria({
         resolver: zodResolver(categoriaFormSchema),
         // Editando, os campos já nascem com o que a API devolveu.
         defaultValues: categoria
-            ? {
-                  nome: categoria.nome,
-                  idadeMinima: categoria.idadeMinima,
-                  idadeMaxima: categoria.idadeMaxima,
-                  maxInscricoes: categoria.maxInscricoes,
-              }
+            ? categoriaFormValues(categoria)
             : categoriaFormDefaults,
         mode: "onTouched",
     });
@@ -170,6 +166,10 @@ function campoCategoriaForm(
         idade_maxima: "idadeMaxima",
         maxInscricoes: "maxInscricoes",
         max_inscricoes: "maxInscricoes",
+        // O backend recebe um instante só; o erro dele cai no dia, que é o
+        // campo que o organizador procura primeiro.
+        dataApresentacao: "diaApresentacao",
+        data_apresentacao: "diaApresentacao",
     };
 
     return campos[campoApi] ?? null;
