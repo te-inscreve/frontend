@@ -4,7 +4,9 @@ import type { Icon } from "@phosphor-icons/react";
 import {
     BuildingsIcon,
     CalendarDotsIcon,
+    ClipboardTextIcon,
     TelevisionIcon,
+    TextboxIcon,
     TicketIcon,
     TrophyIcon,
     UserIcon,
@@ -19,6 +21,8 @@ const iconsMap = {
     trophy: TrophyIcon,
     user: UserIcon,
     tv: TelevisionIcon,
+    ficha: ClipboardTextIcon,
+    field: TextboxIcon,
 };
 
 export type IconName = keyof typeof iconsMap;

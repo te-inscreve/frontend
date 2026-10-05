@@ -9,8 +9,8 @@ import {
     SidebarMenuSubItem,
 } from "@te-inscreve/components/components/sidebar";
 
-import type { ItemNavegacao } from "./items-map";
 import { DynamicIcon } from "./icons-map";
+import type { ItemNavegacao } from "./items-map";
 
 interface Props {
     item: ItemNavegacao;
@@ -40,18 +40,20 @@ export function SidebarItem({ item, subItem, children }: Props) {
         <Wrapper className="flex flex-col gap-1">
             <SidebarMenuButton asChild isActive={ativo} tooltip={item.titulo}>
                 <Link href={item.href}>
-                    <DynamicIcon
-                        iconName={item.icone}
-                        render={(icone) => {
-                            const Icone = icone;
-                            return (
-                                <Icone
-                                    size={18}
-                                    weight={ativo ? "duotone" : "regular"}
-                                />
-                            );
-                        }}
-                    />
+                    {item.icone && (
+                        <DynamicIcon
+                            iconName={item.icone}
+                            render={(icone) => {
+                                const Icone = icone;
+                                return (
+                                    <Icone
+                                        size={18}
+                                        weight={ativo ? "duotone" : "regular"}
+                                    />
+                                );
+                            }}
+                        />
+                    )}
 
                     <span>{item.titulo}</span>
                 </Link>

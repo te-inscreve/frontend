@@ -46,17 +46,23 @@ export async function DetalheCategoria({
             categoriaId,
         }),
     );
+    const modalidade = await getQueryClient().fetchQuery(
+        trpc.modalidade.getById.queryOptions({
+            eventoId,
+            modalidadeId,
+        }),
+    );
 
     // Nulo é 404 do backend: categoria que não existe, ou que não pertence à
     // modalidade daquele evento.
-    if (!categoria) notFound();
+    if (!categoria || !modalidade) notFound();
 
     return (
         <>
             <header className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-start gap-3">
                     <h1 className="text-primary mr-auto text-4xl font-bold">
-                        {categoria.nome}
+                        {modalidade.nome} - {categoria.nome}
                     </h1>
 
                     <Button asChild>

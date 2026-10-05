@@ -17,6 +17,7 @@ import {
     SidebarRail,
 } from "@te-inscreve/components/components/sidebar";
 
+import { ItemComEntidade } from "./item-com-entidade";
 import { itensMap } from "./items-map";
 import { SidebarItem } from "./sidebar-item";
 import { SubItens } from "./sub-itens";
@@ -68,11 +69,21 @@ export function AdminSidebar() {
                         )}
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {itens.map((item) => (
-                                    <SidebarItem key={item.href} item={item}>
-                                        <SubItens item={item} />
-                                    </SidebarItem>
-                                ))}
+                                {itens.map((item) =>
+                                    item.exigeEntidade ? (
+                                        <ItemComEntidade
+                                            key={item.href}
+                                            item={item}
+                                        />
+                                    ) : (
+                                        <SidebarItem
+                                            key={item.href}
+                                            item={item}
+                                        >
+                                            <SubItens item={item} />
+                                        </SidebarItem>
+                                    ),
+                                )}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>

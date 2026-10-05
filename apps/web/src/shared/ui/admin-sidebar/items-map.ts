@@ -5,7 +5,7 @@ import type { IconName } from "./icons-map";
 export interface ItemNavegacao {
     titulo?: string;
     href: string;
-    icone: IconName;
+    icone?: IconName;
 }
 
 export interface ItemNavegacaoComSubItens extends ItemNavegacao {
@@ -18,6 +18,7 @@ export interface ItemNavegacaoComSubItens extends ItemNavegacao {
      * próximo item que ganhasse filhos herdar a regra sem ninguém pedir.
      */
     subItensExigemEntidade?: boolean;
+    exigeEntidade?: boolean;
 }
 
 interface ItensMap {
@@ -76,6 +77,12 @@ const getItensMap = (): ItensMap[] => [
                         icone: "trophy",
                     },
                 ],
+            },
+            {
+                titulo: "Fichas Avaliativas",
+                href: "/admin/fichas-avaliativas",
+                icone: "ficha",
+                exigeEntidade: true,
             },
         ],
     },
