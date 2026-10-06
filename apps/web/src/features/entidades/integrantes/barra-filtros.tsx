@@ -71,10 +71,14 @@ export function BarraFiltros({ filtros, resultados, total, acoes }: Props) {
                 {acoes && <div className="ml-auto">{acoes}</div>}
             </div>
 
-            <p aria-live="polite" className="text-muted-foreground text-sm">
-                {ativo
-                    ? `${resultados} de ${total} integrantes`
-                    : `${total} integrantes`}
+            <p
+                aria-live="polite"
+                className="text-muted-foreground w-full text-sm"
+            >
+                {ativo ? `${resultados} integrantes` : `${total} integrantes`}
+                {valores.idadeMaxima || valores.idadeMinima
+                    ? ` de ${valores.idadeMinima ?? "0"} a ${valores.idadeMaxima ?? "∞"} anos`
+                    : ""}
             </p>
         </div>
     );
