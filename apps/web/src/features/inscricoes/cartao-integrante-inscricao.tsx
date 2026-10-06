@@ -1,8 +1,6 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
-import { MinusCircleIcon } from "@phosphor-icons/react/dist/ssr/MinusCircle";
-import { PlusCircleIcon } from "@phosphor-icons/react/dist/ssr/PlusCircle";
+import { PlusIcon, XIcon } from "@phosphor-icons/react";
 
 import { cn } from "@te-inscreve/components";
 
@@ -14,63 +12,47 @@ import {
 import { nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
 
-type Props = {
+interface Props {
     integrante: Integrante;
+    /** `lista`: na lista da entidade, o clique inclui. `ticket`: o clique tira. */
+    lado: "lista" | "ticket";
     onAlternar: (integrante: Integrante) => void;
     className?: string;
-} & (
-    | {
-          /** Na lista da entidade: o clique inclui, ou tira se já estiver. */
-          lado: "lista";
-          selecionado: boolean;
-      }
-    | {
-          /** No ticket: o clique tira. */
-          lado: "ticket";
-      }
-);
+}
 
 /**
  * Uma pessoa como cartão clicável, no modo de inscrever.
  *
- * Novo, e não o {@link CartaoIntegranteSelecao} da bancada de grupo: aquele
- * tem `layoutId` compartilhado entre as duas mãos e rótulos de grupo, e
- * aqui o cartão **permanece na lista** (marcado) enquanto uma cópia aparece
- * no ticket — dois elementos com o mesmo `layoutId` ao mesmo tempo fazem o
- * Motion animar um para cima do outro. Por isso não há `layoutId` nenhum: o
- * ticket anima a entrada e a saída das linhas com `AnimatePresence`, e a
- * lista só troca o sinal.
+ * Quem entra no ticket sai da lista da entidade: cada pessoa está em um
+ * lugar só, na lista para incluir ou no ticket para tirar.
  *
- * Devolve o `button`, e não o `<li>`: o ticket embrulha num `motion.li` para
- * a linha crescer no lugar, e a lista, num `<li>` comum.
+ * A passagem de um lado a outro é saída e entrada com `AnimatePresence` nas
+ * duas listas, e não `layoutId` compartilhado, porque em tela estreita o
+ * ticket fica acima da lista e muitas vezes fora da tela — o cartão voaria
+ * para onde ninguém vê.
  *
- * `aria-pressed` só na lista, onde o cartão é um alternador. No ticket ele é
- * um botão de tirar, e o rótulo já diz isso. Na lista, marcado, o hover vira
- * vermelho: o próximo clique tira a pessoa, e o cartão avisa antes.
+ * Devolve o `button`, e não o `<li>`: cada lista o embrulha num `motion.li`
+ * para a linha crescer e sumir no lugar.
  */
-export function CartaoIntegranteInscricao(props: Props) {
-    const { integrante, onAlternar, className } = props;
+export function CartaoIntegranteInscricao({
+    integrante,
+    lado,
+    onAlternar,
+    className,
+}: Props) {
     const nome = nomeCompleto(integrante);
-    const marcado = props.lado === "ticket" || props.selecionado;
 
     return (
         <button
             type="button"
             onClick={() => onAlternar(integrante)}
-            aria-pressed={
-                props.lado === "lista" ? props.selecionado : undefined
-            }
             aria-label={
-                marcado
+                lado === "ticket"
                     ? `Tirar ${nome} da inscrição`
                     : `Incluir ${nome} na inscrição`
             }
             className={cn(
-                "focus-visible:ring-ring/50 group flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                // Três estados, duas cores: verde para quem vai entrar,
-                // vermelho no hover de quem vai sair. Marcado na lista é o
-                // único que já nasce tingido — é a resposta ao clique.
-                "bg-card border-border/70 hover:bg-card/50",
+                "focus-visible:ring-ring/50 group bg-card border-border/70 hover:bg-card/50 flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none",
                 className,
             )}
         >
@@ -85,45 +67,33 @@ export function CartaoIntegranteInscricao(props: Props) {
 
             <AvisoMatricula integrante={integrante} />
 
-            <Sinal lado={props.lado} marcado={marcado} />
+            <Sinal lado={lado} />
         </button>
     );
 }
 
-/** O ícone do canto: o que o clique vai fazer. Fora da ordem de foco. */
-function Sinal({ lado, marcado }: { lado: Props["lado"]; marcado: boolean }) {
-    if (lado === "ticket") {
-        return (
-            <MinusCircleIcon
-                aria-hidden="true"
-                size={20}
-                weight="bold"
-                className="text-destructive hidden shrink-0 group-hover:block"
-            />
-        );
-    }
+/** Aparece no hover (e no foco por teclado) com um leve crescer. */
+const VISIVEL_NO_HOVER =
+    "shrink-0 opacity-0 transition duration-150 ease-out group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100 motion-safe:scale-50";
 
-    return marcado ? (
-        <>
-            <CheckCircleIcon
-                aria-hidden="true"
-                size={20}
-                weight="fill"
-                className="text-primary shrink-0 group-hover:hidden"
-            />
-            <MinusCircleIcon
-                aria-hidden="true"
-                size={20}
-                weight="fill"
-                className="text-destructive hidden shrink-0 group-hover:block"
-            />
-        </>
-    ) : (
-        <PlusCircleIcon
+/**
+ * O ícone do canto: o que o clique vai fazer, revelado no hover. Fora da
+ * leitura — o `aria-label` do botão já diz.
+ */
+function Sinal({ lado }: { lado: Props["lado"] }) {
+    return lado === "ticket" ? (
+        <XIcon
             aria-hidden="true"
             size={20}
             weight="bold"
-            className="text-muted-foreground group-hover:text-primary shrink-0 transition-colors"
+            className={cn(VISIVEL_NO_HOVER, "text-destructive")}
+        />
+    ) : (
+        <PlusIcon
+            aria-hidden="true"
+            size={20}
+            weight="bold"
+            className={cn(VISIVEL_NO_HOVER, "text-primary")}
         />
     );
 }

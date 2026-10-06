@@ -25,7 +25,8 @@ interface Props {
     integrantes: Inscricao["integrantes"];
     /** O id do grupo cuja formação está a caminho do ticket, se houver. */
     grupoAplicando: number | null;
-    selecionados: ReadonlySet<number>;
+    /** Quem está no ticket, na ordem do ticket. */
+    inscritos: Inscricao["integrantesInscritos"];
     onAplicarGrupo: Inscricao["aplicarGrupo"];
     onAlternarIntegrante: Inscricao["alternarIntegrante"];
     className?: string;
@@ -55,7 +56,7 @@ export function ColunaEntidade({
     grupos,
     integrantes,
     grupoAplicando,
-    selecionados,
+    inscritos,
     onAplicarGrupo,
     onAlternarIntegrante,
     className,
@@ -112,9 +113,10 @@ export function ColunaEntidade({
                         carregando={integrantes.carregando}
                         erro={integrantes.erro}
                         isFetchingNextPage={integrantes.isFetchingNextPage}
+                        temMais={integrantes.temMais}
                         carregarMais={integrantes.carregarMais}
                         filtros={integrantes.filtros}
-                        selecionados={selecionados}
+                        inscritos={inscritos}
                         onAlternar={onAlternarIntegrante}
                     />
                 </TabsContent>

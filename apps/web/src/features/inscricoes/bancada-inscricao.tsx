@@ -57,7 +57,7 @@ export function BancadaInscricao(props: Props) {
                     grupos={inscricao.grupos}
                     integrantes={inscricao.integrantes}
                     grupoAplicando={inscricao.grupoAplicando?.id ?? null}
-                    selecionados={inscricao.selecionados}
+                    inscritos={inscricao.integrantesInscritos}
                     onAplicarGrupo={inscricao.aplicarGrupo}
                     onAlternarIntegrante={inscricao.alternarIntegrante}
                     className="order-2 lg:order-1"

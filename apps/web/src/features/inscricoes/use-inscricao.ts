@@ -134,11 +134,6 @@ export function useInscricao({
         control: form.control,
         name: "integrantes",
     });
-    /** Quem está no ticket agora — é o que marca os cartões da lista. */
-    const selecionados = useMemo(
-        () => new Set(integrantesInscritos.map(({ id }) => id)),
-        [integrantesInscritos],
-    );
 
     // Revalida só depois da primeira tentativa de envio: antes disso, o
     // ticket vazio não é erro, é o começo.
@@ -304,13 +299,13 @@ export function useInscricao({
             carregando: listaIntegrantes.isLoading,
             erro: listaIntegrantes.error,
             isFetchingNextPage: buscandoMaisIntegrantes,
+            temMais: temMaisIntegrantes,
             carregarMais: carregarMaisIntegrantes,
             filtros: filtrosIntegrantes,
         },
 
         form,
         integrantesInscritos,
-        selecionados,
         /** O grupo cuja formação está a caminho, enquanto `grupo.getById` responde. */
         grupoAplicando: aplicacao.isPending ? aplicacao.variables : null,
         erroAoAplicarGrupo: aplicacao.error,

@@ -68,8 +68,7 @@ interface Props {
  *
  * As linhas entram e saem com `AnimatePresence` + `motion.li layout` (o
  * padrão de `grade-grupos.tsx`), e não com `layoutId` compartilhado com a
- * lista da esquerda: a pessoa continua lá, marcada, enquanto aparece aqui —
- * ver {@link CartaoIntegranteInscricao}.
+ * lista da esquerda — ver {@link CartaoIntegranteInscricao}.
  *
  * Enquanto `grupo.getById` carrega, o corpo mostra esqueletos no fim da
  * lista — onde a formação vai entrar, tantos quantos o cartão do grupo
