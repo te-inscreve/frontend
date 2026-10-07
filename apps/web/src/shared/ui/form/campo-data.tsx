@@ -1,9 +1,8 @@
 "use client";
 
 import type { FieldPath, FieldValues } from "react-hook-form";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
-import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useController, useFormContext } from "react-hook-form";
@@ -15,7 +14,8 @@ import {
     FieldError,
     FieldLabel,
 } from "@te-inscreve/components";
-import { cn } from "@te-inscreve/components/utils";
+
+import { GavetaCalendario } from "./gaveta-calendario";
 
 /** "12 de março de 1998" — sem ambiguidade entre dia e mês, ao contrário de `12/03`. */
 function porExtenso(data: Date) {
@@ -62,11 +62,7 @@ interface Props<T extends FieldValues> {
  * validade, filiação — são escolhidas, não digitadas de cabeça, e o calendário
  * dispensa validar formato.
  *
- * E calendário aberto, não escondido atrás de um botão que abre popover: o
- * formulário já vive dentro de um diálogo, e popover sobre modal empilhava
- * duas camadas para uma escolha só — clicar, esperar abrir, escolher, ver
- * fechar. Aberto, a escolha custa um clique e o mês fica à vista enquanto o
- * resto do formulário é preenchido.
+ * A gaveta ({@link GavetaCalendario}) sobe sozinha quando o dia é escolhido.
  *
  * O tipo do formulário vem por argumento explícito, como em {@link CampoNumero}.
  */
@@ -92,11 +88,20 @@ export function CampoData<T extends FieldValues>({
     // sem levar o calendário junto, o dia recém-escolhido ficaria fora da tela
     // e o clique pareceria não ter feito nada.
     const [mes, setMes] = useState(() => valor ?? mesInicial ?? new Date());
+    const [aberto, setAberto] = useState(false);
+    const limpavel = opcional && valor !== null;
+    const gatilho = useRef<HTMLButtonElement>(null);
 
     const escolher = (data: Date | null) => {
         field.onChange(data);
         field.onBlur();
         if (data) setMes(data);
+        // Escolher é terminar: a gaveta sobe, e o foco volta ao gatilho, ou
+        // ficaria preso num dia que acabou de sair da página.
+        if (aberto) {
+            setAberto(false);
+            gatilho.current?.focus();
+        }
     };
 
     // Um matcher por limite: `{ before: undefined }` não é "sem limite" para o
@@ -124,37 +129,63 @@ export function CampoData<T extends FieldValues>({
                 )}
             </FieldLabel>
 
-            <div className="bg-card group-data-[invalid=true]/field:border-destructive flex flex-col overflow-hidden rounded-lg border">
-                {/* A data escolhida por extenso. O calendário marca o dia, mas
-                    quem rolou até outro mês perde de vista o que escolheu. */}
-                <div className="flex min-h-11 items-center gap-2 border-b px-3 py-2">
-                    <CalendarDotsIcon
-                        aria-hidden="true"
-                        className="text-primary shrink-0"
-                    />
-                    <span
-                        className={cn(
-                            "truncate text-sm font-medium",
-                            !valor && "text-muted-foreground font-normal",
-                        )}
-                    >
-                        {valor ? porExtenso(valor) : "Nenhuma data escolhida"}
-                    </span>
-                    {opcional && valor && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="xs"
-                            className="ml-auto shrink-0"
-                            onClick={() => escolher(null)}
-                        >
-                            <XIcon aria-hidden="true" />
-                            Limpar
-                        </Button>
-                    )}
-                </div>
+            <GavetaCalendario
+                id={`${name}-gatilho`}
+                aberto={aberto}
+                onAbertoChange={setAberto}
+                gatilhoRef={gatilho}
+                aria-labelledby={`${name}-label ${name}-gatilho`}
+                invalido={fieldState.invalid}
+                icone={<CalendarDotsIcon />}
+                vazio={!valor}
+                // Por extenso: o calendário marca o dia, mas quem rolou até
+                // outro mês perde de vista o que escolheu.
+                resumo={valor ? porExtenso(valor) : "Nenhuma data escolhida"}
+                rotuloLimpar="Limpar data"
+                onLimpar={limpavel ? () => escolher(null) : undefined}
+                // Os atalhos ficam embaixo, e não entre o cabeçalho e a grade:
+                // ali eles empurrariam o calendário para baixo, e dois campos
+                // de data lado a lado — um com atalhos, outro sem — sairiam
+                // com as grades desalinhadas.
+                rodape={
+                    presets.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 border-t px-3 py-2">
+                            {presetsLabel && (
+                                <span className="text-muted-foreground mr-0.5 text-xs">
+                                    {presetsLabel}
+                                </span>
+                            )}
+                            {presets.map((preset) => {
+                                const data = preset.data();
+                                const escolhido =
+                                    valor !== null && isSameDay(valor, data);
 
+                                return (
+                                    <Button
+                                        key={preset.rotulo}
+                                        type="button"
+                                        size="xs"
+                                        variant={
+                                            escolhido ? "default" : "outline"
+                                        }
+                                        // `aria-pressed`, e não `aria-selected`:
+                                        // o atalho continua sendo um botão que
+                                        // liga e desliga a data que ele propõe.
+                                        aria-pressed={escolhido}
+                                        onClick={() => escolher(data)}
+                                    >
+                                        {preset.rotulo}
+                                    </Button>
+                                );
+                            })}
+                        </div>
+                    )
+                }
+            >
                 <Calendar
+                    // Abrir a gaveta leva o foco ao dia escolhido (ou a hoje),
+                    // e as setas já navegam pela grade.
+                    autoFocus
                     mode="single"
                     // Nascimento e validade ficam longe do mês corrente: a
                     // legenda clicável abre a grade de meses e a de anos, e
@@ -173,42 +204,7 @@ export function CampoData<T extends FieldValues>({
                     className="bg-transparent"
                     classNames={{ root: "w-full" }}
                 />
-
-                {/* Os atalhos ficam embaixo, e não entre o cabeçalho e a grade:
-                    ali eles empurrariam o calendário para baixo, e dois campos
-                    de data lado a lado — um com atalhos, outro sem — sairiam
-                    com as grades desalinhadas. */}
-                {presets.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5 border-t px-3 py-2">
-                        {presetsLabel && (
-                            <span className="text-muted-foreground mr-0.5 text-xs">
-                                {presetsLabel}
-                            </span>
-                        )}
-                        {presets.map((preset) => {
-                            const data = preset.data();
-                            const escolhido =
-                                valor !== null && isSameDay(valor, data);
-
-                            return (
-                                <Button
-                                    key={preset.rotulo}
-                                    type="button"
-                                    size="xs"
-                                    variant={escolhido ? "default" : "outline"}
-                                    // `aria-pressed`, e não `aria-selected`: o
-                                    // atalho continua sendo um botão que liga e
-                                    // desliga a data que ele propõe.
-                                    aria-pressed={escolhido}
-                                    onClick={() => escolher(data)}
-                                >
-                                    {preset.rotulo}
-                                </Button>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
+            </GavetaCalendario>
 
             {ajuda && (
                 <p
