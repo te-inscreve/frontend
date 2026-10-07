@@ -1,3 +1,5 @@
+import { CalendarBlankIcon } from "@phosphor-icons/react/dist/ssr";
+import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr/Buildings";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 
@@ -6,11 +8,11 @@ import type {
     InscricaoIndividual,
     InscricoesDaCategoria,
 } from "@te-inscreve/schemas";
+import { Badge } from "@te-inscreve/components";
 import { Skeleton } from "@te-inscreve/components/skeleton";
 
 import { formatarDataCriacao } from "~/features/entidades/grupos/grupo";
-import { nomeCompleto } from "~/features/entidades/shared/integrantes";
-import { AvatarUsuario } from "~/features/usuarios/components/avatar-usuario";
+import { idadeEm, nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { PicoteVertical, RecorteDoTicket } from "./partes-do-ticket";
 
 /**
@@ -19,9 +21,8 @@ import { PicoteVertical, RecorteDoTicket } from "./partes-do-ticket";
  * A modalidade decide o formato da resposta, e o formato decide o bilhete:
  * a inscrição em grupo é um bilhete robusto — a entidade no cabeçalho, a
  * formação em número grande embaixo do picote —, porque ali o concorrente
- * é um conjunto de pessoas; a individual é um bilhete fino, deitado, com a
- * pessoa de um lado e o canhoto do outro, o mesmo desenho dos bilhetes da
- * bancada de inscrição.
+ * é um conjunto de pessoas; a individual é um bilhete fino, deitado, com o
+ * canhoto à esquerda e a pessoa à direita.
  *
  * Os bilhetes ficam direto sobre a página, sem moldura: a mordida dos
  * picotes tem a cor do fundo (`fill-background`).
@@ -94,13 +95,14 @@ function BilheteGrupo({ inscricao }: { inscricao: InscricaoGrupo }) {
                     <UsersThreeIcon size={24} weight="duotone" />
                 </span>
                 <div className="min-w-0 flex-1">
-                    <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                        Inscrição em grupo
-                    </p>
                     <h3 className="truncate text-lg font-bold tracking-tight">
                         {nomeConcorrente ?? entidade.nome}
                     </h3>
                     <p className="text-muted-foreground truncate text-sm">
+                        <BuildingsIcon
+                            aria-hidden="true"
+                            className="mr-1 inline size-4"
+                        />
                         {nomeConcorrente
                             ? `${entidade.nome} · ${entidade.cidade}`
                             : entidade.cidade}
@@ -126,7 +128,7 @@ function BilheteGrupo({ inscricao }: { inscricao: InscricaoGrupo }) {
 }
 
 /**
- * A inscrição individual: a pessoa à esquerda, o canhoto à direita,
+ * A inscrição individual: o canhoto à esquerda, a pessoa à direita,
  * separados por um picote de pé.
  *
  * `concorrente` nulo é um estado que o backend não deveria produzir, mas o
@@ -138,24 +140,45 @@ function BilheteIndividual({ inscricao }: { inscricao: InscricaoIndividual }) {
 
     return (
         <article className="bg-card flex min-w-0 rounded-xl border">
-            <div className="flex min-w-0 flex-1 items-center gap-3 p-3">
-                <AvatarUsuario nome={nome ?? "?"} size={36} alt="" />
-                <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-semibold">
-                        {nome ?? "Concorrente não informado"}
-                    </h3>
-                    <p className="text-muted-foreground truncate text-xs">
-                        {entidade.nome} · {entidade.cidade}
-                    </p>
-                </div>
-            </div>
-
-            <PicoteVertical />
-
             <Carimbo
                 inscricao={inscricao}
                 className="flex w-24 shrink-0 flex-col items-center justify-center text-center"
             />
+
+            <PicoteVertical />
+
+            <div className="flex min-w-0 flex-1 items-center gap-3 p-3">
+                <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-semibold">
+                        {nome ?? "Concorrente não informado"}
+                    </h3>
+                    {inscricao.concorrente ? (
+                        <p className="text-muted-foreground truncate text-xs">
+                            <CalendarBlankIcon
+                                aria-hidden="true"
+                                className="mr-1 inline size-3"
+                            />
+                            {idadeEm(inscricao.concorrente.dataNascimento)} anos
+                            ·{" "}
+                            {formatarDataCriacao(
+                                inscricao.concorrente.dataNascimento,
+                            )}
+                        </p>
+                    ) : null}
+                    <p className="text-muted-foreground truncate text-xs">
+                        <BuildingsIcon
+                            aria-hidden="true"
+                            className="mr-1 inline size-3"
+                        />
+                        {entidade.nome} · {entidade.cidade}
+                    </p>
+                </div>
+                <Badge variant="ghost">
+                    {inscricao.concorrente
+                        ? inscricao.concorrente.matriculaMtg
+                        : "Sem matrícula"}
+                </Badge>
+            </div>
         </article>
     );
 }
@@ -194,17 +217,17 @@ export function ListaInscricoesSkeleton() {
             <ul className="grid gap-3 sm:grid-cols-2">
                 {[0, 1, 2, 3].map((indice) => (
                     <li key={indice} className="bg-card flex rounded-xl border">
+                        <div className="flex w-24 shrink-0 flex-col items-center justify-center gap-1.5">
+                            <Skeleton className="h-3 w-10" />
+                            <Skeleton className="h-3 w-16" />
+                        </div>
+                        <PicoteVertical />
                         <div className="flex min-w-0 flex-1 items-center gap-3 p-3">
                             <Skeleton className="size-9 shrink-0 rounded-full" />
                             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                                 <Skeleton className="h-4 w-2/3" />
                                 <Skeleton className="h-3 w-1/2" />
                             </div>
-                        </div>
-                        <PicoteVertical />
-                        <div className="flex w-24 shrink-0 flex-col items-center justify-center gap-1.5">
-                            <Skeleton className="h-3 w-10" />
-                            <Skeleton className="h-3 w-16" />
                         </div>
                     </li>
                 ))}
