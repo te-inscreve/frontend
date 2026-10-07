@@ -24,6 +24,8 @@ import {
 interface Props {
     /** Evento dono da modalidade — vem da rota, não do formulário. */
     eventoId: number;
+    /** Nome já digitado em outro lugar, como no cadastro rápido. */
+    nomeInicial?: string;
     onSuccess?: (modalidade: Modalidade) => void;
 }
 
@@ -31,7 +33,11 @@ interface Props {
  * Estado do formulário de modalidade e o envio para a API, separados da tela:
  * o componente só monta os campos e lê `salvamento`.
  */
-export function useFormModalidade({ eventoId, onSuccess }: Props) {
+export function useFormModalidade({
+    eventoId,
+    nomeInicial,
+    onSuccess,
+}: Props) {
     const queryClient = useQueryClient();
     const trpc = useTRPC();
     const [salvamento, setSalvamento] = useState<
@@ -40,7 +46,9 @@ export function useFormModalidade({ eventoId, onSuccess }: Props) {
 
     const form = useForm<ModalidadeFormValues>({
         resolver: zodResolver(modalidadeFormSchema),
-        defaultValues: modalidadeFormDefaults,
+        defaultValues: nomeInicial
+            ? { ...modalidadeFormDefaults, nome: nomeInicial }
+            : modalidadeFormDefaults,
         mode: "onTouched",
     });
 

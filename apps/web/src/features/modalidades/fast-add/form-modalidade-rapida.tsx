@@ -49,6 +49,12 @@ export function FormModalidadeRapida({ eventoId, onCriada }: Props) {
     // dá tempo de clicar de novo, e o cadastro sairia em duplicata.
     const salvando = salvamento !== "idle";
 
+    // O que já foi digitado segue para o cadastro completo como nome inicial.
+    const nome = form.watch("nome").trim();
+    const hrefCadastroCompleto = `/admin/eventos/${eventoId}/modalidades/criar${
+        nome ? `?${new URLSearchParams({ nome }).toString()}` : ""
+    }`;
+
     return (
         <FormProvider {...form}>
             <form
@@ -92,9 +98,7 @@ export function FormModalidadeRapida({ eventoId, onCriada }: Props) {
                         size="sm"
                         className="justify-center"
                     >
-                        <Link
-                            href={`/admin/eventos/${eventoId}/modalidades/criar`}
-                        >
+                        <Link href={hrefCadastroCompleto}>
                             Cadastro completo
                             <ArrowRightIcon
                                 aria-hidden="true"

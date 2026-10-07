@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FloppyDiskIcon, InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
@@ -35,12 +36,15 @@ interface Props {
      * servidor, e aqui só se conhece o id.
      */
     trilha?: ReactNode;
+    /** Nome que já vem preenchido, trazido do cadastro rápido. */
+    nomeInicial?: string;
 }
 
-export function FormModalidade({ eventoId, trilha }: Props) {
+export function FormModalidade({ eventoId, trilha, nomeInicial }: Props) {
     const router = useRouter();
     const { form, salvamento, salvar, erro } = useFormModalidade({
         eventoId,
+        nomeInicial,
         onSuccess: (modalidade) => {
             // Abre na aba da modalidade recém-criada, como no cadastro rápido.
             router.push(
@@ -49,6 +53,12 @@ export function FormModalidade({ eventoId, trilha }: Props) {
             router.refresh();
         },
     });
+
+    // Quem chega aqui vem para cadastrar: o cursor já espera no nome, venha
+    // ele preenchido do cadastro rápido ou não.
+    useEffect(() => {
+        form.setFocus("nome");
+    }, [form]);
 
     const salvando = salvamento === "loading";
     const erros = form.formState.errors;
