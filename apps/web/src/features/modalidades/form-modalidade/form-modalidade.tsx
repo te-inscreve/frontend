@@ -20,6 +20,7 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 import { FormProvider } from "@te-inscreve/components/components/field";
+import { cn } from "@te-inscreve/components/utils";
 
 import type { ModalidadeFormValues } from "./modalidade-form-schema";
 import { CamposModalidade } from "./campos-modalidade";
@@ -103,9 +104,12 @@ export function FormModalidade({ eventoId, trilha }: Props) {
                     {/* As abas só escondem campos — o formulário continua sendo
                         um só, então a validação e o envio abrangem as duas. */}
                     <Tabs defaultValue="modalidade" className="w-full">
+                        {/* A régua do detalhe do evento: cada aba com a largura
+                            do próprio rótulo, alinhadas à esquerda, e a linha de
+                            baixo atravessando a coluna inteira. */}
                         <TabsList
-                            className="grid w-full grid-cols-2 sm:w-72"
                             variant="line"
+                            className="w-max min-w-full justify-start border-b"
                         >
                             <ModalidadeTabTrigger
                                 value="modalidade"
@@ -193,11 +197,11 @@ function ModalidadeTabTrigger({
             value={value}
             data-invalid={invalida}
             aria-describedby={invalida ? descricaoErroId : undefined}
-            className={
-                invalida
-                    ? "text-destructive data-[state=active]:text-destructive dark:data-[state=active]:text-destructive"
-                    : undefined
-            }
+            className={cn(
+                "flex-none",
+                invalida &&
+                    "text-destructive data-[state=active]:text-destructive dark:data-[state=active]:text-destructive after:bg-destructive",
+            )}
         >
             {icon}
             {children}
