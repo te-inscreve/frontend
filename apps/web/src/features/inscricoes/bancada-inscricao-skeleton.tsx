@@ -1,11 +1,14 @@
 import { Skeleton } from "@te-inscreve/components/skeleton";
 
 import { LadoDaBancada } from "~/features/entidades/grupos/bancada";
-import { CartaoGrupoSkeleton } from "~/features/entidades/grupos/cartao-grupo-skeleton";
+import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
 import { TicketInscricaoSkeleton } from "./ticket-inscricao";
 
-/** Quantos cartões-esqueleto na coluna da esquerda: uma coluna cheia. */
-const ESQUELETOS = 4;
+/**
+ * Quantos cartões-esqueleto na coluna da esquerda: uma coluna cheia. São de
+ * integrante porque é a aba que abre primeiro.
+ */
+const ESQUELETOS = 5;
 
 /**
  * O fallback do portão da entidade na página de Criar Inscrição.
@@ -29,8 +32,8 @@ export function BancadaInscricaoSkeleton() {
                 descricao={<Skeleton className="h-3 w-56" />}
                 abas={
                     <div className="flex h-9 items-center gap-4 px-1">
-                        <Skeleton className="h-4 w-16" />
                         <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-16" />
                     </div>
                 }
                 className="order-2 min-h-0 lg:order-1"
@@ -42,7 +45,7 @@ export function BancadaInscricaoSkeleton() {
 
                 <ul className="grid gap-3">
                     {Array.from({ length: ESQUELETOS }, (_, indice) => (
-                        <CartaoGrupoSkeleton key={indice} />
+                        <CartaoIntegranteSkeleton key={indice} />
                     ))}
                 </ul>
             </LadoDaBancada>

@@ -34,7 +34,7 @@ interface Props {
 
 /**
  * O lado esquerdo da bancada de inscrição: o que a entidade tem, em duas
- * abas — os grupos e as pessoas.
+ * abas — as pessoas, que abrem primeiro, e os grupos.
  *
  * É uma {@link LadoDaBancada} com o slot `abas`: o título é o nome da
  * entidade, e as abas ficam no cabeçalho porque dizem *o que este lado
@@ -63,7 +63,7 @@ export function ColunaEntidade({
 }: Props) {
     return (
         <Tabs
-            defaultValue="grupos"
+            defaultValue="integrantes"
             className={cn("flex min-h-0 flex-col gap-0", className)}
         >
             <LadoDaBancada
@@ -74,13 +74,13 @@ export function ColunaEntidade({
                         variant="line"
                         className="w-full justify-start border-b-0"
                     >
-                        <TabsTrigger value="grupos" className="flex-none">
-                            <UsersFourIcon aria-hidden="true" />
-                            Grupos
-                        </TabsTrigger>
                         <TabsTrigger value="integrantes" className="flex-none">
                             <UsersThreeIcon aria-hidden="true" />
                             Integrantes
+                        </TabsTrigger>
+                        <TabsTrigger value="grupos" className="flex-none">
+                            <UsersFourIcon aria-hidden="true" />
+                            Grupos
                         </TabsTrigger>
                     </TabsList>
                 }
