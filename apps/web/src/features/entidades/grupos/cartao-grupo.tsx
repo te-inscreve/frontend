@@ -76,8 +76,8 @@ export function CartaoGrupo({
  * gestos diferentes: na grade ele é um link para a página do grupo, e na
  * inscrição numa categoria ele é um botão que marca o grupo para se
  * apresentar (`cartao-grupo-selecao.tsx`). O que muda entre os dois é o
- * elemento em volta e o `sinal` no canto — a seta de "abrir" ou o círculo de
- * "marcar" —, não o que o cartão diz sobre o grupo.
+ * elemento em volta e o `sinal` no canto — a seta de "abrir" ou o "Aplicar"
+ * —, não o que o cartão diz sobre o grupo.
  *
  * O `sinal` vem de fora, em vez de ser um `variante`, porque é a única peça
  * que muda: quem monta o cartão sabe o que o clique faz, e este miolo não
@@ -88,7 +88,7 @@ export function ConteudoCartaoGrupo({
     sinal,
 }: {
     grupo: GrupoComPrevia;
-    /** O ícone do canto superior direito: o que o clique no cartão faz. */
+    /** O canto superior direito: o que o clique no cartão faz. */
     sinal: React.ReactNode;
 }) {
     return (

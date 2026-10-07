@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
@@ -23,10 +23,12 @@ interface Props {
  * grupo nenhum, só as pessoas que vieram dele. Aplicar de novo não repete
  * ninguém.
  *
- * O sinal do canto é o "mais" de acrescentar, revelado no hover (e no foco
- * por teclado) com um leve crescer — o mesmo gesto do
- * {@link CartaoIntegranteAlternavel}. Vira spinner, sempre à vista, enquanto
- * `grupo.getById` não responde — a espera é localizada neste cartão.
+ * O sinal do canto é a palavra "Aplicar" com uma seta para o ticket, e não
+ * um "mais": um "+" diria que o grupo passa a fazer parte da inscrição, e
+ * ela não guarda grupo nenhum — o clique só copia as pessoas. Aparece no hover (e no foco por teclado) com um
+ * fade e um deslize curto da direita — sem crescer: uma palavra crescendo
+ * chama mais atenção do que um ícone — e vira spinner, sempre à vista,
+ * enquanto `grupo.getById` não responde — a espera é localizada neste cartão.
  *
  * O clique vale no cartão inteiro, pelo mesmo motivo de sempre: é uma lista
  * em que se escolhe, e o alvo é o cartão, não o ícone.
@@ -51,12 +53,13 @@ export function CartaoGrupoSelecao({ grupo, aplicando, onAplicar }: Props) {
                                 className="text-muted-foreground mt-0.5 shrink-0 animate-spin"
                             />
                         ) : (
-                            <PlusIcon
+                            <span
                                 aria-hidden="true"
-                                size={20}
-                                weight="bold"
-                                className="text-primary mt-0.5 shrink-0 opacity-0 transition duration-150 ease-out group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100 motion-safe:scale-50"
-                            />
+                                className="text-primary flex shrink-0 items-center gap-1 text-sm leading-tight font-semibold opacity-0 transition duration-150 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-safe:translate-x-1"
+                            >
+                                Aplicar
+                                <ArrowRightIcon size={14} weight="bold" />
+                            </span>
                         )
                     }
                 />
