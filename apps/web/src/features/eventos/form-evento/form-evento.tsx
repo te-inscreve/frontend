@@ -19,10 +19,12 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 import { FormProvider } from "@te-inscreve/components/components/field";
+import { cn } from "@te-inscreve/components/utils";
 
 import type { EventoFormValues } from "./evento-form-schema";
 import { GoBackButton } from "~/shared/ui/back-btn";
 import { ChecklistEvento } from "./checklist-evento";
+import { AvisoPeriodos } from "./fields/aviso-periodos";
 import { CartazField } from "./fields/cartaz-field";
 import { DescricaoField } from "./fields/descricao-field";
 import { LocalField } from "./fields/local-field";
@@ -88,9 +90,14 @@ export function FormEvento({ evento }: Props) {
 
                 <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-4 py-6 md:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
                     <Tabs defaultValue="geral" className="w-full shrink-0 grow">
+                        {/* A régua do detalhe do evento: cada aba com a largura
+                            do próprio rótulo, alinhadas à esquerda, e a linha de
+                            baixo atravessando a coluna inteira. A grade de
+                            colunas iguais apertava "Arquivos" e cortava a linha
+                            no fim da terceira aba. */}
                         <TabsList
-                            className="grid w-full grid-cols-3 sm:w-80"
-                            variant={"line"}
+                            variant="line"
+                            className="w-max min-w-full justify-start border-b"
                         >
                             <EventoTabTrigger
                                 value="geral"
@@ -149,9 +156,17 @@ export function FormEvento({ evento }: Props) {
                                     </CardDescription>
                                 </CardHeader>
 
-                                <CardContent className="flex flex-col gap-4">
-                                    <PeriodoInscricoesField />
-                                    <PeriodoEventoField />
+                                {/* Lado a lado enquanto os dois couberem, e um embaixo do
+                                    outro depois — decidido pela largura do cartão, e
+                                    não da tela, porque a coluna do cartaz também
+                                    disputa espaço. Cada campo parte de 18rem e divide
+                                    a sobra com o vizinho; o tamanho do calendário é
+                                    contido dentro do campo. `items-start` porque
+                                    abrir um calendário não deve esticar o vizinho. */}
+                                <CardContent className="flex flex-wrap items-start gap-4">
+                                    <PeriodoInscricoesField className="flex-1 basis-72" />
+                                    <PeriodoEventoField className="flex-1 basis-72" />
+                                    <AvisoPeriodos />
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -228,11 +243,11 @@ function EventoTabTrigger({
             value={value}
             data-invalid={invalida}
             aria-describedby={invalida ? descricaoErroId : undefined}
-            className={
-                invalida
-                    ? "text-destructive data-[state=active]:text-destructive dark:data-[state=active]:text-destructive"
-                    : undefined
-            }
+            className={cn(
+                "flex-none",
+                invalida &&
+                    "text-destructive data-[state=active]:text-destructive dark:data-[state=active]:text-destructive after:bg-destructive",
+            )}
         >
             {icon}
             {children}
