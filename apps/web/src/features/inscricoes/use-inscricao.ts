@@ -46,7 +46,7 @@ interface Opcoes {
 }
 
 /**
- * O estado da página de criar inscrição: o que a entidade tem (grupos e
+ * O estado da página de Criar Inscrição: o que a entidade tem (grupos e
  * integrantes), o que a categoria exige, e o formulário da inscrição.
  *
  * Modelo de `use-detalhe-grupo.ts`. Cinco leituras, todas hidratadas do

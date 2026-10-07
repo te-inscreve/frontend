@@ -58,7 +58,7 @@ interface Props {
  * Por isso a categoria sai de dentro do bilhete e vira o cabeçalho da coluna:
  * ela vale para todos os bilhetes, e repeti-la em cada um seria ruído. E o
  * botão de envio diz quantas inscrições cria — com mais de uma pessoa na
- * lista, não existe "criar inscrição" no singular: o envio é sempre de todas.
+ * lista, não existe "Criar Inscrição" no singular: o envio é sempre de todas.
  *
  * Os bilhetes não têm moldura em volta: ficam direto sobre a página, porque a
  * mordida dos picotes tem a cor do fundo (`fill-background`). A lista rolável

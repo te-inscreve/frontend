@@ -53,7 +53,7 @@ export async function TrilhaInscricao({
         });
     }
 
-    passos.push({ label: "Inscrever-se" });
+    passos.push({ label: "Criar Inscrição" });
 
     return <TrilhaBuilder passos={passos} />;
 }

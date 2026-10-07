@@ -192,7 +192,7 @@ Depois de uma mutação, invalide o Data Cache com as ações de
 Quando o miolo precisa ser `"use client"`, o princípio é o mesmo, com hidratação
 no lugar do streaming de RSC: `void prefetch` na página, `<HydrateClient>` em
 volta e `useQuery` no filho. O exemplo é `app/admin/eventos/page.tsx` — título,
-busca e o botão "Novo evento" são HTML de servidor e pintam na hora; só a grade
+busca e o botão "Criar evento" são HTML de servidor e pintam na hora; só a grade
 depende de dados.
 
 ```tsx

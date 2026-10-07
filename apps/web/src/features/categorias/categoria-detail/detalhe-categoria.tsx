@@ -69,7 +69,8 @@ export async function DetalheCategoria({
                         <Link
                             href={`/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoriaId}/inscricoes/criar`}
                         >
-                            Inscrever-se
+                            <TicketIcon className="size-4" weight="bold" />
+                            Criar Inscrição
                         </Link>
                     </Button>
                     <BotaoEditarCategoria

@@ -201,7 +201,7 @@ export function TicketInscricao({
                     ) : (
                         <TicketIcon aria-hidden="true" />
                     )}
-                    {criando ? "Criando…" : "Criar inscrição"}
+                    {criando ? "Criando…" : "Criar Inscrição"}
                 </Button>
             </footer>
         </form>

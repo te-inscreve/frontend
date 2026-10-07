@@ -13,7 +13,7 @@ import { TrilhaEventoSkeleton } from "~/shared/ui/trilha-evento";
 import { parseInteger } from "~/shared/utils/parsers";
 
 export const metadata = {
-    title: "Criar inscrição | Te Inscreve",
+    title: "Criar Inscrição | Te Inscreve",
     description: "Inscrição da entidade em uma categoria",
 };
 
@@ -23,7 +23,7 @@ const GRUPOS_POR_PAGINA = 12;
 const INTEGRANTES_POR_PAGINA = 20;
 
 /**
- * A página de criar inscrição: a entidade de quem está logado escolhe quem
+ * A página de Criar Inscrição: a entidade de quem está logado escolhe quem
  * se apresenta na categoria — um grupo (com exclusões) e/ou integrantes
  * avulsos.
  *

@@ -16,7 +16,7 @@ interface Props {
 }
 
 /**
- * A bancada de criar inscrição: o que a entidade tem à esquerda, o bilhete
+ * A bancada de Criar Inscrição: o que a entidade tem à esquerda, o bilhete
  * de quem vai à direita.
  *
  * Espelha a {@link DetalheGrupoPagina}: a mesma grade de três colunas, as

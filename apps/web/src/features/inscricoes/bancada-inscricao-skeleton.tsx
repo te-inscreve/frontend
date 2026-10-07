@@ -8,7 +8,7 @@ import { TicketInscricaoSkeleton } from "./ticket-inscricao";
 const ESQUELETOS = 4;
 
 /**
- * O fallback do portão da entidade na página de criar inscrição.
+ * O fallback do portão da entidade na página de Criar Inscrição.
  *
  * Tem a geometria final da {@link BancadaInscricao} — a mesma grade, a
  * moldura da esquerda com título, descrição, abas e barra em esqueleto, e o
