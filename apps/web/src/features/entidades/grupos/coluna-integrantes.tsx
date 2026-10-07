@@ -36,7 +36,7 @@ interface Props {
      * contagem não as distingue: as duas dão zero disponíveis.
      */
     entidadeVazia: boolean;
-    /** Quantos já estão na formação — a linha do fim da cesta os conta. */
+    /** Quantos da formação o recorte mostraria — a linha do fim os conta. */
     noGrupo: number;
     onAlternarIntegrante: (integrante: Integrante) => void;
     className?: string;

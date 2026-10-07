@@ -184,6 +184,17 @@ export function useDetalheGrupo({ id, integrantesPorPagina }: Opcoes) {
         [disponiveis, filtros.valores],
     );
 
+    /**
+     * Quantos da formação o recorte mostraria na cesta — a linha do fim dela
+     * conta só esses, ou diria que saíram pessoas que o filtro nem deixa ver.
+     */
+    const noGrupoNoRecorte = useMemo(
+        () =>
+            filtrarIntegrantes(grupoAberto?.integrantes ?? [], filtros.valores)
+                .length,
+        [grupoAberto, filtros.valores],
+    );
+
     const { hasNextPage, isFetchingNextPage, fetchNextPage } = lista;
     const carregarMaisIntegrantes = useCallback(() => {
         if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
@@ -231,6 +242,7 @@ export function useDetalheGrupo({ id, integrantesPorPagina }: Opcoes) {
         salvarFormacao,
 
         integrantes: visiveis,
+        noGrupoNoRecorte,
         /** Quantos a cesta mostraria sem o filtro — ver {@link totalDisponiveis}. */
         total: totalDisponiveis,
         /**

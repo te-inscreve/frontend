@@ -77,7 +77,7 @@ export function DetalheGrupoPagina({ id, integrantesPorPagina }: Props) {
                     integrantes={painel.integrantes}
                     total={painel.total}
                     entidadeVazia={painel.entidadeVazia}
-                    noGrupo={grupoAberto?.integrantes.length ?? 0}
+                    noGrupo={painel.noGrupoNoRecorte}
                     carregando={painel.carregando}
                     erro={painel.erro}
                     isFetchingNextPage={painel.isFetchingNextPage}

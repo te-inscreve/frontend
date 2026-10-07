@@ -13,7 +13,10 @@ import {
 } from "~/features/entidades/integrantes/cartao-integrante-alternavel";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
 import { JaMovidos } from "~/features/entidades/integrantes/ja-movidos";
-import { temFiltroAtivo } from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import {
+    filtrarIntegrantes,
+    temFiltroAtivo,
+} from "~/features/entidades/integrantes/lib/filtros-integrantes";
 import { nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { useVerticalScroll } from "~/shared/utils/use-vertical-scroll";
 
@@ -60,6 +63,14 @@ export function ListaIntegrantesSelecao({
     inscritos,
     onAlternar,
 }: Props) {
+    // Quem saiu para o ticket *e* estaria nesta lista: a linha do fim conta
+    // só o que o recorte mostraria, ou diria que saíram pessoas que o filtro
+    // nem deixaria ver. Filtra o ticket inteiro, e não só as páginas
+    // carregadas, porque quem veio de um grupo pode não estar nelas.
+    const inscritosNoRecorte = useMemo(
+        () => filtrarIntegrantes(inscritos, filtros.valores).length,
+        [inscritos, filtros.valores],
+    );
     const disponiveis = useMemo(() => {
         const selecionados = new Set(inscritos.map(({ id }) => id));
         return integrantes.filter(({ id }) => !selecionados.has(id));
@@ -97,7 +108,7 @@ export function ListaIntegrantesSelecao({
                 )}
 
                 <JaMovidos
-                    quantidade={inscritos.length}
+                    quantidade={inscritosNoRecorte}
                     destino="na inscrição"
                 />
 
