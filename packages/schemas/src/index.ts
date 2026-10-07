@@ -60,11 +60,20 @@ export type {
 } from "./modalidade";
 
 export {
+    acaoSituacaoCategoriaSchema,
+    acoesPorSituacaoCategoria,
     categoriaAninhadaSchema,
     categoriaSchema,
     formCategoriaSchema,
+    situacaoCategoriaSchema,
 } from "./categoria";
-export type { Categoria, CategoriaAninhada, FormCategoria } from "./categoria";
+export type {
+    AcaoSituacaoCategoria,
+    Categoria,
+    CategoriaAninhada,
+    FormCategoria,
+    SituacaoCategoria,
+} from "./categoria";
 
 export {
     entidadeOpcaoSchema,

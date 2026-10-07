@@ -1,6 +1,44 @@
 import { z } from "zod/v4";
 
 /**
+ * Situação de uma categoria. O backend devolve um objeto: `value` é o que a
+ * lógica compara, `label` é o texto pronto para mostrar.
+ */
+export const situacaoCategoriaSchema = z.object({
+    value: z.enum(["aberta", "fechada", "cancelada", "encerrada"]),
+    label: z.string(),
+});
+
+/**
+ * O que o endpoint de situação recebe: a ação, e não a situação de destino.
+ * `abrir` leva a `aberta`, `fechar` a `fechada`, e assim por diante.
+ */
+export const acaoSituacaoCategoriaSchema = z.enum([
+    "abrir",
+    "fechar",
+    "cancelar",
+    "encerrar",
+]);
+
+export type SituacaoCategoria = z.infer<typeof situacaoCategoriaSchema>;
+export type AcaoSituacaoCategoria = z.infer<typeof acaoSituacaoCategoriaSchema>;
+
+/**
+ * As transições que o backend aceita, a partir da situação atual. Cancelada e
+ * encerrada são finais; pedir a ação da situação em que a categoria já está é
+ * rejeitado, então ela nunca aparece na própria lista.
+ */
+export const acoesPorSituacaoCategoria: Record<
+    SituacaoCategoria["value"],
+    readonly AcaoSituacaoCategoria[]
+> = {
+    aberta: ["fechar", "cancelar", "encerrar"],
+    fechada: ["abrir", "cancelar", "encerrar"],
+    cancelada: [],
+    encerrada: [],
+};
+
+/**
  * Categoria de uma modalidade — o que `CategoriaSerializer` devolve.
  *
  * `avaliadores` é a quantidade de avaliadores da categoria, não a lista deles.
@@ -19,6 +57,7 @@ export const categoriaSchema = z.object({
     maxInscricoes: z.number().int().nullable(),
     countInscricoes: z.number().int(),
     dataApresentacao: z.iso.datetime({ offset: true }).nullable(),
+    situacao: situacaoCategoriaSchema,
 });
 
 /**
@@ -35,13 +74,16 @@ export const categoriaAninhadaSchema = categoriaSchema.omit({
  * não informa: o `id` e a `modalidade` — que, num cadastro aninhado, ainda não
  * existe quando a categoria é preenchida — e `avaliadores` e
  * `countInscricoes`, que o backend calcula a partir dos avaliadores e das
- * inscrições vinculados à categoria.
+ * inscrições vinculados à categoria. A `situacao` também fica de fora: o
+ * backend a ignora na criação e no `PATCH`, e ela só muda pelo endpoint
+ * próprio de situação.
  */
 export const formCategoriaSchema = categoriaSchema.omit({
     id: true,
     modalidade: true,
     avaliadores: true,
     countInscricoes: true,
+    situacao: true,
 });
 
 export type Categoria = z.infer<typeof categoriaSchema>;
