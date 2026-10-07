@@ -5,14 +5,18 @@ import { FloppyDiskIcon } from "@phosphor-icons/react/dist/ssr/FloppyDisk";
 import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
-import { motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 
 import { Badge, Button } from "@te-inscreve/components";
 
 import type { FormGrupo, GrupoDetalhe } from "./grupo";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
+import {
+    CartaoIntegranteAlternavel,
+    LinhaAlternavel,
+} from "~/features/entidades/integrantes/cartao-integrante-alternavel";
+import { nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { LadoDaBancada } from "./bancada";
-import { CartaoIntegranteSelecao } from "./cartao-integrante-selecao";
 import { contagemIntegrantes, formatarDataCriacao } from "./grupo";
 import { MenuGrupo } from "./menu-grupo";
 
@@ -40,19 +44,16 @@ interface Props {
  * superfície igual dos dois lados, o que marca a mudança de lado é o trajeto do
  * cartão e o sinal que ele troca — `+` na cesta, `−` aqui.
  *
- * Essa viagem não precisa de `AnimatePresence`: o cartão não desaparece — ele é
- * removido de uma lista e montado na outra no mesmo render, e é o `layoutId`
- * compartilhado que faz o Motion reconhecer os dois como o mesmo elemento e
- * animar o trajeto. Ver {@link CartaoIntegranteSelecao}.
+ * A passagem é saída e entrada nas duas listas ({@link LinhaAlternavel}), e
+ * não um cartão voando de um lado ao outro — ver
+ * {@link CartaoIntegranteAlternavel}.
  *
  * A volta para a grade é um botão "Voltar" na página do grupo, e não daqui —
  * ver `grupos/[id]/page.tsx`. Ele não depende de nenhum dado desta bancada,
  * então pinta com a casca da página, antes de o grupo chegar.
  *
- * Salvar é o pé do painel, no lugar em que a cesta põe o "Cadastrar integrante":
- * cada mão termina no que fazer depois de mexer nela. Aqui o botão é o cheio, e
- * lá o de contorno — montar a formação é o trabalho desta tela, cadastrar gente
- * é sair dela.
+ * Salvar é o pé do painel: a mão que recebe termina no que fazer depois de
+ * mexer nela.
  */
 export function DetalheGrupo({
     grupo,
@@ -90,11 +91,6 @@ export function DetalheGrupo({
             className={className}
         >
             <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <Badge variant="secondary">
-                    <UsersThreeIcon aria-hidden="true" />
-                    {contagemIntegrantes(grupo.totalIntegrantes)}
-                </Badge>
-
                 {grupo.pendenciaCarteiraVencida && (
                     <Badge variant="warning">
                         <WarningIcon
@@ -120,14 +116,8 @@ export function DetalheGrupo({
 
             {/* A formação rola por dentro, e não com a página: as duas mãos têm
                 a mesma altura, e é rolando separadas que elas continuam lado a
-                lado. `layoutScroll` porque o Motion mede em coordenadas de tela
-                e não sabe que esta caixa rolou — sem o aviso, o cartão que chega
-                da cesta nasceria deslocado. Ver a quinta armadilha de
-                `docs/animacoes.md`. */}
-            <motion.div
-                layoutScroll
-                className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1"
-            >
+                lado. */}
+            <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
                 {grupo.integrantes.length === 0 ? (
                     // O vazio é a própria área de chegada, tracejada como uma
                     // vaga esperando conteúdo — e não um parágrafo avisando que
@@ -150,19 +140,31 @@ export function DetalheGrupo({
                     // o nome trunca e o resumo quebra em três linhas — esta
                     // metade da tela já divide espaço com a cesta de
                     // integrantes.
-                    <ul className="grid gap-3 2xl:grid-cols-2">
-                        {grupo.integrantes.map((integrante) => (
-                            <CartaoIntegranteSelecao
-                                key={integrante.id}
-                                integrante={integrante}
-                                estado="membro"
-                                grupo={grupo.nome}
-                                onAlternar={onAlternarIntegrante}
-                            />
-                        ))}
-                    </ul>
+                    <div className="flex flex-col gap-2">
+                        <p
+                            aria-live="polite"
+                            className="text-muted-foreground text-xs"
+                        >
+                            Listando{" "}
+                            {contagemIntegrantes(grupo.integrantes.length)}
+                        </p>
+                        <ul className="grid gap-3 2xl:grid-cols-2">
+                            <AnimatePresence initial={false} mode="popLayout">
+                                {grupo.integrantes.map((integrante) => (
+                                    <LinhaAlternavel key={integrante.id}>
+                                        <CartaoIntegranteAlternavel
+                                            integrante={integrante}
+                                            acao="tirar"
+                                            rotulo={`Tirar ${nomeCompleto(integrante)} do grupo ${grupo.nome}`}
+                                            onAlternar={onAlternarIntegrante}
+                                        />
+                                    </LinhaAlternavel>
+                                ))}
+                            </AnimatePresence>
+                        </ul>
+                    </div>
                 )}
-            </motion.div>
+            </div>
 
             {grupo.pendenciaCarteiraVencida && (
                 <p className="text-muted-foreground shrink-0 text-xs">

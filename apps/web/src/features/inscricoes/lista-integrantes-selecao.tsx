@@ -2,17 +2,20 @@
 
 import { useMemo } from "react";
 import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
-import { AnimatePresence, motion } from "motion/react";
-
-import { EXPANSION_TRANSITION, Separator } from "@te-inscreve/components";
+import { AnimatePresence } from "motion/react";
 
 import type { FiltrosIntegrantesForm } from "~/features/entidades/integrantes/lib/use-filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { BarraFiltros } from "~/features/entidades/integrantes/barra-filtros";
+import {
+    CartaoIntegranteAlternavel,
+    LinhaAlternavel,
+} from "~/features/entidades/integrantes/cartao-integrante-alternavel";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
+import { JaMovidos } from "~/features/entidades/integrantes/ja-movidos";
 import { temFiltroAtivo } from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import { nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { useVerticalScroll } from "~/shared/utils/use-vertical-scroll";
-import { CartaoIntegranteInscricao } from "./cartao-integrante-inscricao";
 
 /** Quantos esqueletos enquanto a primeira página não chega: uma coluna cheia. */
 const ESQUELETOS = 5;
@@ -40,7 +43,7 @@ interface Props {
  * Como na cesta da bancada de grupo, quem entra na inscrição **sai** daqui:
  * a lista é quem ainda falta, e cada pessoa é clicável em um lugar só — aqui
  * para incluir, no ticket para tirar. Para a entidade não parecer encolher,
- * uma linha discreta no fim conta quantos saíram ({@link JaInscritos}).
+ * uma linha discreta no fim conta quantos saíram ({@link JaMovidos}).
  *
  * Chama `useVerticalScroll` por conta própria pelo motivo anotado em
  * {@link ListaGruposSelecao}: a aba inativa desmonta.
@@ -93,7 +96,10 @@ export function ListaIntegrantesSelecao({
                     </ul>
                 )}
 
-                <JaInscritos quantidade={inscritos.length} />
+                <JaMovidos
+                    quantidade={inscritos.length}
+                    destino="na inscrição"
+                />
 
                 <div
                     ref={triggerScrollRef}
@@ -102,31 +108,6 @@ export function ListaIntegrantesSelecao({
                 />
             </div>
         </>
-    );
-}
-
-/**
- * Quantos já estão no ticket, numa linha miúda fechando a lista — os nomes
- * estão no próprio ticket. Some quando o ticket está vazio. `aria-live`
- * para anunciar cada inclusão: o cartão clicado some, e sem isso o leitor de
- * tela não diria para onde foi.
- */
-function JaInscritos({ quantidade }: { quantidade: number }) {
-    if (quantidade === 0) return null;
-
-    return (
-        <div className="text-muted-foreground mt-3 flex items-center gap-2.5 py-1 text-xs">
-            <Separator className="w-auto flex-1" />
-
-            <span aria-live="polite">
-                {quantidade === 1
-                    ? "+ 1 integrante inscrito"
-                    : `+ ${quantidade} integrantes inscritos`}
-            </span>
-            {/* `w-auto` desfaz o `w-full` do `Separator`, que com
-                `shrink-0` estouraria a linha. */}
-            <Separator className="w-auto flex-1" />
-        </div>
     );
 }
 
@@ -177,7 +158,7 @@ function ConteudoDaLista({
         }
 
         return (
-            <p className="text-muted-foreground rounded-xl border border-dashed p-4 text-sm">
+            <p className="text-muted-foreground bg-card rounded-lg border border-dashed p-4 text-center text-sm">
                 {mensagemDeVazio(integrantes.length > 0, temFiltro)}
             </p>
         );
@@ -189,21 +170,14 @@ function ConteudoDaLista({
                 daqui enquanto cresce lá, e volta quando sai de lá. */}
             <AnimatePresence initial={false} mode="popLayout">
                 {disponiveis.map((integrante) => (
-                    <motion.li
-                        key={integrante.id}
-                        className="min-w-0"
-                        layout
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={EXPANSION_TRANSITION}
-                    >
-                        <CartaoIntegranteInscricao
+                    <LinhaAlternavel key={integrante.id}>
+                        <CartaoIntegranteAlternavel
                             integrante={integrante}
-                            lado="lista"
+                            acao="incluir"
+                            rotulo={`Incluir ${nomeCompleto(integrante)} na inscrição`}
                             onAlternar={onAlternar}
                         />
-                    </motion.li>
+                    </LinhaAlternavel>
                 ))}
             </AnimatePresence>
         </ul>

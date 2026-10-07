@@ -1,25 +1,23 @@
 "use client";
 
-import Link from "next/link";
 import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
-import { UserPlusIcon } from "@phosphor-icons/react/dist/ssr/UserPlus";
-import { motion } from "motion/react";
-
-import { Button } from "@te-inscreve/components";
+import { AnimatePresence } from "motion/react";
 
 import type { FiltrosIntegrantesForm } from "~/features/entidades/integrantes/lib/use-filtros-integrantes";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { BarraFiltros } from "~/features/entidades/integrantes/barra-filtros";
+import {
+    CartaoIntegranteAlternavel,
+    LinhaAlternavel,
+} from "~/features/entidades/integrantes/cartao-integrante-alternavel";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
+import { JaMovidos } from "~/features/entidades/integrantes/ja-movidos";
 import { temFiltroAtivo } from "~/features/entidades/integrantes/lib/filtros-integrantes";
+import { nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { LadoDaBancada } from "./bancada";
-import { CartaoIntegranteSelecao } from "./cartao-integrante-selecao";
 
 /** Quantos esqueletos enquanto a primeira página não chega: uma coluna cheia. */
 const ESQUELETOS = 5;
-
-/** Onde o cadastro de integrante acontece — esta tela só aponta para lá. */
-const CADASTRO_DE_INTEGRANTE = "/admin/minha-entidade/integrantes?novo";
 
 interface Props {
     integrantes: Integrante[];
@@ -38,6 +36,8 @@ interface Props {
      * contagem não as distingue: as duas dão zero disponíveis.
      */
     entidadeVazia: boolean;
+    /** Quantos já estão na formação — a linha do fim da cesta os conta. */
+    noGrupo: number;
     onAlternarIntegrante: (integrante: Integrante) => void;
     className?: string;
 }
@@ -51,7 +51,7 @@ interface Props {
  * e quem entra no grupo some da cesta para aparecer do outro lado.
  *
  * Fora de um grupo aberto ela não teria o que fazer. Os cartões não abrem o
- * detalhe da pessoa (ver {@link CartaoIntegranteSelecao}), então, sem destino, a
+ * detalhe da pessoa (ver {@link CartaoIntegranteAlternavel}), então, sem destino, a
  * lista viraria uma cópia inerte da tela de integrantes ao lado da grade de
  * grupos — ocupando a metade da tela sem responder a clique nenhum.
  *
@@ -62,13 +62,8 @@ interface Props {
  * e a lista sem precisar estar ali.
  *
  * A rolagem é da cesta, e não da página, para a lista de gente e a formação
- * andarem separadas. O `layoutScroll` na caixa rolável é o que faz o cartão que
- * viaja até o grupo sair do lugar certo mesmo com a cesta rolada — ver a quinta
- * armadilha de `docs/animacoes.md`.
- *
- * O cadastro de integrante não mora aqui: o botão do fim leva à tela de
- * integrantes já com o formulário aberto (`?novo`). É uma tarefa de outra tela,
- * e duplicar o formulário faria duas portas para o mesmo cadastro.
+ * andarem separadas. Para a entidade não parecer encolher, uma linha discreta
+ * no fim conta quantos já foram para o grupo ({@link JaMovidos}).
  */
 export function ColunaIntegrantes({
     integrantes,
@@ -80,6 +75,7 @@ export function ColunaIntegrantes({
     filtros,
     grupo,
     entidadeVazia,
+    noGrupo,
     onAlternarIntegrante,
     className,
 }: Props) {
@@ -103,13 +99,7 @@ export function ColunaIntegrantes({
                 total={total}
             />
 
-            {/* `layoutScroll`: o Motion mede posições em coordenadas de tela e
-                não sabe sozinho que este contêiner rolou. Sem o aviso, o cartão
-                que viaja para a formação nasceria deslocado. */}
-            <motion.div
-                layoutScroll
-                className="-mx-1 min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-1"
-            >
+            <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
                 <ConteudoDaCesta
                     integrantes={integrantes}
                     carregando={carregando}
@@ -127,15 +117,10 @@ export function ColunaIntegrantes({
                     </ul>
                 )}
 
-                <div ref={sentinelaRef} aria-hidden="true" className="h-px" />
-            </motion.div>
+                <JaMovidos quantidade={noGrupo} destino="no grupo" />
 
-            <Button asChild variant="outline" className="shrink-0">
-                <Link href={CADASTRO_DE_INTEGRANTE}>
-                    <UserPlusIcon aria-hidden="true" />
-                    Cadastrar integrante
-                </Link>
-            </Button>
+                <div ref={sentinelaRef} aria-hidden="true" className="h-px" />
+            </div>
         </LadoDaBancada>
     );
 }
@@ -194,15 +179,20 @@ function ConteudoDaCesta({
 
     return (
         <ul className="grid gap-3">
-            {integrantes.map((integrante) => (
-                <CartaoIntegranteSelecao
-                    key={integrante.id}
-                    integrante={integrante}
-                    estado="disponivel"
-                    grupo={grupo}
-                    onAlternar={onAlternarIntegrante}
-                />
-            ))}
+            {/* As mesmas entrada e saída das linhas da formação: a pessoa some
+                daqui enquanto cresce lá, e volta quando sai de lá. */}
+            <AnimatePresence initial={false} mode="popLayout">
+                {integrantes.map((integrante) => (
+                    <LinhaAlternavel key={integrante.id}>
+                        <CartaoIntegranteAlternavel
+                            integrante={integrante}
+                            acao="incluir"
+                            rotulo={`Incluir ${nomeCompleto(integrante)} no grupo ${grupo}`}
+                            onAlternar={onAlternarIntegrante}
+                        />
+                    </LinhaAlternavel>
+                ))}
+            </AnimatePresence>
         </ul>
     );
 }

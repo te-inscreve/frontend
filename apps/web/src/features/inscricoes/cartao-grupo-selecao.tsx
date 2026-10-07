@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusCircleIcon } from "@phosphor-icons/react/dist/ssr/PlusCircle";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
 import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
@@ -23,7 +23,9 @@ interface Props {
  * grupo nenhum, só as pessoas que vieram dele. Aplicar de novo não repete
  * ninguém.
  *
- * O sinal do canto é o "mais" de acrescentar, e vira spinner enquanto
+ * O sinal do canto é o "mais" de acrescentar, revelado no hover (e no foco
+ * por teclado) com um leve crescer — o mesmo gesto do
+ * {@link CartaoIntegranteAlternavel}. Vira spinner, sempre à vista, enquanto
  * `grupo.getById` não responde — a espera é localizada neste cartão.
  *
  * O clique vale no cartão inteiro, pelo mesmo motivo de sempre: é uma lista
@@ -37,7 +39,7 @@ export function CartaoGrupoSelecao({ grupo, aplicando, onAplicar }: Props) {
                 aria-label={`Adicionar os integrantes do grupo ${grupo.nome} à inscrição`}
                 aria-busy={aplicando}
                 onClick={() => onAplicar(grupo)}
-                className="focus-visible:ring-ring/50 bg-card border-border/70 hover:border-primary/50 hover:bg-primary/5 flex h-full w-full cursor-pointer flex-col gap-3 rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="focus-visible:ring-ring/50 group bg-card border-border/70 hover:bg-card/50 flex h-full w-full cursor-pointer flex-col gap-3 rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
                 <ConteudoCartaoGrupo
                     grupo={grupo}
@@ -49,11 +51,11 @@ export function CartaoGrupoSelecao({ grupo, aplicando, onAplicar }: Props) {
                                 className="text-muted-foreground mt-0.5 shrink-0 animate-spin"
                             />
                         ) : (
-                            <PlusCircleIcon
+                            <PlusIcon
                                 aria-hidden="true"
                                 size={20}
                                 weight="bold"
-                                className="text-muted-foreground mt-0.5 shrink-0"
+                                className="text-primary mt-0.5 shrink-0 opacity-0 transition duration-150 ease-out group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100 motion-safe:scale-50"
                             />
                         )
                     }

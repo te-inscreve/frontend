@@ -2,26 +2,25 @@
 
 import type { Control } from "react-hook-form";
 import { useId } from "react";
-import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
+import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 import { StackIcon } from "@phosphor-icons/react/dist/ssr/Stack";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UserIcon } from "@phosphor-icons/react/dist/ssr/User";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { useFormState } from "react-hook-form";
 
 import type { Categoria, ModalidadeDetalhe } from "@te-inscreve/schemas";
-import {
-    Button,
-    cn,
-    EXPANSION_TRANSITION,
-    FieldError,
-} from "@te-inscreve/components";
+import { Button, cn, FieldError } from "@te-inscreve/components";
 import { Skeleton } from "@te-inscreve/components/skeleton";
 
 import type { InscricaoFormValues } from "./lib/inscricao-form-schema";
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import { CartaoIntegranteInscricao } from "./cartao-integrante-inscricao";
+import {
+    CartaoIntegranteAlternavel,
+    LinhaAlternavel,
+} from "~/features/entidades/integrantes/cartao-integrante-alternavel";
+import { nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { PicoteVertical, RestricoesDaCategoria } from "./partes-do-ticket";
 
 /** Quantos esqueletos no máximo enquanto a formação do grupo não chega. */
@@ -112,13 +111,13 @@ export function BilhetesIndividuais({
 
             <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 py-1.5">
                 {quantidade === 0 && !grupoAplicando ? (
-                    <div className="bg-card flex h-full min-h-48 flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-center text-sm">
+                    <div className="text-muted-foreground bg-card flex h-full min-h-48 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center text-sm">
                         <UserIcon
                             aria-hidden="true"
                             size={32}
                             className="opacity-60"
                         />
-                        <p className="text-muted-foreground max-w-sm">
+                        <p className="max-w-sm">
                             Nenhuma inscrição ainda. Cada integrante adicionado
                             vira uma inscrição própria — clique em um grupo para
                             trazer todos de uma vez.
@@ -134,25 +133,15 @@ export function BilhetesIndividuais({
                         </p>
 
                         <ul className="grid gap-3">
-                            {/* O mesmo arranjo das linhas do bilhete em grupo:
-                            ver o comentário em `ticket-inscricao.tsx`. */}
                             <AnimatePresence initial={false} mode="popLayout">
                                 {integrantes.map((integrante, indice) => (
-                                    <motion.li
-                                        key={integrante.id}
-                                        className="min-w-0"
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        transition={EXPANSION_TRANSITION}
-                                    >
+                                    <LinhaAlternavel key={integrante.id}>
                                         <BilheteIndividual
                                             integrante={integrante}
                                             numero={indice + 1}
                                             onAlternar={onAlternarIntegrante}
                                         />
-                                    </motion.li>
+                                    </LinhaAlternavel>
                                 ))}
                             </AnimatePresence>
 
@@ -180,7 +169,7 @@ export function BilhetesIndividuais({
 
                 <Button type="submit" disabled={criando}>
                     {criando ? (
-                        <CircleNotchIcon
+                        <SpinnerGapIcon
                             aria-hidden="true"
                             className="animate-spin"
                         />
@@ -200,7 +189,7 @@ export function BilhetesIndividuais({
  * Uma inscrição individual: a pessoa à esquerda, o canhoto numerado à
  * direita, separados por um picote de pé.
  *
- * O corpo é o {@link CartaoIntegranteInscricao} do bilhete em grupo, sem a
+ * O corpo é o {@link CartaoIntegranteAlternavel} do bilhete em grupo, sem a
  * borda própria — a borda é a do bilhete —, e continua sendo o botão de
  * tirar a pessoa. O canhoto é enfeite com número, e fica fora da leitura
  * (`aria-hidden`): o número é só a posição na lista.
@@ -216,9 +205,10 @@ function BilheteIndividual({
 }) {
     return (
         <div className="bg-card flex min-w-0 rounded-xl border">
-            <CartaoIntegranteInscricao
+            <CartaoIntegranteAlternavel
                 integrante={integrante}
-                lado="ticket"
+                acao="tirar"
+                rotulo={`Tirar ${nomeCompleto(integrante)} da inscrição`}
                 onAlternar={onAlternar}
                 className="min-w-0 flex-1 rounded-r-none border-0"
             />

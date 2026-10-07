@@ -42,9 +42,9 @@ interface Props {
  * o material. A cesta vem primeiro no DOM mesmo assim: quem navega por teclado
  * ou leitor de tela encontra a lista na ordem em que ela é usada.
  *
- * O `MotionConfig` com `reducedMotion="user"` vale para o cartão que viaja entre
- * as duas mãos: o `ExpandableDialog` traz o seu por dentro, mas a animação daqui
- * é da tela, e sem este aviso ela ignoraria quem pediu menos movimento no
+ * O `MotionConfig` com `reducedMotion="user"` vale para os cartões que entram e
+ * saem das duas mãos: o `ExpandableDialog` traz o seu por dentro, mas a animação
+ * daqui é da tela, e sem este aviso ela ignoraria quem pediu menos movimento no
  * sistema. Ver a seção 5 de `docs/animacoes.md`.
  *
  * O nome do grupo não é conhecido antes de `grupo.getById` responder — ao
@@ -77,6 +77,7 @@ export function DetalheGrupoPagina({ id, integrantesPorPagina }: Props) {
                     integrantes={painel.integrantes}
                     total={painel.total}
                     entidadeVazia={painel.entidadeVazia}
+                    noGrupo={grupoAberto?.integrantes.length ?? 0}
                     carregando={painel.carregando}
                     erro={painel.erro}
                     isFetchingNextPage={painel.isFetchingNextPage}

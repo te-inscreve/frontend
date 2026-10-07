@@ -2,28 +2,27 @@
 
 import type { Control } from "react-hook-form";
 import { useId } from "react";
-import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
+import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { useFormState } from "react-hook-form";
 
 import type { Categoria, ModalidadeDetalhe } from "@te-inscreve/schemas";
-import {
-    Button,
-    cn,
-    EXPANSION_TRANSITION,
-    FieldError,
-} from "@te-inscreve/components";
+import { Button, cn, FieldError } from "@te-inscreve/components";
 import { Skeleton } from "@te-inscreve/components/skeleton";
 
 import type { InscricaoFormValues } from "./lib/inscricao-form-schema";
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
 import { contagemIntegrantes } from "~/features/entidades/grupos/grupo";
+import {
+    CartaoIntegranteAlternavel,
+    LinhaAlternavel,
+} from "~/features/entidades/integrantes/cartao-integrante-alternavel";
 import { CartaoIntegranteSkeleton } from "~/features/entidades/integrantes/cartao-integrante-skeleton";
+import { nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { CampoNomeConcorrente } from "./campo-nome-concorrente";
-import { CartaoIntegranteInscricao } from "./cartao-integrante-inscricao";
 import { RecorteDoTicket, RestricoesDaCategoria } from "./partes-do-ticket";
 
 /** Quantos esqueletos no máximo enquanto a formação do grupo não chega. */
@@ -66,9 +65,9 @@ interface Props {
  * O corpo rola por dentro, como as listas do outro lado: as duas mãos têm a
  * mesma altura, e é rolando separadas que continuam lado a lado.
  *
- * As linhas entram e saem com `AnimatePresence` + `motion.li layout` (o
- * padrão de `grade-grupos.tsx`), e não com `layoutId` compartilhado com a
- * lista da esquerda — ver {@link CartaoIntegranteInscricao}.
+ * As linhas entram e saem com {@link LinhaAlternavel}, e não com `layoutId`
+ * compartilhado com a lista da esquerda — ver
+ * {@link CartaoIntegranteAlternavel}.
  *
  * Enquanto `grupo.getById` carrega, o corpo mostra esqueletos no fim da
  * lista — onde a formação vai entrar, tantos quantos o cartão do grupo
@@ -137,13 +136,13 @@ export function TicketInscricao({
                     // O vazio é a própria área de chegada, tracejada como uma
                     // vaga esperando conteúdo — o mesmo desenho do grupo vazio
                     // na bancada de grupo.
-                    <div className="bg-card flex h-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center text-sm">
+                    <div className="text-muted-foreground bg-card flex h-full w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center text-sm">
                         <UsersThreeIcon
                             aria-hidden="true"
                             size={32}
                             className="opacity-60"
                         />
-                        <p className="text-muted-foreground max-w-sm">
+                        <p className="max-w-sm">
                             Nenhum integrante adicionado ainda. Clique em um
                             grupo para trazer a formação dele, ou em um
                             integrante para adicioná-lo à inscrição.
@@ -153,36 +152,21 @@ export function TicketInscricao({
                     <div className="flex flex-col gap-2">
                         <p
                             aria-live="polite"
-                            className="text-muted-foreground text-xs"
+                            className="text-muted-foreground text-sm"
                         >
-                            Listando {contagemIntegrantes(integrantes.length)}
+                            {contagemIntegrantes(integrantes.length)}
                         </p>
                         <ul className="grid gap-3">
-                            {/* `initial={false}`: o que já está no ticket na
-                            primeira pintura não nasce animando. `popLayout`
-                            tira a linha que sai do fluxo na hora, para as
-                            vizinhas deslizarem sem esperar. */}
                             <AnimatePresence initial={false} mode="popLayout">
                                 {integrantes.map((integrante) => (
-                                    <motion.li
-                                        key={integrante.id}
-                                        // `min-w-0`: item de grade nasce com
-                                        // `min-width: auto` e não encolhe abaixo
-                                        // do conteúdo — em tela estreita o nome
-                                        // empurrava o ícone para fora do bilhete.
-                                        className="min-w-0"
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        transition={EXPANSION_TRANSITION}
-                                    >
-                                        <CartaoIntegranteInscricao
+                                    <LinhaAlternavel key={integrante.id}>
+                                        <CartaoIntegranteAlternavel
                                             integrante={integrante}
-                                            lado="ticket"
+                                            acao="tirar"
+                                            rotulo={`Tirar ${nomeCompleto(integrante)} da inscrição`}
                                             onAlternar={onAlternarIntegrante}
                                         />
-                                    </motion.li>
+                                    </LinhaAlternavel>
                                 ))}
                             </AnimatePresence>
 
@@ -210,7 +194,7 @@ export function TicketInscricao({
 
                 <Button type="submit" disabled={criando}>
                     {criando ? (
-                        <CircleNotchIcon
+                        <SpinnerGapIcon
                             aria-hidden="true"
                             className="animate-spin"
                         />
