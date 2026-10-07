@@ -63,6 +63,7 @@ export {
     acaoSituacaoCategoriaSchema,
     acoesPorSituacaoCategoria,
     categoriaAninhadaSchema,
+    categoriaDetalheSchema,
     categoriaSchema,
     formCategoriaSchema,
     situacaoCategoriaSchema,
@@ -71,6 +72,7 @@ export type {
     AcaoSituacaoCategoria,
     Categoria,
     CategoriaAninhada,
+    CategoriaDetalhe,
     FormCategoria,
     SituacaoCategoria,
 } from "./categoria";

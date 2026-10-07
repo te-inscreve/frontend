@@ -61,6 +61,15 @@ export const categoriaSchema = z.object({
 });
 
 /**
+ * Categoria como o detalhe a devolve: a mesma da listagem e mais o que só faz
+ * sentido para quem está olhando — `canInscrever` diz se a entidade do usuário
+ * ainda pode se inscrever nela, ou se já tem inscrição.
+ */
+export const categoriaDetalheSchema = categoriaSchema.extend({
+    canInscrever: z.boolean(),
+});
+
+/**
  * Categoria como ela chega aninhada no detalhe da modalidade: sem `id` e sem
  * `modalidade`, porque os dois são redundantes ali — a modalidade é o objeto
  * que a contém.
@@ -88,4 +97,5 @@ export const formCategoriaSchema = categoriaSchema.omit({
 
 export type Categoria = z.infer<typeof categoriaSchema>;
 export type CategoriaAninhada = z.infer<typeof categoriaAninhadaSchema>;
+export type CategoriaDetalhe = z.infer<typeof categoriaDetalheSchema>;
 export type FormCategoria = z.infer<typeof formCategoriaSchema>;

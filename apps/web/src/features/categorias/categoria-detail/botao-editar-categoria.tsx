@@ -18,6 +18,7 @@ import {
     ExpandableDialogTrigger,
 } from "@te-inscreve/components";
 
+import type { PeriodoEvento } from "~/features/categorias/form-categoria/campos-categoria";
 import { FormCategoriaDialogo } from "~/features/categorias/form-categoria/form-categoria-dialogo";
 
 interface Props {
@@ -25,6 +26,8 @@ interface Props {
     /** A modalidade não está na rota, mas o endpoint da categoria é aninhado nela. */
     modalidadeId: number;
     categoria: Categoria;
+    /** Limita o dia da apresentação aos dias do evento, como na criação. */
+    periodoEvento: PeriodoEvento;
 }
 
 /**
@@ -38,6 +41,7 @@ export function BotaoEditarCategoria({
     eventoId,
     modalidadeId,
     categoria,
+    periodoEvento,
 }: Props) {
     const [aberto, setAberto] = useState(false);
 
@@ -85,6 +89,7 @@ export function BotaoEditarCategoria({
                         eventoId={eventoId}
                         modalidadeId={modalidadeId}
                         categoria={categoria}
+                        periodoEvento={periodoEvento}
                         onSalva={() => setAberto(false)}
                     />
                 </ExpandableDialogBody>

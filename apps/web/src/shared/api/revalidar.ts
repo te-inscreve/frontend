@@ -76,9 +76,13 @@ export async function revalidarCategoria(
     updateTag(tagCategoria(categoriaId));
 }
 
-/** Depois de criar inscrições: a aba de inscritos da categoria envelheceu. */
+/**
+ * Depois de criar inscrições: a aba de inscritos da categoria envelheceu, e o
+ * detalhe dela também — o `canInscrever` que decide o botão de inscrição.
+ */
 export async function revalidarInscricoes(categoriaId: number) {
     updateTag(tagInscricoesDaCategoria(categoriaId));
+    updateTag(tagCategoria(categoriaId));
 }
 
 /**

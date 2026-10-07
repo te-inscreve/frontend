@@ -1,7 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
-import type { Categoria } from "@te-inscreve/schemas";
+import type { Categoria, CategoriaDetalhe } from "@te-inscreve/schemas";
 import {
     acaoSituacaoCategoriaSchema,
     formCategoriaSchema,
@@ -54,7 +54,7 @@ export const categoriaRouter = {
             }),
         )
         .query(async ({ ctx, input }) => {
-            const result = await ctx.restClient.get<Categoria>(
+            const result = await ctx.restClient.get<CategoriaDetalhe>(
                 `/eventos/${input.eventoId}/modalidades/${input.modalidadeId}/categorias/${input.categoriaId}/`,
                 {
                     next: {

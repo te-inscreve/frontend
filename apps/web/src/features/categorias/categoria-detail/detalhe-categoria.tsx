@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr/ClipboardText";
+import { SealCheckIcon } from "@phosphor-icons/react/dist/ssr/SealCheck";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UserCheckIcon } from "@phosphor-icons/react/dist/ssr/UserCheck";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
@@ -15,8 +16,8 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 
-import { ListaInscricoesSkeleton } from "~/features/inscricoes/lista-inscricoes";
 import { SituacaoCategoriaBadge } from "~/features/categorias/situacao-categoria-badge";
+import { ListaInscricoesSkeleton } from "~/features/inscricoes/lista-inscricoes";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { AcoesCategoria } from "./acoes-categoria";
 import { BotaoEditarCategoria } from "./botao-editar-categoria";
@@ -41,23 +42,30 @@ export async function DetalheCategoria({
     modalidadeId,
     categoriaId,
 }: Props) {
-    const categoria = await getQueryClient().fetchQuery(
-        trpc.categoria.getById.queryOptions({
-            eventoId,
-            modalidadeId,
-            categoriaId,
-        }),
-    );
-    const modalidade = await getQueryClient().fetchQuery(
-        trpc.modalidade.getById.queryOptions({
-            eventoId,
-            modalidadeId,
-        }),
-    );
+    // O evento já foi disparado pela página (é a mesma requisição da trilha):
+    // daqui sai o período que limita o dia da apresentação na edição.
+    const [categoria, modalidade, evento] = await Promise.all([
+        getQueryClient().fetchQuery(
+            trpc.categoria.getById.queryOptions({
+                eventoId,
+                modalidadeId,
+                categoriaId,
+            }),
+        ),
+        getQueryClient().fetchQuery(
+            trpc.modalidade.getById.queryOptions({
+                eventoId,
+                modalidadeId,
+            }),
+        ),
+        getQueryClient().fetchQuery(
+            trpc.evento.getById.queryOptions({ id: eventoId }),
+        ),
+    ]);
 
     // Nulo é 404 do backend: categoria que não existe, ou que não pertence à
     // modalidade daquele evento.
-    if (!categoria || !modalidade) notFound();
+    if (!categoria || !modalidade || !evento) notFound();
 
     return (
         <>
@@ -70,18 +78,35 @@ export async function DetalheCategoria({
                         <SituacaoCategoriaBadge situacao={categoria.situacao} />
                     </div>
 
-                    <Button asChild>
-                        <Link
-                            href={`/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoriaId}/inscricoes/criar`}
-                        >
-                            <TicketIcon className="size-4" weight="bold" />
-                            Criar Inscrição
-                        </Link>
-                    </Button>
+                    {/* Uma inscrição por entidade: quem já tem a sua vê o
+                        aviso no lugar do botão, com a mesma altura dele. */}
+                    {categoria.canInscrever ? (
+                        <Button asChild>
+                            <Link
+                                href={`/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoriaId}/inscricoes/criar`}
+                            >
+                                <TicketIcon className="size-4" weight="bold" />
+                                Criar Inscrição
+                            </Link>
+                        </Button>
+                    ) : (
+                        <p className="text-muted-foreground bg-card inline-flex h-9 items-center gap-1 rounded-md border border-dashed px-3 text-sm">
+                            <SealCheckIcon
+                                aria-hidden="true"
+                                className="text-primary size-4"
+                                weight="fill"
+                            />
+                            Entidade já inscrita
+                        </p>
+                    )}
                     <BotaoEditarCategoria
                         eventoId={eventoId}
                         modalidadeId={modalidadeId}
                         categoria={categoria}
+                        periodoEvento={{
+                            inicio: evento.dataInicio,
+                            fim: evento.dataFim,
+                        }}
                     />
                     <AcoesCategoria
                         eventoId={eventoId}
@@ -89,7 +114,7 @@ export async function DetalheCategoria({
                         categoria={categoria}
                     />
                 </div>
-                <dl className="text-muted-foreground flex flex-col gap-1 text-sm sm:flex-row sm:gap-4">
+                <dl className="flex flex-col gap-1 text-sm sm:flex-row sm:gap-4">
                     <Resumo
                         icone={<UsersThreeIcon />}
                         termo="Faixa etária"
@@ -101,19 +126,21 @@ export async function DetalheCategoria({
                         // Nulo é ausência de teto, e não zero inscrições.
                         valor={
                             categoria.maxInscricoes === null
-                                ? "Sem limite"
-                                : `Até ${categoria.maxInscricoes}`
+                                ? "Sem limite de inscrições"
+                                : `Até ${categoria.maxInscricoes} inscrições`
                         }
                     />
                     <Resumo
-                        icone={<UserCheckIcon />}
-                        termo="Avaliadores"
-                        // Nulo é categoria sem avaliador definido, não zero.
-                        valor={
-                            categoria.avaliadores === null
-                                ? "Nenhum definido"
-                                : String(categoria.avaliadores)
+                        icone={
+                            modalidade.isGrupo ? (
+                                <UsersThreeIcon />
+                            ) : (
+                                <UserCheckIcon />
+                            )
                         }
+                        termo="Formato"
+                        // Nulo é categoria sem avaliador definido, não zero.
+                        valor={`Modalidade ${modalidade.isGrupo ? " em grupo" : " individual"}`}
                     />
                 </dl>
             </header>
@@ -192,7 +219,10 @@ function Resumo({
 }) {
     return (
         <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="[&_svg]:size-4">
+            <span
+                aria-hidden="true"
+                className="text-muted-foreground [&_svg]:size-4"
+            >
                 {icone}
             </span>
             <dt className="sr-only">{termo}</dt>
