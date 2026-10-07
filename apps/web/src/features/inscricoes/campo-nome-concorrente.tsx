@@ -34,6 +34,11 @@ interface Props {
  * criar está no rodapé, e um Enter aqui é "pronto", não "inscreva". Inválido,
  * o campo fica editável sozinho — o RHF leva o foco até ele no envio, e um
  * foco num campo travado não serviria de nada.
+ *
+ * Focar o campo também liga a edição (`onFocus`): sem isso, o campo aberto
+ * só pelo erro fecharia na primeira letra — digitar revalida, o erro some, e
+ * com ele o motivo de o `input` estar montado. Aberto assim, ele só fecha no
+ * `blur`, como o aberto pelo lápis.
  */
 export function CampoNomeConcorrente({ control }: Props) {
     const id = useId();
@@ -41,7 +46,9 @@ export function CampoNomeConcorrente({ control }: Props) {
     const [editando, setEditando] = useState(false);
 
     useEffect(() => {
-        if (!editando) return;
+        // Já focado é a edição ligada pelo próprio foco: selecionar tudo ali
+        // atropelaria o cursor de quem clicou no meio do texto.
+        if (!editando || document.activeElement === inputRef.current) return;
         inputRef.current?.focus();
         inputRef.current?.select();
     }, [editando]);
@@ -78,6 +85,7 @@ export function CampoNomeConcorrente({ control }: Props) {
                                             autoComplete="off"
                                             aria-invalid={fieldState.invalid}
                                             placeholder="Sem nome"
+                                            onFocus={() => setEditando(true)}
                                             onBlur={() => {
                                                 field.onBlur();
                                                 setEditando(false);
