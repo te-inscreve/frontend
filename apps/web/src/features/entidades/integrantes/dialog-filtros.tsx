@@ -99,6 +99,12 @@ export function DialogFiltros({ filtros }: Props) {
                 o gatilho fica para trás do modal. */}
             <div className="relative">
                 <ExpandableDialogTrigger
+                    // Sem texto visível: o nome do botão vai aqui.
+                    aria-label={
+                        ativos === 0
+                            ? "Filtros"
+                            : `Filtros (${ativos} ${ativos === 1 ? "ativo" : "ativos"})`
+                    }
                     className={cn(
                         buttonVariants({ variant: "outline" }),
                         "h-10 transition-colors",

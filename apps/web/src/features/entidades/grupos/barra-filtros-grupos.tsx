@@ -1,14 +1,13 @@
 "use client";
 
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
-import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 import { Controller } from "react-hook-form";
 
-import { Button, Input } from "@te-inscreve/components";
+import { Input } from "@te-inscreve/components";
 
 import type { FiltrosGruposForm } from "./use-filtros-grupos";
 import { DialogFiltrosGrupos } from "./dialog-filtros-grupos";
-import { filtrosGruposVazios, temFiltroGrupoAtivo } from "./filtros-grupos";
+import { temFiltroGrupoAtivo } from "./filtros-grupos";
 
 interface Props {
     /** O recorte em uso — ver `useFiltrosGrupos`. */
@@ -21,7 +20,8 @@ interface Props {
 /**
  * A barra de recorte da lista de grupos: os controles numa linha, a contagem
  * embaixo — o mesmo desenho de `BarraFiltros`, dos integrantes, para as duas
- * abas da inscrição se lerem como a mesma barra trocando de assunto.
+ * abas da inscrição se lerem como a mesma barra trocando de assunto. Por
+ * isso também é uma linha só (`flex-nowrap`), e limpar é do diálogo, como lá.
  *
  * Os ids são próprios (`filtro-nome-grupos`) porque a barra de integrantes
  * mora na outra aba da mesma tela: só uma está montada por vez, mas ids
@@ -33,7 +33,7 @@ export function BarraFiltrosGrupos({ filtros, resultados, total }: Props) {
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-nowrap items-center gap-2">
                 <div className="relative min-w-52 flex-1 sm:max-w-xs">
                     <MagnifyingGlassIcon
                         aria-hidden="true"
@@ -56,18 +56,6 @@ export function BarraFiltrosGrupos({ filtros, resultados, total }: Props) {
                 </div>
 
                 <DialogFiltrosGrupos filtros={filtros} />
-
-                {ativo && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => form.reset(filtrosGruposVazios)}
-                    >
-                        <XIcon aria-hidden="true" />
-                        Limpar filtros
-                    </Button>
-                )}
             </div>
 
             <p aria-live="polite" className="text-muted-foreground text-sm">

@@ -17,7 +17,6 @@ import {
     ExpandableDialogFooter,
     ExpandableDialogHeader,
     ExpandableDialogIcon,
-    ExpandableDialogLabel,
     ExpandableDialogTitle,
     ExpandableDialogTrigger,
     Label,
@@ -88,23 +87,34 @@ export function DialogFiltrosGrupos({ filtros }: Props) {
             {/* `buttonVariants` em vez de `<Button asChild>` e `transition-colors`
                 no fim pelos motivos anotados em `dialog-filtros.tsx`: o gatilho
                 já é um `motion.button`, e o `transition-all` do botão
-                disputaria o `transform` com o Motion. */}
-            <ExpandableDialogTrigger
-                className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "h-10 transition-colors",
-                )}
-            >
-                <FunilCompartilhado />
-                <ExpandableDialogLabel className="font-semibold">
-                    Filtros
-                </ExpandableDialogLabel>
+                disputaria o `transform` com o Motion.
+
+                Só o funil, com a contagem num selo no canto — o mesmo gatilho
+                do diálogo de integrantes, para a barra não mudar de forma ao
+                trocar de aba. Sem texto visível, o nome vai no `aria-label`. */}
+            <div className="relative">
+                <ExpandableDialogTrigger
+                    aria-label={
+                        ativos === 0
+                            ? "Filtros"
+                            : `Filtros (${ativos} ${ativos === 1 ? "ativo" : "ativos"})`
+                    }
+                    className={cn(
+                        buttonVariants({ variant: "outline" }),
+                        "h-10 transition-colors",
+                    )}
+                >
+                    <FunilCompartilhado />
+                </ExpandableDialogTrigger>
                 {ativos > 0 && (
-                    <Badge variant="secondary" className="ml-1">
+                    <Badge
+                        variant="destructive"
+                        className="absolute -top-1.5 -right-1.5 aspect-square px-1.5"
+                    >
                         {ativos}
                     </Badge>
                 )}
-            </ExpandableDialogTrigger>
+            </div>
 
             <ExpandableDialogContent className="max-w-md!">
                 <ExpandableDialogHeader>
