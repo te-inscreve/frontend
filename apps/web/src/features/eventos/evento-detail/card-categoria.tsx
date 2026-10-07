@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
-import { CheckIcon } from "@phosphor-icons/react/dist/ssr/Check";
-import { FlagCheckeredIcon } from "@phosphor-icons/react/dist/ssr/FlagCheckered";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 
 import type { CategoriaAninhada } from "@te-inscreve/schemas";
-import { Badge } from "@te-inscreve/components";
 
+import { SituacaoCategoriaBadge } from "~/features/categorias/situacao-categoria-badge";
 import { formatDateTime } from "~/shared/utils/format-date";
 
 interface Props {
@@ -20,9 +18,6 @@ interface Props {
 }
 
 export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
-    const situacao = sortearSituacao();
-    const estilo = ESTILOS[situacao];
-
     return (
         <Link
             href={`/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoria.id}`}
@@ -33,7 +28,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
             // é a própria borda.
             className="bg-border focus-visible:bg-ring group flex w-100 shrink-0 rounded-xl p-px transition-colors focus-visible:outline-none"
         >
-            <CanhotoIdade categoria={categoria} estilo={estilo} />
+            <CanhotoIdade categoria={categoria} />
 
             <div
                 // `h-full` porque a fila de categorias é um flex row: sem ele a
@@ -49,7 +44,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                     <h5 className="text-base leading-tight font-bold">
                         {categoria.nome}
                     </h5>
-                    <SituacaoBadge estilo={estilo} />
+                    <SituacaoCategoriaBadge situacao={categoria.situacao} />
                 </div>
 
                 <dl className="grid grid-cols-2 gap-3 pt-1">
@@ -92,16 +87,10 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
  * próprio — quem arredonda as pontas dela é o `overflow-hidden` do cartão, e é
  * por isso que o detalhe acompanha o raio das quinas sem nenhum ajuste.
  */
-function CanhotoIdade({
-    categoria,
-    estilo,
-}: {
-    categoria: CategoriaAninhada;
-    estilo: Estilo;
-}) {
+function CanhotoIdade({ categoria }: { categoria: CategoriaAninhada }) {
     return (
         <div
-            className={`${estilo.canhoto} relative flex w-fit flex-col items-center justify-center rounded-l-xl px-3`}
+            className={`bg-muted text-muted-foreground relative flex w-fit flex-col items-center justify-center rounded-l-xl px-3`}
         >
             <span className="text-base font-bold tracking-wider whitespace-nowrap">
                 {categoria.idadeMinima}-{categoria.idadeMaxima}
@@ -132,84 +121,5 @@ function Dado({
                 </dd>
             </div>
         </div>
-    );
-}
-
-function SituacaoBadge({ estilo }: { estilo: Estilo }) {
-    return (
-        <Badge
-            variant={estilo.badge}
-            className={`shrink-0 ${estilo.badgeExtra} gap-2`}
-        >
-            {estilo.icone}
-            {estilo.rotulo}
-        </Badge>
-    );
-}
-
-/* -------------------------------------------------------------------------
- * Situação da categoria — provisório.
- *
- * A API ainda não devolve esse dado, então ele é sorteado a cada render só
- * para a variação visual dos estados ficar de pé. O sorteio é seguro aqui
- * porque o cartão é Server Component: o HTML é gerado uma vez no servidor e
- * não há re-render no cliente para divergir dele.
- * ---------------------------------------------------------------------- */
-
-type Situacao = "correndo" | "abertas" | "comeca" | "encerrado";
-
-interface Estilo {
-    rotulo: string;
-    icone: React.ReactNode;
-    badge: "default" | "secondary" | "outline" | "destructive";
-    badgeExtra: string;
-    /** Fundo e cor do texto do canhoto. */
-    canhoto: string;
-}
-
-const ESTILOS: Record<Situacao, Estilo> = {
-    correndo: {
-        rotulo: "Ao vivo",
-        // O ponto pulsando separa "acontecendo agora" de um estado apenas
-        // favorável, como inscrições abertas.
-        icone: (
-            <span className="relative flex size-2">
-                <span className="bg-destructive-foreground absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
-                <span className="bg-destructive-foreground relative inline-flex size-2 rounded-full"></span>
-            </span>
-        ),
-        badge: "destructive",
-        badgeExtra: "font-bold",
-        canhoto: "bg-muted text-muted-foreground",
-    },
-    abertas: {
-        rotulo: "Inscrições abertas",
-        icone: <TicketIcon aria-hidden="true" weight="bold" />,
-        badge: "outline",
-        badgeExtra:
-            "text-warning-foreground bg-warning border-warning border-transparent font-bold",
-        canhoto: "bg-muted text-muted-foreground",
-    },
-    comeca: {
-        rotulo: "Inscrições fechadas",
-        icone: <CheckIcon aria-hidden="true" weight="bold" />,
-        badge: "default",
-        badgeExtra: "font-bold",
-        canhoto: "bg-muted text-muted-foreground",
-    },
-    encerrado: {
-        rotulo: "Encerrado",
-        icone: <FlagCheckeredIcon aria-hidden="true" />,
-        badge: "secondary",
-        badgeExtra: "",
-        canhoto: "bg-muted text-muted-foreground",
-    },
-};
-
-const SITUACOES = ["correndo", "abertas", "comeca", "encerrado"] as const;
-
-function sortearSituacao(): Situacao {
-    return (
-        SITUACOES[Math.floor(Math.random() * SITUACOES.length)] ?? SITUACOES[0]
     );
 }

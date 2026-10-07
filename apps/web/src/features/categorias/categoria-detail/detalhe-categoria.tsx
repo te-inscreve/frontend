@@ -16,7 +16,9 @@ import {
 } from "@te-inscreve/components";
 
 import { ListaInscricoesSkeleton } from "~/features/inscricoes/lista-inscricoes";
+import { SituacaoCategoriaBadge } from "~/features/categorias/situacao-categoria-badge";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
+import { AcoesCategoria } from "./acoes-categoria";
 import { BotaoEditarCategoria } from "./botao-editar-categoria";
 import { InscricoesDaCategoria } from "./inscricoes-da-categoria";
 import { PainelNaoImplementado } from "./painel-nao-implementado";
@@ -61,9 +63,12 @@ export async function DetalheCategoria({
         <>
             <header className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-start gap-3">
-                    <h1 className="text-primary mr-auto text-4xl font-bold">
-                        {modalidade.nome} - {categoria.nome}
-                    </h1>
+                    <div className="mr-auto flex flex-wrap items-center gap-3">
+                        <h1 className="text-primary text-4xl font-bold">
+                            {modalidade.nome} - {categoria.nome}
+                        </h1>
+                        <SituacaoCategoriaBadge situacao={categoria.situacao} />
+                    </div>
 
                     <Button asChild>
                         <Link
@@ -74,6 +79,11 @@ export async function DetalheCategoria({
                         </Link>
                     </Button>
                     <BotaoEditarCategoria
+                        eventoId={eventoId}
+                        modalidadeId={modalidadeId}
+                        categoria={categoria}
+                    />
+                    <AcoesCategoria
                         eventoId={eventoId}
                         modalidadeId={modalidadeId}
                         categoria={categoria}
