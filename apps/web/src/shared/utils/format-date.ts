@@ -2,7 +2,8 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 function timeAgo(date: Date): string {
-    return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+    const result = formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+    return result.replace("cerca de ", "");
 }
 
 /**

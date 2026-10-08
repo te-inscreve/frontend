@@ -1,4 +1,7 @@
-import { CalendarBlankIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+    CalendarBlankIcon,
+    IdentificationCardIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr/Buildings";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
@@ -13,6 +16,7 @@ import { Skeleton } from "@te-inscreve/components/skeleton";
 
 import { formatarDataCriacao } from "~/features/entidades/grupos/grupo";
 import { idadeEm, nomeCompleto } from "~/features/entidades/shared/integrantes";
+import { timeAgo } from "~/shared/utils/format-date";
 import { PicoteVertical, RecorteDoTicket } from "./partes-do-ticket";
 
 /**
@@ -137,6 +141,13 @@ function BilheteGrupo({ inscricao }: { inscricao: InscricaoGrupo }) {
 function BilheteIndividual({ inscricao }: { inscricao: InscricaoIndividual }) {
     const { entidade, concorrente } = inscricao;
     const nome = concorrente ? nomeCompleto(concorrente) : null;
+    if (!concorrente) {
+        return (
+            <div className="bg-card flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border p-8 text-center">
+                <p className="text-sm font-medium">Concorrente não informado</p>
+            </div>
+        );
+    }
 
     return (
         <article className="bg-card flex min-w-0 rounded-xl border">
@@ -147,24 +158,20 @@ function BilheteIndividual({ inscricao }: { inscricao: InscricaoIndividual }) {
 
             <PicoteVertical />
 
-            <div className="flex min-w-0 flex-1 items-center gap-3 p-3">
+            <div className="flex min-w-0 flex-1 items-start gap-3 p-3">
                 <div className="min-w-0 flex-1">
                     <h3 className="truncate text-sm font-semibold">
                         {nome ?? "Concorrente não informado"}
                     </h3>
-                    {inscricao.concorrente ? (
-                        <p className="text-muted-foreground truncate text-xs">
-                            <CalendarBlankIcon
-                                aria-hidden="true"
-                                className="mr-1 inline size-3"
-                            />
-                            {idadeEm(inscricao.concorrente.dataNascimento)} anos
-                            ·{" "}
-                            {formatarDataCriacao(
-                                inscricao.concorrente.dataNascimento,
-                            )}
-                        </p>
-                    ) : null}
+
+                    <p className="text-muted-foreground truncate text-xs">
+                        <CalendarBlankIcon
+                            aria-hidden="true"
+                            className="mr-1 inline size-3"
+                        />
+                        {idadeEm(concorrente.dataNascimento)} anos ·{" "}
+                        {formatarDataCriacao(concorrente.dataNascimento)}
+                    </p>
                     <p className="text-muted-foreground truncate text-xs">
                         <BuildingsIcon
                             aria-hidden="true"
@@ -172,11 +179,16 @@ function BilheteIndividual({ inscricao }: { inscricao: InscricaoIndividual }) {
                         />
                         {entidade.nome} · {entidade.cidade}
                     </p>
+                    <p className="text-muted-foreground truncate text-xs">
+                        <IdentificationCardIcon
+                            aria-hidden="true"
+                            className="mr-1 inline size-3"
+                        />
+                        {concorrente.matriculaMtg}
+                    </p>
                 </div>
-                <Badge variant="ghost">
-                    {inscricao.concorrente
-                        ? inscricao.concorrente.matriculaMtg
-                        : "Sem matrícula"}
+                <Badge variant="ghost" className="text-muted-foreground">
+                    {timeAgo(new Date(inscricao.dataCriacao))}
                 </Badge>
             </div>
         </article>
@@ -191,16 +203,12 @@ function Carimbo({
     inscricao: Pick<InscricaoIndividual, "id" | "dataCriacao">;
     className?: string;
 }) {
+    const codigo = `#${inscricao.id.toString().padStart(4, "0")}`;
     return (
         <dl className={className}>
             <dt className="sr-only">Número da inscrição</dt>
-            <dd className="text-xs font-semibold tabular-nums">
-                Nº {inscricao.id}
-            </dd>
+            <dd className="text-sm font-semibold tabular-nums">{codigo}</dd>
             <dt className="sr-only">Data da inscrição</dt>
-            <dd className="text-muted-foreground text-xs tabular-nums">
-                {formatarDataCriacao(inscricao.dataCriacao)}
-            </dd>
         </dl>
     );
 }
