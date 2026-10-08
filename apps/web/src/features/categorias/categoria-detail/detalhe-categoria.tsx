@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { RankingIcon, UserIcon } from "@phosphor-icons/react/dist/ssr";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr/ClipboardText";
 import { SealCheckIcon } from "@phosphor-icons/react/dist/ssr/SealCheck";
@@ -16,6 +17,7 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 
+import { FichaAvaliativaVazia } from "~/features/avaliacoes/ficha-avaliativa/ficha-avaliativa-vazia";
 import { SituacaoCategoriaBadge } from "~/features/categorias/situacao-categoria-badge";
 import { ListaInscricoesSkeleton } from "~/features/inscricoes/lista-inscricoes";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
@@ -130,12 +132,23 @@ export async function DetalheCategoria({
                                 : `Até ${categoria.maxInscricoes} inscrições`
                         }
                     />
+                    {/* <Resumo
+                        icone={<TicketIcon />}
+                        termo="Limite de inscrições por entidade"
+                        // Nulo é ausência de teto, e não zero inscrições.
+                        valor={
+                            modalidade.maxInscricoesEntidadePorCategoria ===
+                            null
+                                ? "Sem limite por entidade"
+                                : `Até ${modalidade.maxInscricoesEntidadePorCategoria} inscrições por entidade`
+                        }
+                    /> */}
                     <Resumo
                         icone={
                             modalidade.isGrupo ? (
                                 <UsersThreeIcon />
                             ) : (
-                                <UserCheckIcon />
+                                <UserIcon />
                             )
                         }
                         termo="Formato"
@@ -162,13 +175,15 @@ export async function DetalheCategoria({
                             <CalendarDotsIcon />
                             Cronograma
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="classificacoes"
+                            className="flex-none"
+                        >
+                            <RankingIcon />
+                            Classificações
+                        </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="cronograma" className="mt-4">
-                        <PainelNaoImplementado>
-                            Cronograma da categoria
-                        </PainelNaoImplementado>
-                    </TabsContent>
                     <TabsContent value="inscritos" className="mt-4">
                         <Suspense fallback={<ListaInscricoesSkeleton />}>
                             <InscricoesDaCategoria
@@ -177,6 +192,16 @@ export async function DetalheCategoria({
                                 categoriaId={categoriaId}
                             />
                         </Suspense>
+                    </TabsContent>
+                    <TabsContent value="cronograma" className="mt-4">
+                        <PainelNaoImplementado>
+                            Cronograma da categoria
+                        </PainelNaoImplementado>
+                    </TabsContent>
+                    <TabsContent value="classificacoes" className="mt-4">
+                        <PainelNaoImplementado>
+                            Classificações da categoria
+                        </PainelNaoImplementado>
                     </TabsContent>
                 </Tabs>
 
@@ -198,9 +223,7 @@ export async function DetalheCategoria({
                         </PainelNaoImplementado>
                     </TabsContent>
                     <TabsContent value="ficha" className="mt-4">
-                        <PainelNaoImplementado>
-                            Ficha avaliativa da categoria
-                        </PainelNaoImplementado>
+                        <FichaAvaliativaVazia categoriaId={categoriaId} />
                     </TabsContent>
                 </Tabs>
             </div>
