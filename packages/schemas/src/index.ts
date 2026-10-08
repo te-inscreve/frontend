@@ -146,3 +146,29 @@ export type {
     InscricoesCriadas,
     InscricoesDaCategoria,
 } from "./inscricao";
+
+export {
+    agrupamentoFichaCriacaoSchema,
+    agrupamentoFichaSchema,
+    alternativaCriacaoSchema,
+    campoFichaCriacaoSchema,
+    campoFichaSchema,
+    criarModeloFichaSchema,
+    modeloFichaDetalheSchema,
+    modificadorNotaSchema,
+    posicaoFichaCriacaoSchema,
+    posicaoFichaSchema,
+    tipoCampoFichaSchema,
+} from "./ficha-avaliativa";
+export type {
+    AgrupamentoFicha,
+    AgrupamentoFichaCriacao,
+    CampoFicha,
+    CampoFichaCriacao,
+    CriarModeloFicha,
+    ModeloFichaDetalhe,
+    ModificadorNota,
+    PosicaoFicha,
+    PosicaoFichaCriacao,
+    TipoCampoFicha,
+} from "./ficha-avaliativa";
