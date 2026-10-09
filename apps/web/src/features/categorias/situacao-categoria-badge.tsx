@@ -1,6 +1,5 @@
-import { CheckIcon } from "@phosphor-icons/react/dist/ssr/Check";
 import { FlagCheckeredIcon } from "@phosphor-icons/react/dist/ssr/FlagCheckered";
-import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
+import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 import { XCircleIcon } from "@phosphor-icons/react/dist/ssr/XCircle";
 
 import type { SituacaoCategoria } from "@te-inscreve/schemas";
@@ -15,14 +14,14 @@ interface Estilo {
 /** O visual de cada situação; o texto é o `label` que a API devolve. */
 const ESTILOS: Record<SituacaoCategoria["value"], Estilo> = {
     aberta: {
-        icone: <TicketIcon aria-hidden="true" weight="bold" />,
-        badge: "outline",
-        extra: "text-warning-foreground bg-warning border-warning border-transparent font-bold",
-    },
-    fechada: {
-        icone: <CheckIcon aria-hidden="true" weight="bold" />,
+        icone: undefined,
         badge: "default",
         extra: "font-bold",
+    },
+    fechada: {
+        icone: <LockSimpleIcon aria-hidden="true" weight="bold" />,
+        badge: "outline",
+        extra: "text-background bg-foreground border-warning border-transparent font-bold",
     },
     encerrada: {
         icone: <FlagCheckeredIcon aria-hidden="true" />,

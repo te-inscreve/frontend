@@ -79,8 +79,22 @@ const formatDifferentYears = (start: Date, end: Date) => {
     return `${capitalize(startStr)} – ${capitalize(endStr)}`;
 };
 
-const formatDateTime = (date: Date) => {
-    return `${format(date, "d", { locale: ptBR })} de ${capitalize(format(date, "MMMM", { locale: ptBR }))}`;
+const formatDate = (date: Date) => {
+    return `${format(date, "d", { locale: ptBR })} de ${capitalize(format(date, "MMM", { locale: ptBR }))}`;
 };
 
-export { formatDateRange, formatDateTime, timeAgo, useDateRangeFormatter };
+const formatDateTime = (date: Date) => {
+    const hora = format(date, "HH", { locale: ptBR }) + "h";
+    const minuto = format(date, "m", { locale: ptBR });
+    const fullHour =
+        minuto === "0" ? hora : `${hora}${minuto.padStart(2, "0")}`;
+    return `${format(date, "d", { locale: ptBR })} de ${capitalize(format(date, "MMMM", { locale: ptBR }))} às ${fullHour}`;
+};
+
+export {
+    formatDate,
+    formatDateRange,
+    formatDateTime,
+    timeAgo,
+    useDateRangeFormatter,
+};

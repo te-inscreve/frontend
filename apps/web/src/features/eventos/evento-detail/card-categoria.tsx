@@ -5,7 +5,7 @@ import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import type { CategoriaAninhada } from "@te-inscreve/schemas";
 
 import { SituacaoCategoriaBadge } from "~/features/categorias/situacao-categoria-badge";
-import { formatDateTime } from "~/shared/utils/format-date";
+import { formatDate } from "~/shared/utils/format-date";
 
 interface Props {
     categoria: CategoriaAninhada;
@@ -38,7 +38,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                 // `overflow-hidden` é o que faz o canhoto respeitar o
                 // arredondado: ele encosta nas quatro bordas e é o recorte
                 // desta camada que arredonda as pontas dele.
-                className="bg-card relative flex h-full w-full flex-col gap-2 overflow-hidden rounded-r-xl p-4 transition-colors"
+                className="bg-card relative flex h-full w-full flex-col gap-2 overflow-hidden rounded-r-xl p-2 transition-colors"
             >
                 <div className="flex items-start justify-between gap-2">
                     <h5 className="text-base leading-tight font-bold">
@@ -47,7 +47,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                     <SituacaoCategoriaBadge situacao={categoria.situacao} />
                 </div>
 
-                <dl className="grid grid-cols-2 gap-3 pt-1">
+                <dl className="grid grid-cols-2 gap-2">
                     <Dado
                         icone={<TicketIcon size={36} className="text-xl" />}
                         termo="Inscrições"
@@ -66,7 +66,7 @@ export function CardCategoria({ categoria, eventoId, modalidadeId }: Props) {
                         valor={
                             categoria.dataApresentacao === null
                                 ? null
-                                : formatDateTime(
+                                : formatDate(
                                       new Date(categoria.dataApresentacao),
                                   )
                         }
@@ -95,11 +95,11 @@ function CanhotoIdade({ categoria }: { categoria: CategoriaAninhada }) {
             <span className="text-base font-bold tracking-wider whitespace-nowrap">
                 {categoria.idadeMinima}-{categoria.idadeMaxima}
             </span>
-            <span className="text-sm">anos</span>
-            <span
+            <span className="text-sm">Anos</span>
+            {/* <span
                 aria-hidden="true"
-                className={`border-border absolute right-0 h-full border-l`}
-            />
+                className={`border-primary-foreground absolute right-0 h-full border-l border-dashed`}
+            /> */}
         </div>
     );
 }
@@ -113,7 +113,7 @@ function Dado({
     valor: string | null;
 }) {
     return (
-        <div className="flex flex-col [&_svg]:size-4">
+        <div className="bg-muted flex flex-col items-center justify-center rounded-md py-2 [&_svg]:size-4">
             <dt className="text-muted-foreground text-sm">{termo}</dt>
             <div className="flex items-center gap-2">
                 <dd className="truncate text-sm font-normal">

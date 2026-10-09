@@ -12,6 +12,8 @@ import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import type { ModalidadeDetalhe } from "@te-inscreve/schemas";
 import { Button } from "@te-inscreve/components";
 
+import { IsGroupBadge } from "~/features/categorias/categoria-detail/is-group-badge";
+
 interface Props {
     eventoId: number;
     modalidade: ModalidadeDetalhe;
@@ -129,14 +131,7 @@ export function ResumoModalidade({
                 para quem enxerga. */}
             <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <div className="flex items-center gap-1 rounded-sm text-sm">
-                        {emGrupo ? (
-                            <UsersThreeIcon size={16} />
-                        ) : (
-                            <UserIcon size={16} />
-                        )}
-                        {emGrupo ? "Em grupo" : "Individual"}
-                    </div>
+                    <IsGroupBadge isGroup={modalidade.isGrupo} />
 
                     {regras
                         .filter(({ emDestaque }) => emDestaque)
