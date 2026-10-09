@@ -15,6 +15,7 @@ import { Skeleton } from "@te-inscreve/components/skeleton";
 import type { InscricaoFormValues } from "./lib/inscricao-form-schema";
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
+import { IsGroupBadge } from "~/features/categorias/categoria-detail/is-group-badge";
 import { contagemIntegrantes } from "~/features/entidades/grupos/grupo";
 import {
     CartaoIntegranteAlternavel,
@@ -112,14 +113,19 @@ export function TicketInscricao({
             )}
         >
             <header className="bg-card flex shrink-0 flex-col gap-0 rounded-t-xl px-4 py-3">
-                <h2
-                    id={tituloId}
-                    className="mb-1 truncate text-lg font-bold tracking-tight"
-                >
-                    {modalidade === null || categoria === null
-                        ? "…"
-                        : `${modalidade.nome} ${categoria.nome.toLowerCase()}`}
-                </h2>
+                <div className="flex items-center justify-between">
+                    <h2
+                        id={tituloId}
+                        className="mb-1 truncate text-lg font-bold tracking-tight"
+                    >
+                        {modalidade === null || categoria === null
+                            ? "…"
+                            : `${modalidade.nome} ${categoria.nome.toLowerCase()}`}
+                    </h2>
+                    {modalidade && (
+                        <IsGroupBadge isGroup={modalidade.isGrupo} />
+                    )}
+                </div>
                 <RestricoesDaCategoria
                     categoria={categoria}
                     modalidade={modalidade}

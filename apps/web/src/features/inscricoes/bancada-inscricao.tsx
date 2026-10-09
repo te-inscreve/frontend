@@ -40,12 +40,19 @@ interface Props {
  */
 export function BancadaInscricao(props: Props) {
     const inscricao = useInscricao(props);
-    // Enquanto a modalidade não chega (na prática, nunca: ela vem do
-    // `prefetch`), vale o bilhete em grupo, que já sabe esperá-la.
-    const Inscricoes =
-        inscricao.modalidade?.isGrupo === false
-            ? BilhetesIndividuais
-            : TicketInscricao;
+    const ladoDaInscricao = {
+        categoria: inscricao.categoria,
+        modalidade: inscricao.modalidade,
+        control: inscricao.form.control,
+        integrantes: inscricao.integrantesInscritos,
+        grupoAplicando: inscricao.grupoAplicando,
+        erroAoAplicarGrupo: inscricao.erroAoAplicarGrupo,
+        onAlternarIntegrante: inscricao.alternarIntegrante,
+        onCriar: inscricao.criarInscricao,
+        criando: inscricao.criando,
+        erroAoCriar: inscricao.erroAoCriar,
+        className: "order-1 lg:order-3",
+    };
 
     return (
         <MotionConfig reducedMotion="user">
@@ -68,19 +75,17 @@ export function BancadaInscricao(props: Props) {
                     className="border-border/70 hidden border-l border-dashed lg:order-2 lg:block"
                 />
 
-                <Inscricoes
-                    categoria={inscricao.categoria}
-                    modalidade={inscricao.modalidade}
-                    control={inscricao.form.control}
-                    integrantes={inscricao.integrantesInscritos}
-                    grupoAplicando={inscricao.grupoAplicando}
-                    erroAoAplicarGrupo={inscricao.erroAoAplicarGrupo}
-                    onAlternarIntegrante={inscricao.alternarIntegrante}
-                    onCriar={inscricao.criarInscricao}
-                    criando={inscricao.criando}
-                    erroAoCriar={inscricao.erroAoCriar}
-                    className="order-1 lg:order-3"
-                />
+                {/* Enquanto a modalidade não chega (na prática, nunca: ela vem
+                    do `prefetch`), vale o bilhete em grupo, que já sabe
+                    esperá-la. */}
+                {inscricao.modalidade?.isGrupo === false ? (
+                    <BilhetesIndividuais
+                        {...ladoDaInscricao}
+                        entidade={inscricao.entidade}
+                    />
+                ) : (
+                    <TicketInscricao {...ladoDaInscricao} />
+                )}
             </div>
         </MotionConfig>
     );

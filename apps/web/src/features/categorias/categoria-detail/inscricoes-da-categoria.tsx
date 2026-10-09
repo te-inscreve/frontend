@@ -5,6 +5,7 @@ interface Props {
     eventoId: number;
     modalidadeId: number;
     categoriaId: number;
+    isGrupo: boolean;
 }
 
 /**
@@ -18,6 +19,7 @@ export async function InscricoesDaCategoria({
     eventoId,
     modalidadeId,
     categoriaId,
+    isGrupo,
 }: Props) {
     const inscricoes = await getQueryClient().fetchQuery(
         trpc.inscricao.getAll.queryOptions({
@@ -27,5 +29,5 @@ export async function InscricoesDaCategoria({
         }),
     );
 
-    return <ListaInscricoes inscricoes={inscricoes} />;
+    return <ListaInscricoes inscricoes={inscricoes} isGrupo={isGrupo} />;
 }

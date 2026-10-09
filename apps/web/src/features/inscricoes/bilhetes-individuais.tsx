@@ -2,25 +2,29 @@
 
 import type { Control } from "react-hook-form";
 import { useId } from "react";
+import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr/Buildings";
 import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 import { StackIcon } from "@phosphor-icons/react/dist/ssr/Stack";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UserIcon } from "@phosphor-icons/react/dist/ssr/User";
+import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 import { AnimatePresence } from "motion/react";
 import { useFormState } from "react-hook-form";
 
-import type { Categoria, ModalidadeDetalhe } from "@te-inscreve/schemas";
+import type {
+    Categoria,
+    MinhaEntidade,
+    ModalidadeDetalhe,
+} from "@te-inscreve/schemas";
 import { Button, cn, FieldError } from "@te-inscreve/components";
 import { Skeleton } from "@te-inscreve/components/skeleton";
 
 import type { InscricaoFormValues } from "./lib/inscricao-form-schema";
 import type { GrupoComPrevia } from "~/features/entidades/grupos/grupo";
 import type { Integrante } from "~/features/entidades/shared/integrantes";
-import {
-    CartaoIntegranteAlternavel,
-    LinhaAlternavel,
-} from "~/features/entidades/integrantes/cartao-integrante-alternavel";
-import { nomeCompleto } from "~/features/entidades/shared/integrantes";
+import { IsGroupBadge } from "~/features/categorias/categoria-detail/is-group-badge";
+import { LinhaAlternavel } from "~/features/entidades/integrantes/cartao-integrante-alternavel";
+import { idadeEm, nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { PicoteVertical, RestricoesDaCategoria } from "./partes-do-ticket";
 
 /** Quantos esqueletos no máximo enquanto a formação do grupo não chega. */
@@ -29,6 +33,8 @@ const MAXIMO_DE_ESQUELETOS = 6;
 interface Props {
     /** `null` enquanto a categoria não chega — o título vira reticências. */
     categoria: Categoria | null;
+    /** `null` enquanto a entidade não chega — a linha dela vira reticências. */
+    entidade: MinhaEntidade | null;
     modalidade: ModalidadeDetalhe | null;
     control: Control<InscricaoFormValues>;
     /** Quem está no formulário — cada um é uma inscrição. */
@@ -66,6 +72,7 @@ interface Props {
  */
 export function BilhetesIndividuais({
     categoria,
+    entidade,
     modalidade,
     control,
     integrantes,
@@ -95,14 +102,19 @@ export function BilhetesIndividuais({
             className={cn("flex min-w-0 flex-col gap-3", className)}
         >
             <header className="flex shrink-0 flex-col gap-1 px-0">
-                <h2
-                    id={tituloId}
-                    className="truncate text-lg font-bold tracking-tight"
-                >
-                    {modalidade === null || categoria === null
-                        ? "…"
-                        : `${modalidade.nome} ${categoria.nome.toLowerCase()}`}
-                </h2>
+                <div className="flex items-center justify-between">
+                    <h2
+                        id={tituloId}
+                        className="truncate text-lg font-bold tracking-tight"
+                    >
+                        {modalidade === null || categoria === null
+                            ? "…"
+                            : `${modalidade.nome} ${categoria.nome.toLowerCase()}`}
+                    </h2>
+                    {modalidade && (
+                        <IsGroupBadge isGroup={modalidade.isGrupo} />
+                    )}
+                </div>
                 <RestricoesDaCategoria
                     categoria={categoria}
                     modalidade={modalidade}
@@ -111,34 +123,32 @@ export function BilhetesIndividuais({
 
             <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 py-1.5">
                 {quantidade === 0 && !grupoAplicando ? (
-                    <div className="text-muted-foreground bg-card flex h-full min-h-48 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center text-sm">
+                    <div className="text-muted-foreground flex h-full min-h-48 w-full flex-col items-center justify-center gap-2 p-8 text-center text-sm">
                         <UserIcon
                             aria-hidden="true"
                             size={32}
                             className="opacity-60"
                         />
                         <p className="max-w-sm">
-                            Nenhuma inscrição ainda. Cada integrante adicionado
-                            vira uma inscrição própria — clique em um grupo para
-                            trazer todos de uma vez.
+                            Nenhum integrante foi adicionado à inscrição.
                         </p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-2">
                         <p
                             aria-live="polite"
-                            className="text-muted-foreground text-xs"
+                            className="text-muted-foreground text-sm"
                         >
                             {contagemInscricoes(quantidade)}
                         </p>
 
                         <ul className="grid gap-3">
                             <AnimatePresence initial={false} mode="popLayout">
-                                {integrantes.map((integrante, indice) => (
+                                {integrantes.map((integrante) => (
                                     <LinhaAlternavel key={integrante.id}>
                                         <BilheteIndividual
                                             integrante={integrante}
-                                            numero={indice + 1}
+                                            entidade={entidade}
                                             onAlternar={onAlternarIntegrante}
                                         />
                                     </LinhaAlternavel>
@@ -186,44 +196,74 @@ export function BilhetesIndividuais({
 }
 
 /**
- * Uma inscrição individual: a pessoa à esquerda, o canhoto numerado à
+ * Uma inscrição individual, no mesmo desenho do bilhete da lista de
+ * inscrições ({@link ListaInscricoes}): o canhoto à esquerda, a pessoa à
  * direita, separados por um picote de pé.
  *
- * O corpo é o {@link CartaoIntegranteAlternavel} do bilhete em grupo, sem a
- * borda própria — a borda é a do bilhete —, e continua sendo o botão de
- * tirar a pessoa. O canhoto é enfeite com número, e fica fora da leitura
- * (`aria-hidden`): o número é só a posição na lista.
+ * O canhoto leva só o ícone de bilhete: lá ele leva o número da inscrição,
+ * e aqui a inscrição ainda não existe. A largura é a mesma, para o bilhete
+ * não mudar de forma quando for criado.
+ *
+ * O lado da pessoa é o botão de tirá-la da inscrição — o mesmo gesto do
+ * {@link CartaoIntegranteAlternavel}, com o "x" revelado no hover e no foco.
+ * Tudo em `span` dentro dele: `button` só aceita conteúdo de frase.
  */
 function BilheteIndividual({
     integrante,
-    numero,
+    entidade,
     onAlternar,
 }: {
     integrante: Integrante;
-    numero: number;
+    entidade: Pick<MinhaEntidade, "nome" | "cidade"> | null;
     onAlternar: (integrante: Integrante) => void;
 }) {
+    const nome = nomeCompleto(integrante);
+
     return (
         <div className="bg-card flex min-w-0 rounded-xl border">
-            <CartaoIntegranteAlternavel
-                integrante={integrante}
-                acao="tirar"
-                rotulo={`Tirar ${nomeCompleto(integrante)} da inscrição`}
-                onAlternar={onAlternar}
-                className="min-w-0 flex-1 rounded-r-none border-0"
-            />
+            <div
+                aria-hidden="true"
+                className="text-muted-foreground flex w-24 shrink-0 items-center justify-center"
+            >
+                ----
+            </div>
 
             <PicoteVertical />
 
-            <div
-                aria-hidden="true"
-                className="text-muted-foreground flex w-14 shrink-0 flex-col items-center justify-center gap-0.5"
+            <button
+                type="button"
+                onClick={() => onAlternar(integrante)}
+                aria-label={`Tirar ${nome} da inscrição`}
+                className="focus-visible:ring-ring/50 group hover:bg-card/50 flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-r-xl p-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
-                <TicketIcon size={18} />
-                <span className="text-xs font-semibold tabular-nums">
-                    {numero}
+                <span className="min-w-0 flex-1">
+                    <span className="block truncate">{nome}</span>
+                    <span className="text-muted-foreground block truncate text-sm">
+                        <UserIcon
+                            aria-hidden="true"
+                            className="mr-1 inline size-4"
+                        />
+                        {idadeEm(integrante.dataNascimento)} anos {"  "}·{"  "}
+                        {integrante.matriculaMtg}
+                    </span>
+                    <span className="text-muted-foreground block truncate text-sm">
+                        <BuildingsIcon
+                            aria-hidden="true"
+                            className="mr-1 inline size-4"
+                        />
+                        {entidade
+                            ? `${entidade.nome} · ${entidade.cidade}`
+                            : "…"}
+                    </span>
                 </span>
-            </div>
+
+                <XIcon
+                    aria-hidden="true"
+                    size={20}
+                    weight="bold"
+                    className="text-destructive shrink-0 opacity-0 transition duration-150 ease-out group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100 motion-safe:scale-50"
+                />
+            </button>
         </div>
     );
 }
@@ -232,16 +272,12 @@ function BilheteIndividual({
 function BilheteIndividualSkeleton() {
     return (
         <li className="bg-card flex rounded-xl border">
-            <div className="flex min-w-0 flex-1 items-center gap-3 p-3">
-                <Skeleton className="size-9 shrink-0 rounded-full" />
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <Skeleton className="h-4 w-2/3" />
-                    <Skeleton className="h-3 w-1/2" />
-                </div>
-            </div>
+            <div className="w-24 shrink-0" />
             <PicoteVertical />
-            <div className="flex w-14 shrink-0 items-center justify-center">
-                <Skeleton className="size-5 rounded" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-3">
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-3.5 w-1/2" />
+                <Skeleton className="h-3.5 w-3/5" />
             </div>
         </li>
     );
@@ -249,8 +285,8 @@ function BilheteIndividualSkeleton() {
 
 function contagemInscricoes(quantidade: number) {
     if (quantidade === 0) return "Nenhuma inscrição";
-    if (quantidade === 1) return "1 inscrição individual";
-    return `${quantidade} inscrições individuais`;
+    if (quantidade === 1) return "1 inscrição";
+    return `${quantidade} inscrições`;
 }
 
 /**

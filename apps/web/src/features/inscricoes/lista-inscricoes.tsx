@@ -1,7 +1,4 @@
-import {
-    CalendarBlankIcon,
-    IdentificationCardIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { UserIcon } from "@phosphor-icons/react/dist/ssr";
 import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr/Buildings";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
@@ -11,10 +8,9 @@ import type {
     InscricaoIndividual,
     InscricoesDaCategoria,
 } from "@te-inscreve/schemas";
-import { Badge } from "@te-inscreve/components";
+import { Badge, cn } from "@te-inscreve/components";
 import { Skeleton } from "@te-inscreve/components/skeleton";
 
-import { formatarDataCriacao } from "~/features/entidades/grupos/grupo";
 import { idadeEm, nomeCompleto } from "~/features/entidades/shared/integrantes";
 import { timeAgo } from "~/shared/utils/format-date";
 import { PicoteVertical, RecorteDoTicket } from "./partes-do-ticket";
@@ -35,7 +31,9 @@ import { PicoteVertical, RecorteDoTicket } from "./partes-do-ticket";
  */
 export function ListaInscricoes({
     inscricoes,
+    isGrupo,
 }: {
+    isGrupo: boolean;
     inscricoes: InscricoesDaCategoria;
 }) {
     if (inscricoes.length === 0) {
@@ -48,7 +46,6 @@ export function ListaInscricoes({
             </div>
         );
     }
-
     return (
         <div className="flex flex-col gap-3">
             <p className="text-muted-foreground text-sm">
@@ -57,26 +54,28 @@ export function ListaInscricoes({
                     : `${inscricoes.length} inscrições`}
             </p>
 
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul
+                className={cn(
+                    "grid gap-3",
+                    isGrupo ? "grid sm:grid-cols-3" : "sm:grid-cols-2",
+                )}
+            >
                 {inscricoes.map((inscricao) => (
                     <li key={inscricao.id} className="min-w-0">
-                        {ehGrupo(inscricao) ? (
-                            <BilheteGrupo inscricao={inscricao} />
+                        {isGrupo ? (
+                            <BilheteGrupo
+                                inscricao={inscricao as InscricaoGrupo}
+                            />
                         ) : (
-                            <BilheteIndividual inscricao={inscricao} />
+                            <BilheteIndividual
+                                inscricao={inscricao as InscricaoIndividual}
+                            />
                         )}
                     </li>
                 ))}
             </ul>
         </div>
     );
-}
-
-/** Só a inscrição em grupo traz a contagem da formação. */
-function ehGrupo(
-    inscricao: InscricaoIndividual | InscricaoGrupo,
-): inscricao is InscricaoGrupo {
-    return "totalIntegrantes" in inscricao;
 }
 
 /**
@@ -90,7 +89,7 @@ function BilheteGrupo({ inscricao }: { inscricao: InscricaoGrupo }) {
     const { entidade, nomeConcorrente, totalIntegrantes } = inscricao;
 
     return (
-        <article className="bg-card flex min-w-0 flex-col rounded-xl border">
+        <article className="bg-card flex aspect-3/2 min-w-0 flex-col rounded-xl border">
             <header className="flex items-start gap-3 px-4 pt-4 pb-3">
                 <span
                     aria-hidden="true"
@@ -160,31 +159,24 @@ function BilheteIndividual({ inscricao }: { inscricao: InscricaoIndividual }) {
 
             <div className="flex min-w-0 flex-1 items-start gap-3 p-3">
                 <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-semibold">
+                    <h3 className="truncate">
                         {nome ?? "Concorrente não informado"}
                     </h3>
 
-                    <p className="text-muted-foreground truncate text-xs">
-                        <CalendarBlankIcon
+                    <p className="text-muted-foreground truncate text-sm">
+                        <UserIcon
                             aria-hidden="true"
-                            className="mr-1 inline size-3"
+                            className="mr-1 inline size-4"
                         />
-                        {idadeEm(concorrente.dataNascimento)} anos ·{" "}
-                        {formatarDataCriacao(concorrente.dataNascimento)}
+                        {idadeEm(concorrente.dataNascimento)} anos {"  "}·{"  "}
+                        {concorrente.matriculaMtg}
                     </p>
-                    <p className="text-muted-foreground truncate text-xs">
+                    <p className="text-muted-foreground truncate text-sm">
                         <BuildingsIcon
                             aria-hidden="true"
-                            className="mr-1 inline size-3"
+                            className="mr-1 inline size-4"
                         />
                         {entidade.nome} · {entidade.cidade}
-                    </p>
-                    <p className="text-muted-foreground truncate text-xs">
-                        <IdentificationCardIcon
-                            aria-hidden="true"
-                            className="mr-1 inline size-3"
-                        />
-                        {concorrente.matriculaMtg}
                     </p>
                 </div>
                 <Badge variant="ghost" className="text-muted-foreground">
@@ -207,7 +199,7 @@ function Carimbo({
     return (
         <dl className={className}>
             <dt className="sr-only">Número da inscrição</dt>
-            <dd className="text-sm font-semibold tabular-nums">{codigo}</dd>
+            <dd className="text-base font-semibold tabular-nums">{codigo}</dd>
             <dt className="sr-only">Data da inscrição</dt>
         </dl>
     );

@@ -24,6 +24,7 @@ import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { AcoesCategoria } from "./acoes-categoria";
 import { BotaoEditarCategoria } from "./botao-editar-categoria";
 import { InscricoesDaCategoria } from "./inscricoes-da-categoria";
+import { IsGroupBadge } from "./is-group-badge";
 import { PainelNaoImplementado } from "./painel-nao-implementado";
 
 interface Props {
@@ -78,6 +79,7 @@ export async function DetalheCategoria({
                             {modalidade.nome} - {categoria.nome}
                         </h1>
                         <SituacaoCategoriaBadge situacao={categoria.situacao} />
+                        <IsGroupBadge isGroup={modalidade.isGrupo} />
                     </div>
 
                     {/* Uma inscrição por entidade: quem já tem a sua vê o
@@ -190,6 +192,7 @@ export async function DetalheCategoria({
                                 eventoId={eventoId}
                                 modalidadeId={modalidadeId}
                                 categoriaId={categoriaId}
+                                isGrupo={modalidade.isGrupo}
                             />
                         </Suspense>
                     </TabsContent>

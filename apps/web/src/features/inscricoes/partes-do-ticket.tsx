@@ -52,18 +52,15 @@ export function RestricoesDaCategoria({
                         <Skeleton className="h-3.5 w-28" />
                     </dd>
                 </div>
-            ) : (
-                modalidade.isGrupo && (
-                    <div className="flex items-center gap-1">
-                        <dt className="text-muted-foreground">Por grupo:</dt>
-                        <dd className="text-foreground">
-                            {semLimite(modalidade.minInscritosPorGrupo)} a{" "}
-                            {semLimite(modalidade.maxInscritosPorGrupo)}{" "}
-                            inscritos
-                        </dd>
-                    </div>
-                )
-            )}
+            ) : modalidade.isGrupo ? (
+                <div className="flex items-center gap-1">
+                    <dt className="text-muted-foreground">Por grupo:</dt>
+                    <dd className="text-foreground">
+                        {semLimite(modalidade.minInscritosPorGrupo)} a{" "}
+                        {semLimite(modalidade.maxInscritosPorGrupo)} integrantes
+                    </dd>
+                </div>
+            ) : null}
         </dl>
     );
 }
