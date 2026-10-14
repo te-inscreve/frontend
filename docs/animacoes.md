@@ -148,7 +148,7 @@ alguma delas.
 5. **`layoutScroll` em todo ancestral rolável.** O Motion mede posições em
    coordenadas de viewport e não sabe sozinho que um contêiner rolou. Sem esse
    aviso, o modal nasce deslocado assim que a lista está fora do início — é o que
-   `HorizontalScrollList` (`apps/web/src/shared/ui/horizontal-scroll-list.tsx`)
+   `HorizontalScrollViewport` (`apps/web/src/shared/ui/horizontal-scroll.tsx`)
    passa para a `motion.div` que rola.
 
 ## 5. Movimento reduzido

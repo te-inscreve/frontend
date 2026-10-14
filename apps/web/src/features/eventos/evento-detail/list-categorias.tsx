@@ -3,7 +3,12 @@ import { useMemo } from "react";
 import type { CategoriaAninhada } from "@te-inscreve/schemas";
 
 import type { PeriodoEvento } from "~/features/categorias/form-categoria/campos-categoria";
-import { HorizontalScrollList } from "~/shared/ui/horizontal-scroll-list";
+import {
+    HorizontalScroll,
+    HorizontalScrollNext,
+    HorizontalScrollPrevious,
+    HorizontalScrollViewport,
+} from "~/shared/ui/horizontal-scroll";
 import { BotaoCriarCategoria } from "./botao-criar-categoria";
 import { CardCategoria } from "./card-categoria";
 
@@ -42,21 +47,25 @@ export function ListCategorias({
     );
 
     return (
-        <HorizontalScrollList label={`Categorias de ${modalidadeNome}`}>
-            <BotaoCriarCategoria
-                eventoId={eventoId}
-                modalidadeId={modalidadeId}
-                periodoEvento={periodoEvento}
-                sozinho={categorias.length === 0}
-            />
-            {sortedCategorias.map((categoria) => (
-                <CardCategoria
-                    key={categoria.id}
-                    categoria={categoria}
+        <HorizontalScroll>
+            <HorizontalScrollPrevious lateral />
+            <HorizontalScrollNext lateral />
+            <HorizontalScrollViewport label={`Categorias de ${modalidadeNome}`}>
+                <BotaoCriarCategoria
                     eventoId={eventoId}
                     modalidadeId={modalidadeId}
+                    periodoEvento={periodoEvento}
+                    sozinho={categorias.length === 0}
                 />
-            ))}
-        </HorizontalScrollList>
+                {sortedCategorias.map((categoria) => (
+                    <CardCategoria
+                        key={categoria.id}
+                        categoria={categoria}
+                        eventoId={eventoId}
+                        modalidadeId={modalidadeId}
+                    />
+                ))}
+            </HorizontalScrollViewport>
+        </HorizontalScroll>
     );
 }
