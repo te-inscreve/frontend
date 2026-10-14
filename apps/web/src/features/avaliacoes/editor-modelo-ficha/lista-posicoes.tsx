@@ -2,10 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
-import {
-    SortableContext,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 
 import { cn } from "@te-inscreve/components/utils";
 
@@ -17,7 +14,7 @@ import { useEditor } from "./editor-contexto";
 import { Insercao } from "./insercao";
 import { dadosDe, idRecipienteArraste } from "./lib/arraste";
 import { novaPosicaoExclusiva } from "./lib/modelo-ficha-form-schema";
-import { campoDaPosicao, PosicaoEditavel } from "./posicao-editavel";
+import { PosicaoEditavel } from "./posicao-editavel";
 import { idRecipiente } from "./use-composicao";
 
 interface Props {
@@ -32,9 +29,13 @@ interface Props {
 }
 
 /**
- * Uma lista de posições — os campos gerais, ou os de um agrupamento: reordena
- * por arraste, recebe campos do catálogo e tem um "+" entre cada par para
- * criar um campo exclusivo naquele ponto.
+ * Uma lista de posições — os campos gerais, ou os de um agrupamento — numa
+ * grade de cartões que quebra linha: reordena por arraste, recebe campos do
+ * catálogo e termina num cartão "+" para criar um campo exclusivo.
+ *
+ * Numa grade não há "entre dois" onde morar um "+", então o exclusivo nasce
+ * no fim e vai para o lugar arrastado. O campo do catálogo continua caindo
+ * onde é solto.
  */
 export function ListaPosicoes({
     recipiente,
@@ -44,7 +45,7 @@ export function ListaPosicoes({
     opcoesFinais = [],
     vazia,
 }: Props) {
-    const { camposGlobais, composicao, selecionar } = useEditor();
+    const { composicao, selecionar } = useEditor();
     const { active, over } = useDndContext();
 
     const id = idRecipiente(recipiente);
@@ -73,13 +74,6 @@ export function ListaPosicoes({
         ];
     }
 
-    function nome(indice: number) {
-        const posicao = posicoes[indice];
-        return posicao
-            ? (campoDaPosicao(posicao, camposGlobais)?.nome ?? "campo")
-            : "campo";
-    }
-
     return (
         <div
             ref={setNodeRef}
@@ -90,7 +84,7 @@ export function ListaPosicoes({
         >
             <SortableContext
                 items={posicoes.map((posicao) => posicao.chave)}
-                strategy={verticalListSortingStrategy}
+                strategy={rectSortingStrategy}
             >
                 {posicoes.length === 0 ? (
                     <div
@@ -107,38 +101,25 @@ export function ListaPosicoes({
                         />
                     </div>
                 ) : (
-                    <>
-                        <Insercao
-                            descricao={`antes de ${nome(0)}`}
-                            opcoes={opcoesEm(0)}
-                        />
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-3">
                         {posicoes.map((posicao, indice) => (
-                            <div key={posicao.chave}>
-                                <PosicaoEditavel
-                                    posicao={posicao}
-                                    recipiente={recipiente}
-                                    caminho={`${caminho}.${indice}`}
-                                />
-                                <Insercao
-                                    descricao={`depois de ${nome(indice)}`}
-                                    opcoes={
-                                        indice === posicoes.length - 1
-                                            ? [
-                                                  ...opcoesEm(indice + 1),
-                                                  ...opcoesFinais,
-                                              ]
-                                            : opcoesEm(indice + 1)
-                                    }
-                                />
-                            </div>
-                        ))}
-                        {recebendoNoFim && (
-                            <span
-                                aria-hidden="true"
-                                className="bg-primary -mt-3 mb-2.5 h-0.5 rounded-full"
+                            <PosicaoEditavel
+                                key={posicao.chave}
+                                posicao={posicao}
+                                recipiente={recipiente}
+                                caminho={`${caminho}.${indice}`}
                             />
-                        )}
-                    </>
+                        ))}
+                        <Insercao
+                            cartao
+                            recebendo={recebendoNoFim}
+                            descricao={`no fim de ${rotulo}`}
+                            opcoes={[
+                                ...opcoesEm(posicoes.length),
+                                ...opcoesFinais,
+                            ]}
+                        />
+                    </div>
                 )}
             </SortableContext>
         </div>

@@ -71,6 +71,6 @@ export const ROTULO_TIPO: Record<TipoCampoFicha, string> = {
 };
 
 export const ROTULO_MODIFICADOR: Record<ModificadorNota, string> = {
-    SOMA: "Soma à nota",
-    DESCONTA: "Desconta da nota",
+    SOMA: "Soma",
+    DESCONTA: "Subtrai",
 };

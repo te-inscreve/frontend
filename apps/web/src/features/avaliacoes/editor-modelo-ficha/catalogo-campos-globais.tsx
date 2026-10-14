@@ -1,19 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 
 import type { CampoFicha } from "@te-inscreve/schemas";
+import { Input } from "@te-inscreve/components";
 import { cn } from "@te-inscreve/components/utils";
 
 import type { DadosArraste } from "./lib/arraste";
+import type { FiltrosCatalogo } from "./lib/filtros-catalogo-schema";
+import { CartaoCampo } from "./cartao-campo";
+import { DialogFiltrosCatalogo } from "./dialog-filtros-catalogo";
 import { idGlobalArraste } from "./lib/arraste";
 import { exibirCampoGlobal, ROTULO_TIPO } from "./lib/campo-exibido";
-import { MiniaturaCampo } from "./miniatura-campo";
+import { filtrosCatalogoVazios } from "./lib/filtros-catalogo-schema";
 
 /**
- * Painel da esquerda: a grade dos campos globais, que entram na ficha
- * arrastados. Ninguém os altera daqui — o cadastro deles é outro.
+ * Painel da esquerda: a lista dos campos globais, um por linha, que entram
+ * na ficha arrastados. Ninguém os altera daqui — o cadastro deles é outro.
  */
 export function CatalogoCamposGlobais({
     campos,
@@ -22,26 +27,92 @@ export function CatalogoCamposGlobais({
     campos: CampoFicha[];
     id: string;
 }) {
+    const [busca, setBusca] = useState("");
+    const [filtros, setFiltros] = useState(filtrosCatalogoVazios);
+    const visiveis = filtrarCampos(campos, busca, filtros);
+
     return (
         <section aria-labelledby={`${id}-titulo`} className="flex flex-col">
             <header className="flex flex-col gap-1 px-4 pt-4 pb-3">
-                <h2 id={`${id}-titulo`} className="text-sm font-bold">
-                    Campos globais
+                <h2
+                    id={`${id}-titulo`}
+                    className="text-primary text-base font-bold"
+                >
+                    Campos prontos
                 </h2>
-                <p className="text-muted-foreground text-xs">
-                    Arraste para a ficha. Campos globais não podem ser
-                    alterados.
-                </p>
             </header>
-            <ul className="grid grid-cols-2 gap-2 px-4 pb-4">
-                {campos.map((campo) => (
-                    <li key={campo.id}>
-                        <CartaoCampoGlobalArrastavel campo={campo} />
-                    </li>
-                ))}
-            </ul>
+            <div className="flex flex-col gap-2 px-4 pb-4">
+                <div className="flex items-center gap-2">
+                    <div className="relative min-w-0 flex-1">
+                        <MagnifyingGlassIcon
+                            aria-hidden="true"
+                            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                        />
+                        <Input
+                            id={`${id}-busca`}
+                            type="search"
+                            value={busca}
+                            onChange={(evento) => setBusca(evento.target.value)}
+                            placeholder="Buscar campo"
+                            aria-label="Buscar campo global por nome"
+                            className="h-9 pl-9"
+                            autoComplete="off"
+                        />
+                    </div>
+                    <DialogFiltrosCatalogo
+                        id={id}
+                        filtros={filtros}
+                        aoAplicar={setFiltros}
+                    />
+                </div>
+                <span className="text-muted-foreground text-xs">
+                    {visiveis.length}{" "}
+                    {campos.length !== visiveis.length
+                        ? `de ${campos.length}`
+                        : ""}{" "}
+                    campos globais
+                </span>
+                {visiveis.length > 0 ? (
+                    <ul className="flex flex-col gap-2">
+                        {visiveis.map((campo) => (
+                            <li key={campo.id}>
+                                <CartaoCampoGlobalArrastavel campo={campo} />
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p
+                        aria-live="polite"
+                        className="text-muted-foreground py-6 text-center text-xs"
+                    >
+                        Nenhum campo global encontrado.
+                    </p>
+                )}
+            </div>
         </section>
     );
+}
+
+/** Pelo tipo e pelo nome, sem diferenciar maiúsculas nem acentos. */
+function filtrarCampos(
+    campos: CampoFicha[],
+    busca: string,
+    filtros: FiltrosCatalogo,
+): CampoFicha[] {
+    const procurado = normalizar(busca.trim());
+
+    return campos.filter(
+        (campo) =>
+            (!filtros.tipo || campo.tipo === filtros.tipo) &&
+            (!procurado || normalizar(campo.nome).includes(procurado)),
+    );
+}
+
+function normalizar(texto: string) {
+    return texto
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase();
 }
 
 function CartaoCampoGlobalArrastavel({ campo }: { campo: CampoFicha }) {
@@ -80,25 +151,11 @@ export function CartaoCampoGlobal({
     campo: CampoFicha;
     className?: string;
 }) {
-    const exibido = exibirCampoGlobal(campo);
-
     return (
-        <div
-            className={cn(
-                "bg-card hover:border-primary/50 flex h-full flex-col gap-2 rounded-md border p-2 shadow-xs transition-colors",
-                className,
-            )}
-        >
-            <MiniaturaCampo campo={exibido} />
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="line-clamp-2 text-xs leading-tight font-semibold">
-                    {campo.nome}
-                </span>
-                <span className="text-muted-foreground mt-auto flex items-center gap-1 text-[11px]">
-                    <LockSimpleIcon aria-hidden="true" className="size-3" />
-                    {ROTULO_TIPO[campo.tipo]}
-                </span>
-            </div>
-        </div>
+        <CartaoCampo
+            campo={exibirCampoGlobal(campo)}
+            global
+            className={className}
+        />
     );
 }

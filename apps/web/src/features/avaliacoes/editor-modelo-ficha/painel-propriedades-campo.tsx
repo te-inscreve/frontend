@@ -84,6 +84,9 @@ export function PainelPropriedadesCampo() {
                 caminho={caminho}
                 campo={aberto.campo}
             />
+            <Button type="button" className="mx-4">
+                Aplicar
+            </Button>
         </section>
     );
 }
@@ -366,10 +369,9 @@ function Alternativas({
                                         />
                                         <Button
                                             type="button"
-                                            variant="ghost"
+                                            variant="ghost-destructive"
                                             size="icon-sm"
                                             aria-label={`Remover alternativa ${indice + 1}`}
-                                            className="text-muted-foreground hover:text-destructive"
                                             onClick={() =>
                                                 gravar(
                                                     alternativas.filter(

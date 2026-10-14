@@ -163,10 +163,10 @@ export function CartaoAgrupamento({ agrupamento, indice }: Props) {
                     />
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="ghost-destructive"
                         size="icon"
                         aria-label={`Remover agrupamento ${rotulo}`}
-                        className="text-muted-foreground hover:text-destructive mt-[1.375rem]"
+                        className="mt-[1.375rem]"
                         onClick={() =>
                             agrupamento.campos.length > 0
                                 ? setConfirmandoRemocao(true)

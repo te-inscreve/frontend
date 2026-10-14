@@ -14,6 +14,9 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { EyeIcon } from "@phosphor-icons/react/dist/ssr";
+import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 import { SidebarSimpleIcon } from "@phosphor-icons/react/dist/ssr/SidebarSimple";
 import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
 import { get } from "react-hook-form";
@@ -35,6 +38,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
     Button,
+    cn,
     Tabs,
     TabsList,
     TabsTrigger,
@@ -107,6 +111,10 @@ export function EditorModeloFicha({
     );
 
     const editando = modo === "edicao";
+    // Com o painel aberto, a pessoa está no meio de um campo: criar o modelo
+    // ali salvaria o que ainda está sendo escrito. O botão trava até fechar —
+    // e, travado o botão padrão, o Enter num input também não envia.
+    const propriedadesAbertas = editando && selecionado !== null;
     const sujo = form.formState.isDirty && !salvo;
 
     useEffect(() => {
@@ -215,6 +223,10 @@ export function EditorModeloFicha({
         else router.push(destino);
     }
 
+    const [isEditing, isPreview] = useMemo(() => {
+        return [modo === "edicao", modo === "previa"];
+    }, [modo]);
+
     return (
         <EditorProvider
             value={{
@@ -280,10 +292,16 @@ export function EditorModeloFicha({
                         >
                             <TabsList aria-label="Modo da ficha">
                                 <TabsTrigger value="edicao" className="text-sm">
-                                    Edição
+                                    <PencilSimpleIcon
+                                        weight={isEditing ? "bold" : "regular"}
+                                    />
+                                    {isEditing ? "Edição" : undefined}
                                 </TabsTrigger>
                                 <TabsTrigger value="previa" className="text-sm">
-                                    Pré-visualização
+                                    <EyeIcon
+                                        weight={isPreview ? "bold" : "regular"}
+                                    />
+                                    {isPreview ? "Prévia" : undefined}
                                 </TabsTrigger>
                             </TabsList>
                         </Tabs>
@@ -329,7 +347,15 @@ export function EditorModeloFicha({
                                     }
                                 }}
                             >
-                                <div className="mx-auto w-full max-w-3xl px-4 py-8">
+                                <div
+                                    className={cn(
+                                        "mx-auto w-full px-4 py-8",
+                                        // A prévia é mais larga: os
+                                        // agrupamentos põem os campos lado a
+                                        // lado.
+                                        editando ? "max-w-3xl" : "max-w-6xl",
+                                    )}
+                                >
                                     <div className="bg-card rounded-lg border p-6 shadow-xs md:p-10">
                                         {editando ? (
                                             <CanvasModeloFicha />
@@ -368,7 +394,16 @@ export function EditorModeloFicha({
                                 ))}
                             </ul>
                         )}
-                        <div className="ml-auto flex gap-2">
+                        <div className="ml-auto flex items-center gap-2">
+                            {propriedadesAbertas && (
+                                <p
+                                    id="criar-modelo-travado"
+                                    className="text-muted-foreground text-xs"
+                                >
+                                    Feche as propriedades do campo para criar o
+                                    modelo.
+                                </p>
+                            )}
                             <Button
                                 type="button"
                                 variant="outline"
@@ -376,12 +411,23 @@ export function EditorModeloFicha({
                             >
                                 Cancelar
                             </Button>
-                            <Button type="submit" disabled={salvando}>
+                            <Button
+                                type="submit"
+                                disabled={salvando || propriedadesAbertas}
+                                aria-describedby={
+                                    propriedadesAbertas
+                                        ? "criar-modelo-travado"
+                                        : undefined
+                                }
+                            >
                                 {salvando && (
                                     <SpinnerGapIcon
                                         aria-hidden="true"
                                         className="animate-spin"
                                     />
+                                )}
+                                {propriedadesAbertas && (
+                                    <LockSimpleIcon aria-hidden="true" />
                                 )}
                                 Criar modelo
                             </Button>

@@ -3,13 +3,11 @@
 import { useDndContext } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { DotsSixVerticalIcon } from "@phosphor-icons/react/dist/ssr/DotsSixVertical";
-import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr/PencilSimple";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
 import { get, useFormState } from "react-hook-form";
 
-import { Badge, Button } from "@te-inscreve/components";
+import { Button } from "@te-inscreve/components";
 import { cn } from "@te-inscreve/components/utils";
 
 import type { DadosArraste } from "./lib/arraste";
@@ -19,10 +17,14 @@ import type {
     PosicaoForm,
 } from "./lib/modelo-ficha-form-schema";
 import type { Recipiente } from "./use-composicao";
-import { ControleCampo } from "./controle-campo";
+import { CartaoCampo } from "./cartao-campo";
 import { useEditor } from "./editor-contexto";
 import { dadosDe } from "./lib/arraste";
-import { exibirCampoExclusivo, exibirCampoGlobal } from "./lib/campo-exibido";
+import {
+    exibirCampoExclusivo,
+    exibirCampoGlobal,
+    ROTULO_TIPO,
+} from "./lib/campo-exibido";
 import { idRecipiente } from "./use-composicao";
 
 interface Props {
@@ -33,9 +35,14 @@ interface Props {
 }
 
 /**
- * Uma posição na ficha em edição: o campo desenhado como o jurado o vê, com a
- * alça para reordenar e o botão de tirar. A exclusiva abre o painel de
- * propriedades ao clique; a global só se move e sai.
+ * Uma posição na ficha em edição, no mesmo cartão do catálogo. O cartão
+ * inteiro é a alça de arraste; a exclusiva abre o painel de propriedades ao
+ * clique — a distância mínima do sensor separa clique de arraste.
+ *
+ * As ações vivem na doca do cartão: editar no lugar do lápis, sempre à
+ * vista; remover desliza para fora dela com o ponteiro ou o foco. Os botões
+ * param o `keydown` e o `pointerdown`: o cartão escuta os dois para
+ * arrastar, e Enter em "Remover" começaria um arraste pelo teclado.
  */
 export function PosicaoEditavel({ posicao, recipiente, caminho }: Props) {
     const { camposGlobais, composicao, selecionado, selecionar } = useEditor();
@@ -56,13 +63,13 @@ export function PosicaoEditavel({ posicao, recipiente, caminho }: Props) {
         attributes,
         listeners,
         setNodeRef,
-        setActivatorNodeRef,
         transform,
         transition,
         isDragging,
     } = useSortable({ id: posicao.chave, data: dados });
 
-    // O campo do catálogo não abre vaga na lista: a linha marca onde ele entra.
+    // O campo do catálogo não abre vaga na grade: a linha à esquerda marca
+    // onde ele entra.
     const recebendoGlobal =
         dadosDe(active?.data)?.tipo === "global" && over?.id === posicao.chave;
 
@@ -75,65 +82,46 @@ export function PosicaoEditavel({ posicao, recipiente, caminho }: Props) {
     return (
         <div
             ref={setNodeRef}
+            {...attributes}
+            {...listeners}
+            aria-roledescription="posição arrastável"
+            aria-label={`${campo.nome}, ${ROTULO_TIPO[campo.tipo]}${exclusiva ? "" : ", global"}`}
+            onClick={(evento) => {
+                evento.stopPropagation();
+                abrir();
+            }}
             style={{
                 transform: CSS.Translate.toString(transform),
                 transition,
             }}
-            className={cn("relative", isDragging && "z-10 opacity-60")}
+            className={cn(
+                "group/posicao focus-visible:ring-ring/50 relative h-full cursor-grab touch-none rounded-md outline-none focus-visible:ring-[3px]",
+                isDragging && "z-10 opacity-60",
+            )}
         >
             {recebendoGlobal && (
                 <span
                     aria-hidden="true"
-                    className="bg-primary absolute inset-x-0 -top-3 h-0.5 rounded-full"
+                    className="bg-primary absolute inset-y-0 -left-2 w-0.5 rounded-full"
                 />
             )}
-            <div
-                onClick={(evento) => {
-                    evento.stopPropagation();
-                    abrir();
-                }}
+            <CartaoCampo
+                campo={campo}
+                global={!exclusiva}
                 className={cn(
-                    "group/posicao bg-card relative flex gap-2 rounded-md border border-transparent py-3 pr-3 pl-1 transition-colors",
-                    exclusiva && "hover:border-border cursor-pointer",
-                    !exclusiva && "hover:border-border/60",
                     aberta && "border-primary ring-primary/20 ring-[3px]",
                     comErro && "border-destructive",
                 )}
-            >
-                <button
-                    ref={setActivatorNodeRef}
-                    type="button"
-                    {...attributes}
-                    {...listeners}
-                    aria-roledescription="posição arrastável"
-                    aria-label={`Mover ${campo.nome}`}
-                    onClick={(evento) => evento.stopPropagation()}
-                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 flex w-6 shrink-0 cursor-grab touch-none items-start justify-center rounded-sm pt-0.5 outline-none focus-visible:ring-[3px]"
-                >
-                    <DotsSixVerticalIcon aria-hidden="true" weight="bold" />
-                </button>
-
-                <div className="min-w-0 flex-1">
-                    <ControleCampo
-                        campo={campo}
-                        id={`editor-${posicao.chave}`}
-                        desabilitado
-                    />
-                    {comErro && (
-                        <p className="text-destructive mt-2 text-sm">
-                            Revise as propriedades deste campo.
-                        </p>
-                    )}
-                </div>
-
-                <div className="flex shrink-0 items-start gap-1">
-                    {exclusiva ? (
+                icone={
+                    exclusiva ? (
                         <Button
                             type="button"
                             variant="ghost"
-                            size="icon-sm"
+                            size="icon-xs"
                             aria-label={`Editar ${campo.nome}`}
                             aria-pressed={aberta}
+                            onKeyDown={(evento) => evento.stopPropagation()}
+                            onPointerDown={(evento) => evento.stopPropagation()}
                             onClick={(evento) => {
                                 evento.stopPropagation();
                                 abrir();
@@ -141,18 +129,16 @@ export function PosicaoEditavel({ posicao, recipiente, caminho }: Props) {
                         >
                             <PencilSimpleIcon aria-hidden="true" />
                         </Button>
-                    ) : (
-                        <Badge variant="outline" className="mt-1.5">
-                            <LockSimpleIcon aria-hidden="true" />
-                            Global
-                        </Badge>
-                    )}
+                    ) : undefined
+                }
+                acoes={
                     <Button
                         type="button"
-                        variant="ghost"
-                        size="icon-sm"
+                        variant="ghost-destructive"
+                        size="icon-xs"
                         aria-label={`Remover ${campo.nome}`}
-                        className="text-muted-foreground hover:text-destructive opacity-0 group-focus-within/posicao:opacity-100 group-hover/posicao:opacity-100"
+                        onKeyDown={(evento) => evento.stopPropagation()}
+                        onPointerDown={(evento) => evento.stopPropagation()}
                         onClick={(evento) => {
                             evento.stopPropagation();
                             if (aberta) selecionar(null);
@@ -164,8 +150,14 @@ export function PosicaoEditavel({ posicao, recipiente, caminho }: Props) {
                     >
                         <TrashIcon aria-hidden="true" />
                     </Button>
-                </div>
-            </div>
+                }
+            >
+                {comErro && (
+                    <p className="text-destructive text-[11px] leading-tight">
+                        Revise as propriedades.
+                    </p>
+                )}
+            </CartaoCampo>
         </div>
     );
 }
