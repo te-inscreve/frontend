@@ -18,10 +18,11 @@ import {
     Input,
 } from "@te-inscreve/components";
 
+import { BotaoCriarModeloFicha } from "./botao-criar-modelo-ficha";
 import { CartaoModeloFicha } from "./cartao-modelo-ficha";
 import { filtrarModelosFicha, modelosFichaMock } from "./mock-modelos-ficha";
 
-const ROTULO = "Selecionar modelo de ficha";
+const ROTULO = "Selecionar ficha";
 
 /**
  * O botão do estado vazio da ficha avaliativa, que se expande no seletor de
@@ -93,16 +94,18 @@ export function BotaoSelecionarModeloFicha({
                     </div>
 
                     <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6 pb-1">
-                        {modelos.length > 0 ? (
-                            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                                {modelos.map((modelo) => (
-                                    <CartaoModeloFicha
-                                        key={modelo.id}
-                                        modelo={modelo}
-                                    />
-                                ))}
-                            </ul>
-                        ) : (
+                        {/* O atalho de criar fica fora do filtro: a busca sem
+                            resultado é justamente quando ele mais serve. */}
+                        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                            <BotaoCriarModeloFicha />
+                            {modelos.map((modelo) => (
+                                <CartaoModeloFicha
+                                    key={modelo.id}
+                                    modelo={modelo}
+                                />
+                            ))}
+                        </ul>
+                        {modelos.length === 0 && (
                             <p
                                 aria-live="polite"
                                 className="text-muted-foreground py-12 text-center text-sm"
