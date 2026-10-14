@@ -78,7 +78,13 @@ export {
     EXPANSION_TRANSITION,
 } from "./components/expandable-dialog";
 export { Input, type InputProps } from "./components/input";
-export { Field, FieldError, FieldGroup, FieldLabel } from "./components/field";
+export {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from "./components/field";
 export { Label } from "./components/label";
 export {
     DropdownMenu,

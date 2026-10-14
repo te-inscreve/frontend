@@ -107,6 +107,20 @@ function FieldLabel({
     );
 }
 
+/**
+ * Texto de ajuda do campo: fica abaixo do controle, em 12px, e o controle
+ * aponta para ele com `aria-describedby`.
+ */
+function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
+    return (
+        <p
+            data-slot="field-description"
+            className={cn("text-muted-foreground text-xs", className)}
+            {...props}
+        />
+    );
+}
+
 type FieldErrorProps = React.ComponentProps<"div"> & {
     errors?: ({ message?: string } | undefined)[];
 };
@@ -139,6 +153,7 @@ function FieldError({
 
 export {
     Field,
+    FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
