@@ -28,3 +28,17 @@ Aplica-se a toda tela escrita em `frontend/apps/web`.
 - O boundary fica o mais fundo possível — um por unidade de espera independente — e o fallback tem a geometria do conteúdo final. Skeleton para carregamento de estrutura, spinner só para ação localizada.
 - Exceções são pontuais e justificadas por comentário no próprio arquivo: `defaultValues` de formulário, portão que decide se a página existe, leitura de `cookies()`. Elas justificam um `await`, não a página inteira.
 - `app/admin/eventos/[slug]/modalidades/[slugModalidade]/page.tsx` é o exemplo canônico. Leia `docs/fcp.md` antes de criar uma tela nova ou de acrescentar uma espera a uma existente.
+
+## Agent skills
+
+### Issue tracker
+
+Issues e specs ficam no Linear, time `TE` (Te-inscreve), acessado pelo MCP do Linear; issues deste repo levam o label `Frontend`. Ver `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Os cinco papéis canônicos com os nomes padrão (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), criados no time `TE`. Ver `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context: `GLOSSARY-MAP.md` na raiz aponta um `GLOSSARY.md` por contexto de negócio em `docs/contextos/<contexto>/`. Ver `docs/agents/domain.md`.
