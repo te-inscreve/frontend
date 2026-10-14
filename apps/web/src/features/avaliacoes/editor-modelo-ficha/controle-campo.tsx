@@ -1,12 +1,6 @@
 "use client";
 
-import {
-    Badge,
-    Checkbox,
-    Input,
-    Label,
-    Textarea,
-} from "@te-inscreve/components";
+import { Badge, Input, Label, Textarea } from "@te-inscreve/components";
 
 import type { CampoExibido } from "./lib/campo-exibido";
 import { ROTULO_MODIFICADOR } from "./lib/campo-exibido";
@@ -77,9 +71,12 @@ export function ControleCampo({ campo, id, desabilitado = false }: Props) {
                 </div>
             )}
 
+            {/* Escolha única: o jurado marca uma alternativa só. Os radios
+                nativos dividem o `name`, que já é único por volta do
+                agrupamento na prévia. */}
             {campo.tipo === "ALTERNATIVA_MULTIPLA" && (
                 <div
-                    role="group"
+                    role="radiogroup"
                     aria-labelledby={`${id}-rotulo`}
                     aria-describedby={descricaoId}
                     className="flex flex-col gap-2"
@@ -89,9 +86,13 @@ export function ControleCampo({ campo, id, desabilitado = false }: Props) {
                             key={indice}
                             className="flex items-center gap-2 text-sm"
                         >
-                            <Checkbox
+                            <input
+                                type="radio"
                                 id={`${id}-${indice}`}
+                                name={id}
+                                value={indice}
                                 disabled={desabilitado}
+                                className="accent-primary size-4 shrink-0 disabled:cursor-not-allowed"
                             />
                             <Label
                                 htmlFor={`${id}-${indice}`}

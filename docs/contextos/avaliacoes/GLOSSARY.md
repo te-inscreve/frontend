@@ -26,6 +26,10 @@ _Avoid_: Campo padrão, campo do sistema
 Campo que nasce dentro de um modelo de ficha e só existe nele.
 _Avoid_: Campo local, campo personalizado, campo custom
 
+**Alternativa**:
+Uma das opções de um campo de alternativa múltipla. O jurado marca uma só: "múltipla" é a quantidade de opções, não de respostas.
+_Avoid_: Opção, item de escolha
+
 **Posição**:
 O lugar que um campo ocupa na ordem de um modelo de ficha. O mesmo campo global pode ocupar várias posições.
 _Avoid_: Slot, linha

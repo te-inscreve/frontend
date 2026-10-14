@@ -19,6 +19,7 @@ import type { ModeloFichaFormValues } from "./lib/modelo-ficha-form-schema";
 import { CartaoAgrupamento } from "./cartao-agrupamento";
 import { useEditor } from "./editor-contexto";
 import { Insercao } from "./insercao";
+import { mensagemDaLista } from "./lib/erro-lista";
 import { novoAgrupamento } from "./lib/modelo-ficha-form-schema";
 import { ListaPosicoes } from "./lista-posicoes";
 
@@ -41,7 +42,7 @@ export function CanvasModeloFicha() {
         rotulo: "Criar agrupamento",
         aoEscolher: () => composicao.inserirAgrupamento(novoAgrupamento()),
     };
-    const erroComposicao = errors.camposGerais?.message;
+    const erroComposicao = mensagemDaLista(errors, "camposGerais");
 
     return (
         <div className="flex flex-col gap-6">

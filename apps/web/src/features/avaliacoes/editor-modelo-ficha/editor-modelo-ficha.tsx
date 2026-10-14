@@ -1,6 +1,7 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import type { FieldErrors } from "react-hook-form";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,6 +41,7 @@ import {
 } from "@te-inscreve/components";
 import { FormProvider } from "@te-inscreve/components/components/field";
 
+import type { ModeloFichaFormValues } from "./lib/modelo-ficha-form-schema";
 import type { Recipiente } from "./use-composicao";
 import { CanvasModeloFicha } from "./canvas-modelo-ficha";
 import {
@@ -71,7 +73,9 @@ type Modo = "edicao" | "previa";
  * ficha ao centro, as propriedades do campo exclusivo aberto à direita.
  *
  * A página não rola: cabeçalho e rodapé ficam parados, e cada painel rola por
- * dentro. Abaixo de `lg` os painéis laterais passam a flutuar sobre a ficha.
+ * dentro. Abaixo de `lg` o catálogo flutua sobre a ficha; o painel de
+ * propriedades flutua abaixo de `2xl`, porque somado ao catálogo e à sidebar
+ * do admin ele espremia a ficha numa coluna de poucas palavras.
  */
 export function EditorModeloFicha({
     camposGlobais,
@@ -195,9 +199,10 @@ export function EditorModeloFicha({
         }
     }
 
-    function aoInvalidar() {
-        // Erro em campo exclusivo só aparece no painel: abre o primeiro.
-        const { errors } = form.formState;
+    function aoInvalidar(errors: FieldErrors<ModeloFichaFormValues>) {
+        // Erro em campo exclusivo só aparece no painel: abre o primeiro. Os
+        // erros vêm do argumento — o `form.formState` aqui ainda é o do
+        // último render, de antes desta validação.
         const comErro = camposExclusivos(form.getValues()).find((exclusivo) =>
             get(errors, exclusivo.caminho.join(".")),
         );
@@ -310,7 +315,19 @@ export function EditorModeloFicha({
 
                             <main
                                 className="bg-muted/40 min-h-0 min-w-0 flex-1 overflow-y-auto"
-                                onClick={() => setSelecionado(null)}
+                                onClick={(evento) => {
+                                    // Menus e diálogos vivem num portal, mas
+                                    // o clique deles sobe pela árvore do
+                                    // React até aqui: só fecha o painel o
+                                    // clique que caiu de fato na ficha.
+                                    if (
+                                        evento.currentTarget.contains(
+                                            evento.target as Node,
+                                        )
+                                    ) {
+                                        setSelecionado(null);
+                                    }
+                                }}
                             >
                                 <div className="mx-auto w-full max-w-3xl px-4 py-8">
                                     <div className="bg-card rounded-lg border p-6 shadow-xs md:p-10">
@@ -324,7 +341,7 @@ export function EditorModeloFicha({
                             </main>
 
                             {editando && selecionado && (
-                                <aside className="bg-card w-80 shrink-0 overflow-y-auto border-l max-lg:absolute max-lg:inset-y-0 max-lg:right-0 max-lg:z-20 max-lg:shadow-xl">
+                                <aside className="bg-card w-80 shrink-0 overflow-y-auto border-l max-2xl:absolute max-2xl:inset-y-0 max-2xl:right-0 max-2xl:z-20 max-2xl:shadow-xl">
                                     <PainelPropriedadesCampo />
                                 </aside>
                             )}

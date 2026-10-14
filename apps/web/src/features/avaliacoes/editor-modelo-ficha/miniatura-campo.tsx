@@ -44,7 +44,7 @@ function MiniaturaNumerico({ campo }: { campo: CampoExibido }) {
                 0
             </span>
             {campo.teto && (
-                <span className="text-muted-foreground text-xs tabular-nums">
+                <span className="text-muted-foreground text-xs whitespace-nowrap tabular-nums">
                     / {campo.teto}
                 </span>
             )}
@@ -60,7 +60,7 @@ function MiniaturaAlternativas({ alternativas }: { alternativas: string[] }) {
         <ul className="flex w-full flex-col gap-1">
             {linhas.map((alternativa, indice) => (
                 <li key={indice} className="flex items-center gap-1.5">
-                    <span className="bg-card size-2.5 shrink-0 rounded-[3px] border" />
+                    <span className="bg-card size-2.5 shrink-0 rounded-full border" />
                     {alternativa ? (
                         <span className="text-muted-foreground truncate text-[10px] leading-none">
                             {alternativa}

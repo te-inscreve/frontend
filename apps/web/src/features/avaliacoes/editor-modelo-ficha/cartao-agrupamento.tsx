@@ -5,7 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { DotsSixVerticalIcon } from "@phosphor-icons/react/dist/ssr/DotsSixVertical";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
-import { Controller, get, useFormContext, useFormState } from "react-hook-form";
+import { Controller, useFormContext, useFormState } from "react-hook-form";
 
 import {
     AlertDialog,
@@ -31,6 +31,7 @@ import type {
 } from "./lib/modelo-ficha-form-schema";
 import { NumberInput } from "~/shared/ui/number-input";
 import { useEditor } from "./editor-contexto";
+import { mensagemDaLista } from "./lib/erro-lista";
 import { ListaPosicoes } from "./lista-posicoes";
 
 interface Props {
@@ -51,8 +52,7 @@ export function CartaoAgrupamento({ agrupamento, indice }: Props) {
 
     const caminho = `agrupamentos.${indice}` as const;
     const rotulo = agrupamento.nome.trim() || `Agrupamento ${indice + 1}`;
-    const erroCampos = get(errors, `${caminho}.campos`) as
-        { message?: string } | undefined;
+    const erroCampos = mensagemDaLista(errors, `${caminho}.campos`);
 
     const dados: DadosArraste = { tipo: "agrupamento", rotulo };
     const {
@@ -84,7 +84,7 @@ export function CartaoAgrupamento({ agrupamento, indice }: Props) {
             className={cn(
                 "bg-muted/40 relative flex rounded-lg border",
                 isDragging && "z-10 opacity-70 shadow-lg",
-                erroCampos?.message && "border-destructive",
+                erroCampos && "border-destructive",
             )}
         >
             {/* O entalhe: a faixa da esquerda é a alça do cartão inteiro. */}
@@ -189,9 +189,9 @@ export function CartaoAgrupamento({ agrupamento, indice }: Props) {
                         </p>
                     }
                 />
-                {erroCampos?.message && (
+                {erroCampos && (
                     <p role="alert" className="text-destructive text-sm">
-                        {erroCampos.message}
+                        {erroCampos}
                     </p>
                 )}
             </div>

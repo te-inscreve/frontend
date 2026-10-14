@@ -1,6 +1,7 @@
 "use client";
 
 import type { FieldPath } from "react-hook-form";
+import { useEffect, useRef } from "react";
 import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
 import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
@@ -30,6 +31,7 @@ import type {
 } from "./lib/modelo-ficha-form-schema";
 import { useEditor } from "./editor-contexto";
 import { ROTULO_MODIFICADOR, ROTULO_TIPO } from "./lib/campo-exibido";
+import { mensagemDaLista } from "./lib/erro-lista";
 import {
     campoComTipo,
     camposExclusivos,
@@ -313,6 +315,22 @@ function Alternativas({
     const { control, getFieldState, formState } =
         useFormContext<ModeloFichaFormValues>();
     const estadoLista = getFieldState(caminho, formState);
+    const mensagemLista = mensagemDaLista(formState.errors, caminho);
+    // A alternativa nova recebe o foco assim que aparece: quem clicou em
+    // "Adicionar" vai digitar o texto dela em seguida.
+    const focar = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!focar.current) return;
+        document.getElementById(`alternativa-${focar.current}`)?.focus();
+        focar.current = null;
+    }, [alternativas]);
+
+    function adicionar() {
+        const nova = novaAlternativa();
+        gravar([...alternativas, nova]);
+        focar.current = nova.chave;
+    }
 
     return (
         <Field data-invalid={estadoLista.invalid}>
@@ -381,14 +399,12 @@ function Alternativas({
                 variant="outline"
                 size="sm"
                 className="self-start"
-                onClick={() => gravar([...alternativas, novaAlternativa()])}
+                onClick={adicionar}
             >
                 <PlusIcon aria-hidden="true" />
                 Adicionar alternativa
             </Button>
-            {estadoLista.error?.message && (
-                <FieldError errors={[estadoLista.error]} />
-            )}
+            {mensagemLista && <FieldError>{mensagemLista}</FieldError>}
         </Field>
     );
 }
