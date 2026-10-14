@@ -1,9 +1,12 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { RankingIcon, UserIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+    ClipboardTextIcon,
+    RankingIcon,
+    UserIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
-import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr/ClipboardText";
 import { SealCheckIcon } from "@phosphor-icons/react/dist/ssr/SealCheck";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UserCheckIcon } from "@phosphor-icons/react/dist/ssr/UserCheck";
@@ -208,7 +211,7 @@ export async function DetalheCategoria({
                     </TabsContent>
                 </Tabs>
 
-                <Tabs defaultValue="avaliadores" className="lg:order-2">
+                <Tabs defaultValue="ficha" className="lg:order-2">
                     <TabsList variant="line" className="w-full justify-start">
                         <TabsTrigger value="avaliadores" className="flex-none">
                             <UserCheckIcon />
