@@ -173,8 +173,16 @@ export const modeloFichaFormDefaults: ModeloFichaFormValues = {
     agrupamentos: [],
 };
 
+/**
+ * A chave só precisa ser única dentro do formulário aberto e nunca sai do
+ * navegador: um contador basta. `crypto.randomUUID` não serve — só existe em
+ * contexto seguro, e falha no dev server aberto por IP da rede.
+ */
+let ultimaChave = 0;
+
 function novaChave() {
-    return crypto.randomUUID();
+    ultimaChave += 1;
+    return `chave-${ultimaChave}`;
 }
 
 export function novaPosicaoGlobal(campoId: number): PosicaoGlobalForm {
