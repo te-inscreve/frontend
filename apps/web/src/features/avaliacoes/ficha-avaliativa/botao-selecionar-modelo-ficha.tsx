@@ -3,6 +3,8 @@
 import { useDeferredValue, useState } from "react";
 import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr/ClipboardText";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
+import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
+import { useQuery } from "@tanstack/react-query";
 
 import {
     buttonVariants,
@@ -17,12 +19,17 @@ import {
     ExpandableDialogTrigger,
     Input,
 } from "@te-inscreve/components";
+import { Skeleton } from "@te-inscreve/components/skeleton";
 
+import { useTRPC } from "~/shared/api/trpc/client";
 import { BotaoCriarModeloFicha } from "./botao-criar-modelo-ficha";
 import { CartaoModeloFicha } from "./cartao-modelo-ficha";
-import { filtrarModelosFicha, modelosFichaMock } from "./mock-modelos-ficha";
+import { filtrarModelosFicha } from "./lib/filtrar-modelos-ficha";
 
 const ROTULO = "Selecionar ficha";
+
+/** Uma linha cheia da grade no maior breakpoint, ao lado do atalho de criar. */
+const ESQUELETOS = 7;
 
 /**
  * O botão do estado vazio da ficha avaliativa, que se expande no seletor de
@@ -32,6 +39,10 @@ const ROTULO = "Selecionar ficha";
  * O rótulo do botão é o título do modal, com o mesmo tamanho nos dois lados:
  * elemento compartilhado que muda de tamanho é escalado pelo Motion, e texto
  * escalado estica.
+ *
+ * Os modelos só são buscados quando o seletor abre: a aba vazia é vista por
+ * muita gente que nunca chega a abri-lo. Enquanto chegam, a grade mostra
+ * pranchetas vazias do tamanho das de verdade.
  */
 export function BotaoSelecionarModeloFicha({
     categoriaId,
@@ -40,8 +51,13 @@ export function BotaoSelecionarModeloFicha({
 }) {
     const [aberto, setAberto] = useState(false);
     const [busca, setBusca] = useState("");
+    const trpc = useTRPC();
+    const consulta = useQuery({
+        ...trpc.fichaAvaliativa.getAll.queryOptions({}),
+        enabled: aberto,
+    });
     const modelos = filtrarModelosFicha(
-        modelosFichaMock,
+        consulta.data ?? [],
         useDeferredValue(busca),
     );
 
@@ -98,6 +114,12 @@ export function BotaoSelecionarModeloFicha({
                             resultado é justamente quando ele mais serve. */}
                         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                             <BotaoCriarModeloFicha />
+                            {consulta.isPending &&
+                                Array.from({ length: ESQUELETOS }, (_, i) => (
+                                    <li key={i} aria-hidden="true">
+                                        <Skeleton className="aspect-3/4 w-full rounded-lg" />
+                                    </li>
+                                ))}
                             {modelos.map((modelo) => (
                                 <CartaoModeloFicha
                                     key={modelo.id}
@@ -105,7 +127,20 @@ export function BotaoSelecionarModeloFicha({
                                 />
                             ))}
                         </ul>
-                        {modelos.length === 0 && (
+                        {consulta.isError && (
+                            <p
+                                role="alert"
+                                className="text-destructive flex items-center justify-center gap-2 py-12 text-sm"
+                            >
+                                <WarningCircleIcon
+                                    aria-hidden="true"
+                                    className="size-4"
+                                />
+                                Não foi possível carregar os modelos.{" "}
+                                {consulta.error.message}
+                            </p>
+                        )}
+                        {consulta.isSuccess && modelos.length === 0 && (
                             <p
                                 aria-live="polite"
                                 className="text-muted-foreground py-12 text-center text-sm"
