@@ -167,8 +167,10 @@ export type {
     CampoFichaCriacao,
     CriarModeloFicha,
     ModeloFichaDetalhe,
+    ModeloFichaResumo,
     ModificadorNota,
     PosicaoFicha,
     PosicaoFichaCriacao,
+    PreviaModeloFicha,
     TipoCampoFicha,
 } from "./ficha-avaliativa";

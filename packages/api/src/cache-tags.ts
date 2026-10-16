@@ -84,3 +84,5 @@ export const tagsEntidades = () => ["entidades"];
  * refaz uma leitura —, e evita ter que carregar o id do usuário até aqui.
  */
 export const tagsPerfil = () => ["perfil"];
+
+export const tagsFichasAvaliativas = () => ["fichas-avaliativas"];

@@ -192,12 +192,46 @@ export const modeloFichaDetalheSchema = z.object({
     nome: z.string(),
     original: z.boolean(),
     editavel: z.boolean(),
+    global: z.boolean(),
     camposGerais: z.array(posicaoFichaSchema),
     agrupamentos: z.array(agrupamentoFichaSchema),
     versoes: z.array(
         z.object({ id: z.number().int(), versao: z.number().int() }),
     ),
 });
+
+/**
+ * O conteúdo de um modelo, para desenhar o cartão da listagem sem buscar o
+ * detalhe: os campos vêm só pelo nome. O backend pode mandar as listas
+ * inteiras ou cortadas; quando corta, os totais dizem quanto ficou de fora.
+ * `totalCampos` conta posições, gerais e de agrupamento, sem multiplicar pela
+ * `quantidade`.
+ */
+export const previaModeloFichaSchema = z.object({
+    camposGerais: z.array(z.string()),
+    agrupamentos: z.array(
+        z.object({
+            nome: z.string(),
+            quantidade: z.number().int(),
+            campos: z.array(z.string()),
+        }),
+    ),
+    totalCampos: z.number().int().optional(),
+    totalAgrupamentos: z.number().int().optional(),
+});
+
+/** Um item do `GET /fichas-avaliativas/modelos/`. */
+export const modeloFichaResumoSchema = modeloFichaDetalheSchema
+    .pick({
+        id: true,
+        codigoFamilia: true,
+        versao: true,
+        nome: true,
+        original: true,
+        editavel: true,
+        global: true,
+    })
+    .extend({ previa: previaModeloFichaSchema });
 
 export type TipoCampoFicha = z.infer<typeof tipoCampoFichaSchema>;
 export type ModificadorNota = z.infer<typeof modificadorNotaSchema>;
@@ -211,3 +245,5 @@ export type CampoFicha = z.infer<typeof campoFichaSchema>;
 export type PosicaoFicha = z.infer<typeof posicaoFichaSchema>;
 export type AgrupamentoFicha = z.infer<typeof agrupamentoFichaSchema>;
 export type ModeloFichaDetalhe = z.infer<typeof modeloFichaDetalheSchema>;
+export type PreviaModeloFicha = z.infer<typeof previaModeloFichaSchema>;
+export type ModeloFichaResumo = z.infer<typeof modeloFichaResumoSchema>;

@@ -1,11 +1,35 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { z } from "zod/v4";
 
-import type { ModeloFichaDetalhe } from "@te-inscreve/schemas";
+import type {
+    ModeloFichaDetalhe,
+    ModeloFichaResumo,
+} from "@te-inscreve/schemas";
 import { criarModeloFichaSchema } from "@te-inscreve/schemas";
 
+import { tagsFichasAvaliativas } from "../cache-tags";
 import { authenticatedProcedure } from "../trpc";
 
 export const fichaAvaliativaRouter = {
+    getAll: authenticatedProcedure
+        .input(
+            z.object({
+                search: z.string().trim().max(255).optional(),
+            }),
+        )
+        .query(async ({ ctx }) => {
+            const result = await ctx.restClient.get<ModeloFichaResumo[]>(
+                "/fichas-avaliativas/modelos/",
+                {
+                    next: {
+                        revalidate: 30,
+                        tags: tagsFichasAvaliativas(),
+                    },
+                },
+            );
+            if (!result.ok) throw result.error;
+            return result.data;
+        }),
     /**
      * Cria um modelo de ficha da entidade de quem está logado — do zero, ou a
      * partir de `modeloFichaAvaliativaId` (nova versão de uma ficha da
