@@ -1,4 +1,4 @@
-import { GlobeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { GlobeSimpleIcon } from "@phosphor-icons/react/dist/ssr/GlobeSimple";
 import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 
 import type { ModeloFichaResumo } from "@te-inscreve/schemas";
@@ -12,12 +12,13 @@ import { useResumirPreviaFicha } from "./lib/use-resumir-previa-ficha";
  *
  * O agrupamento é a única cor dentro da folha — faixa verde com o nome e a
  * quantidade de repetições —, para que dê para achar, de relance, os modelos
- * que repetem campos. Quando há agrupamento, os campos gerais cedem espaço:
- * a folha mostra um só, e o bloco repetido nunca fica de fora. Só o primeiro
- * agrupamento é desenhado; os demais entram na contagem do rodapé.
+ * que repetem campos. Quando há agrupamento, os campos gerais cedem espaço
+ * para que o bloco repetido nunca fique de fora. Só o primeiro agrupamento é
+ * desenhado; o que não coube — campos gerais, campos do agrupamento e os
+ * demais agrupamentos — vira uma contagem logo depois do trecho cortado.
  *
- * Os totais da prévia, quando vêm, valem mais que as listas: o backend pode
- * mandá-las cortadas. Sem eles, as listas são o modelo inteiro.
+ * Global é o modelo da plataforma, compartilhado por todas as entidades e que
+ * ninguém altera; fora dele, o rodapé avisa quando o modelo não é editável.
  */
 export function CartaoModeloFicha({
     modelo,
@@ -27,10 +28,15 @@ export function CartaoModeloFicha({
         "nome" | "versao" | "global" | "editavel" | "previa"
     >;
 }) {
-    const { campos, agrupamento, agrupamentosOcultos, camposOcultos } =
-        useResumirPreviaFicha({
-            previa: modelo.previa,
-        });
+    const {
+        campos,
+        agrupamento,
+        agrupamentosOcultos,
+        camposOcultos,
+        camposAgrupadosOcultos,
+    } = useResumirPreviaFicha({
+        previa: modelo.previa,
+    });
     return (
         // O respiro no topo é do prendedor, que sobe acima da prancheta: sem
         // ele, um contêiner com rolagem corta a primeira linha da grade.
@@ -39,27 +45,21 @@ export function CartaoModeloFicha({
                 <Prendedor />
 
                 <div className="bg-card flex flex-1 flex-col gap-2 overflow-hidden rounded-sm p-2.5 shadow-xs">
-                    {/* Quem cede altura é a prévia, não a contagem: com nomes de
-                        duas linhas, o que cabe depende da largura do cartão, e
-                        a lista é cortada com um esmaecido — a folha continua —
-                        enquanto o "+N campos" fica à vista. Sem corte, o
-                        esmaecido cai no espaço vazio do fim da folha. */}
+                    {/* Com nomes de duas linhas, o que cabe depende da largura
+                        do cartão: o que passa da folha é cortado com um
+                        esmaecido — a folha continua —, contagens incluídas.
+                        Sem corte, o esmaecido cai no espaço vazio do fim. */}
                     <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden mask-b-from-[calc(100%-1rem)]">
-                        <span className="line-clamp-2 text-sm leading-tight font-semibold">
+                        <span className="line-clamp-2 shrink-0 text-sm leading-tight font-semibold">
                             {modelo.nome}
                         </span>
 
                         <ListaCampos campos={campos} />
-                        {camposOcultos > 0 && (
-                            <div className="flex items-center gap-1.5">
-                                <Separator className="flex-1" />
-                                <span className="text-muted-foreground/70 shrink-0 text-[10px]">
-                                    +{camposOcultos}{" "}
-                                    {camposOcultos === 1 ? "campo" : "campos"}
-                                </span>
-                                <Separator className="flex-1" />
-                            </div>
-                        )}
+                        <Contagem
+                            quantidade={camposOcultos}
+                            singular="campo"
+                            plural="campos"
+                        />
                         {agrupamento && (
                             <div className="bg-primary-foreground flex flex-col gap-1.5 rounded-[3px] px-2 pb-1.5">
                                 <div className="bg-primary text-primary-foreground -mx-2 flex items-center gap-1 rounded-[3px] px-2 text-[10px] font-semibold">
@@ -72,36 +72,40 @@ export function CartaoModeloFicha({
                                     </span>
                                 </div>
                                 <ListaCampos campos={agrupamento.campos} />
+                                <Contagem
+                                    quantidade={camposAgrupadosOcultos}
+                                    singular="campo"
+                                    plural="campos"
+                                />
                             </div>
                         )}
-                        {agrupamentosOcultos > 0 && (
-                            <div className="flex items-center gap-1.5">
-                                <Separator className="flex-1" />
-                                <span className="text-muted-foreground/70 shrink-0 text-[10px]">
-                                    +{agrupamentosOcultos}{" "}
-                                    {agrupamentosOcultos === 1
-                                        ? "agrupamento"
-                                        : "agrupamentos"}
-                                </span>
-                                <Separator className="flex-1" />
-                            </div>
-                        )}
+                        <Contagem
+                            quantidade={agrupamentosOcultos}
+                            singular="agrupamento"
+                            plural="agrupamentos"
+                        />
                     </div>
                 </div>
 
                 <div className="text-muted-foreground flex gap-2.5 px-1 pt-1.5 text-[10px]">
-                    {!modelo.global && (
+                    {modelo.global ? (
                         <span className="flex items-center gap-1">
                             <GlobeSimpleIcon
                                 aria-hidden="true"
                                 className="size-3"
                             />
-                            <LockSimpleIcon
-                                aria-hidden="true"
-                                className="size-3"
-                            />
-                            Somente leitura
+                            Global
                         </span>
+                    ) : (
+                        !modelo.editavel && (
+                            <span className="flex items-center gap-1">
+                                <LockSimpleIcon
+                                    aria-hidden="true"
+                                    className="size-3"
+                                />
+                                Somente leitura
+                            </span>
+                        )
                     )}
                     <span className="text-muted-foreground ml-auto shrink-0 text-[11px] tabular-nums">
                         v{modelo.versao}
@@ -128,6 +132,29 @@ function Prendedor() {
                 d="M0 9Q0 6 3 6H15Q17.5 6 18.2 3.4Q19 0 22.5 0H41.5Q45 0 45.8 3.4Q46.5 6 49 6H61Q64 6 64 9V13Q64 16 61 16H3Q0 16 0 13ZM28.5 3.5Q27 3.5 27 5Q27 6.5 28.5 6.5H35.5Q37 6.5 37 5Q37 3.5 35.5 3.5Z"
             />
         </svg>
+    );
+}
+
+/** O que não coube na folha, entre fios: "+3 campos". */
+function Contagem({
+    quantidade,
+    singular,
+    plural,
+}: {
+    quantidade: number;
+    singular: string;
+    plural: string;
+}) {
+    if (quantidade <= 0) return null;
+
+    return (
+        <div className="flex items-center gap-1.5">
+            <Separator className="flex-1" />
+            <span className="text-muted-foreground/70 shrink-0 text-[10px]">
+                +{quantidade} {quantidade === 1 ? singular : plural}
+            </span>
+            <Separator className="flex-1" />
+        </div>
     );
 }
 
