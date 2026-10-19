@@ -2,7 +2,14 @@
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import type { FieldErrors } from "react-hook-form";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+    useEffect,
+    useId,
+    useMemo,
+    useRef,
+    useState,
+    useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -14,8 +21,10 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr/Check";
 import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 import { SidebarSimpleIcon } from "@phosphor-icons/react/dist/ssr/SidebarSimple";
 import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
@@ -39,9 +48,6 @@ import {
     BreadcrumbSeparator,
     Button,
     cn,
-    Tabs,
-    TabsList,
-    TabsTrigger,
 } from "@te-inscreve/components";
 import { FormProvider } from "@te-inscreve/components/components/field";
 
@@ -70,11 +76,14 @@ import { useSalvarModeloFicha } from "./use-salvar-modelo-ficha";
 
 const LISTA = "/admin/fichas-avaliativas";
 
-type Modo = "edicao" | "previa";
+type Passo = "montar" | "revisar";
 
 /**
- * A tela de criar modelo de ficha: catálogo de campos globais à esquerda, a
- * ficha ao centro, as propriedades do campo exclusivo aberto à direita.
+ * A tela de criar modelo de ficha, em dois passos. Em **montar**, o catálogo
+ * de campos globais à esquerda, a ficha ao centro, as propriedades do campo
+ * exclusivo aberto à direita. **Próximo** valida a ficha e leva a
+ * **revisar**: a folha na prancheta, como os avaliadores vão encontrá-la, e
+ * só dali o modelo é criado.
  *
  * A página não rola: cabeçalho e rodapé ficam parados, e cada painel rola por
  * dentro. Abaixo de `lg` o catálogo flutua sobre a ficha; o painel de
@@ -96,7 +105,8 @@ export function EditorModeloFicha({
         [camposGlobais],
     );
 
-    const [modo, setModo] = useState<Modo>("edicao");
+    const [passo, setPasso] = useState<Passo>("montar");
+    const mainRef = useRef<HTMLElement>(null);
     const [selecionado, setSelecionado] = useState<string | null>(null);
     const telaLarga = useTelaLarga();
     // `null` segue a largura da tela: aberto no desktop, fechado no celular,
@@ -110,10 +120,10 @@ export function EditorModeloFicha({
         null,
     );
 
-    const editando = modo === "edicao";
-    // Com o painel aberto, a pessoa está no meio de um campo: criar o modelo
-    // ali salvaria o que ainda está sendo escrito. O botão trava até fechar —
-    // e, travado o botão padrão, o Enter num input também não envia.
+    const editando = passo === "montar";
+    // Com o painel aberto, a pessoa está no meio de um campo: seguir para a
+    // revisão ali levaria o que ainda está sendo escrito. O botão trava até
+    // fechar — e, travado o botão padrão, o Enter num input também não segue.
     const propriedadesAbertas = editando && selecionado !== null;
     const sujo = form.formState.isDirty && !salvo;
 
@@ -123,6 +133,19 @@ export function EditorModeloFicha({
         window.addEventListener("beforeunload", avisar);
         return () => window.removeEventListener("beforeunload", avisar);
     }, [sujo]);
+
+    // O botão que levou ao passo some com ele: o foco e a rolagem voltam ao
+    // começo da ficha, em vez de cair no `body` no meio da página. Na
+    // primeira montagem não há troca, e o foco fica onde o navegador pôs.
+    const passoInicial = useRef(true);
+    useEffect(() => {
+        if (passoInicial.current) {
+            passoInicial.current = false;
+            return;
+        }
+        mainRef.current?.scrollTo({ top: 0 });
+        mainRef.current?.focus({ preventScroll: true });
+    }, [passo]);
 
     useEffect(() => {
         if (!selecionado) return;
@@ -137,6 +160,9 @@ export function EditorModeloFicha({
         return () => document.removeEventListener("keydown", fechar);
     }, [selecionado]);
 
+    // Sem `id`, o dnd-kit numera o `aria-describedby` com um contador global,
+    // que no servidor e no cliente não bate: aviso de hidratação.
+    const dndId = useId();
     const sensores = useSensors(
         // A distância deixa o clique no cartão ser clique, e não arraste.
         useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -214,7 +240,7 @@ export function EditorModeloFicha({
         const comErro = camposExclusivos(form.getValues()).find((exclusivo) =>
             get(errors, exclusivo.caminho.join(".")),
         );
-        setModo("edicao");
+        setPasso("montar");
         if (comErro) setSelecionado(comErro.chave);
     }
 
@@ -222,10 +248,6 @@ export function EditorModeloFicha({
         if (sujo) setDestinoSaida(destino);
         else router.push(destino);
     }
-
-    const [isEditing, isPreview] = useMemo(() => {
-        return [modo === "edicao", modo === "previa"];
-    }, [modo]);
 
     return (
         <EditorProvider
@@ -239,7 +261,12 @@ export function EditorModeloFicha({
             <FormProvider {...form}>
                 <form
                     noValidate
-                    onSubmit={form.handleSubmit(salvar, aoInvalidar)}
+                    // O Enter num input envia o form: no primeiro passo, ele só
+                    // segue para a revisão; criar é sempre do segundo.
+                    onSubmit={form.handleSubmit(
+                        editando ? () => setPasso("revisar") : salvar,
+                        aoInvalidar,
+                    )}
                     className="flex h-full min-h-0 flex-col"
                 >
                     <header className="bg-card flex shrink-0 flex-wrap items-center gap-3 border-b px-4 py-3">
@@ -285,29 +312,11 @@ export function EditorModeloFicha({
                             </BreadcrumbList>
                         </Breadcrumb>
 
-                        <Tabs
-                            value={modo}
-                            onValueChange={(valor) => setModo(valor as Modo)}
-                            className="ml-auto"
-                        >
-                            <TabsList aria-label="Modo da ficha">
-                                <TabsTrigger value="edicao" className="text-sm">
-                                    <PencilSimpleIcon
-                                        weight={isEditing ? "bold" : "regular"}
-                                    />
-                                    {isEditing ? "Edição" : undefined}
-                                </TabsTrigger>
-                                <TabsTrigger value="previa" className="text-sm">
-                                    <EyeIcon
-                                        weight={isPreview ? "bold" : "regular"}
-                                    />
-                                    {isPreview ? "Prévia" : undefined}
-                                </TabsTrigger>
-                            </TabsList>
-                        </Tabs>
+                        <Etapas passo={passo} />
                     </header>
 
                     <DndContext
+                        id={dndId}
                         sensors={sensores}
                         collisionDetection={deteccaoColisao}
                         accessibility={{
@@ -332,7 +341,14 @@ export function EditorModeloFicha({
                             )}
 
                             <main
-                                className="bg-muted/40 min-h-0 min-w-0 flex-1 overflow-y-auto"
+                                ref={mainRef}
+                                tabIndex={-1}
+                                aria-label={
+                                    editando
+                                        ? "Montagem da ficha"
+                                        : "Revisão da ficha"
+                                }
+                                className="bg-muted/40 min-h-0 min-w-0 flex-1 overflow-y-auto outline-none"
                                 onClick={(evento) => {
                                     // Menus e diálogos vivem num portal, mas
                                     // o clique deles sobe pela árvore do
@@ -347,22 +363,25 @@ export function EditorModeloFicha({
                                     }
                                 }}
                             >
-                                <div
-                                    className={cn(
-                                        "mx-auto w-full px-4 py-8",
-                                        // A prévia é mais larga: os
-                                        // agrupamentos põem os campos lado a
-                                        // lado.
-                                        editando ? "max-w-3xl" : "max-w-6xl",
-                                    )}
-                                >
-                                    <div className="bg-card rounded-lg border p-6 shadow-xs md:p-10">
-                                        {editando ? (
+                                <div className="mx-auto w-full max-w-3xl px-4 py-8">
+                                    {/* A revisão traz a própria folha, presa
+                                        na prancheta; só a montagem usa o
+                                        papel liso. */}
+                                    {editando ? (
+                                        <div className="bg-card rounded-lg border p-6 shadow-xs md:p-10">
                                             <CanvasModeloFicha />
-                                        ) : (
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col gap-4">
+                                            <p className="text-muted-foreground text-sm">
+                                                Confira a ficha como os
+                                                avaliadores vão encontrá-la.
+                                                Para mudar algo, volte à
+                                                montagem.
+                                            </p>
                                             <PreviaModeloFicha />
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
                                 </div>
                             </main>
 
@@ -397,40 +416,60 @@ export function EditorModeloFicha({
                         <div className="ml-auto flex items-center gap-2">
                             {propriedadesAbertas && (
                                 <p
-                                    id="criar-modelo-travado"
+                                    id="proximo-travado"
                                     className="text-muted-foreground text-xs"
                                 >
-                                    Feche as propriedades do campo para criar o
-                                    modelo.
+                                    Feche as propriedades do campo para
+                                    continuar.
                                 </p>
                             )}
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => sair(LISTA)}
-                            >
-                                Cancelar
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={salvando || propriedadesAbertas}
-                                aria-describedby={
-                                    propriedadesAbertas
-                                        ? "criar-modelo-travado"
-                                        : undefined
-                                }
-                            >
-                                {salvando && (
-                                    <SpinnerGapIcon
-                                        aria-hidden="true"
-                                        className="animate-spin"
-                                    />
-                                )}
-                                {propriedadesAbertas && (
-                                    <LockSimpleIcon aria-hidden="true" />
-                                )}
-                                Criar modelo
-                            </Button>
+                            {editando ? (
+                                <>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => sair(LISTA)}
+                                    >
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={propriedadesAbertas}
+                                        aria-describedby={
+                                            propriedadesAbertas
+                                                ? "proximo-travado"
+                                                : undefined
+                                        }
+                                    >
+                                        {propriedadesAbertas && (
+                                            <LockSimpleIcon aria-hidden="true" />
+                                        )}
+                                        Próximo
+                                        <ArrowRightIcon aria-hidden="true" />
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={salvando}
+                                        onClick={() => setPasso("montar")}
+                                    >
+                                        <ArrowLeftIcon aria-hidden="true" />
+                                        Voltar
+                                    </Button>
+                                    <Button type="submit" disabled={salvando}>
+                                        {salvando && (
+                                            <SpinnerGapIcon
+                                                aria-hidden="true"
+                                                className="animate-spin"
+                                            />
+                                        )}
+                                        Criar modelo
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </footer>
                 </form>
@@ -466,6 +505,58 @@ export function EditorModeloFicha({
                 </AlertDialogContent>
             </AlertDialog>
         </EditorProvider>
+    );
+}
+
+const ETAPAS: { passo: Passo; rotulo: string }[] = [
+    { passo: "montar", rotulo: "Montar" },
+    { passo: "revisar", rotulo: "Revisar" },
+];
+
+/** Onde a pessoa está no caminho até criar: só indica, não navega. */
+function Etapas({ passo }: { passo: Passo }) {
+    const atual = ETAPAS.findIndex((etapa) => etapa.passo === passo);
+
+    return (
+        <ol aria-label="Etapas" className="ml-auto flex items-center gap-1.5">
+            {ETAPAS.map((etapa, indice) => {
+                const feita = indice < atual;
+                const ativa = indice === atual;
+                return (
+                    <li
+                        key={etapa.passo}
+                        aria-current={ativa ? "step" : undefined}
+                        className={cn(
+                            "flex items-center gap-1.5 text-sm",
+                            ativa
+                                ? "text-foreground font-semibold"
+                                : "text-muted-foreground",
+                        )}
+                    >
+                        {/* O chevron fica dentro do `li`: a `ol` só aceita
+                            itens, e ele é desenho, não etapa. */}
+                        {indice > 0 && (
+                            <CaretRightIcon
+                                aria-hidden="true"
+                                className="text-muted-foreground mr-1.5 size-3.5"
+                            />
+                        )}
+                        <span
+                            aria-hidden="true"
+                            className={cn(
+                                "flex size-5 items-center justify-center rounded-full border text-xs tabular-nums",
+                                (ativa || feita) &&
+                                    "bg-primary border-primary text-primary-foreground",
+                            )}
+                        >
+                            {feita ? <CheckIcon weight="bold" /> : indice + 1}
+                        </span>
+                        {etapa.rotulo}
+                        {feita && <span className="sr-only"> (concluída)</span>}
+                    </li>
+                );
+            })}
+        </ol>
     );
 }
 
