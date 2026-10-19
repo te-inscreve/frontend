@@ -20,7 +20,10 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 
-import { FichaAvaliativaVazia } from "~/features/avaliacoes/ficha-avaliativa/ficha-avaliativa-vazia";
+import {
+    FichaAvaliativaDaCategoria,
+    FichaAvaliativaDaCategoriaSkeleton,
+} from "~/features/avaliacoes/ficha-avaliativa/ficha-avaliativa-da-categoria";
 import { SituacaoCategoriaBadge } from "~/features/categorias/situacao-categoria-badge";
 import { ListaInscricoesSkeleton } from "~/features/inscricoes/lista-inscricoes";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
@@ -229,7 +232,15 @@ export async function DetalheCategoria({
                         </PainelNaoImplementado>
                     </TabsContent>
                     <TabsContent value="ficha" className="mt-4">
-                        <FichaAvaliativaVazia categoriaId={categoriaId} />
+                        <Suspense
+                            fallback={<FichaAvaliativaDaCategoriaSkeleton />}
+                        >
+                            <FichaAvaliativaDaCategoria
+                                eventoId={eventoId}
+                                modalidadeId={modalidadeId}
+                                categoriaId={categoriaId}
+                            />
+                        </Suspense>
                     </TabsContent>
                 </Tabs>
             </div>

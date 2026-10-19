@@ -44,6 +44,14 @@ export default function CategoriaDetailPage({
             categoriaId,
         }),
     );
+    // E a ficha avaliativa, para a aba dela.
+    void prefetch(
+        trpc.categoria.getFichaAvaliativa.queryOptions({
+            eventoId,
+            modalidadeId,
+            categoriaId,
+        }),
+    );
     // O evento também: é dele que a trilha tira o nome do evento e o da
     // modalidade.
     void prefetch(trpc.evento.getById.queryOptions({ id: eventoId }));

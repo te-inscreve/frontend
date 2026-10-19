@@ -1,8 +1,10 @@
+import Link from "next/link";
+import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { GlobeSimpleIcon } from "@phosphor-icons/react/dist/ssr/GlobeSimple";
 import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 
 import type { ModeloFichaResumo } from "@te-inscreve/schemas";
-import { Separator } from "@te-inscreve/components";
+import { cn, Separator } from "@te-inscreve/components";
 
 import { useResumirPreviaFicha } from "./lib/use-resumir-previa-ficha";
 
@@ -19,14 +21,23 @@ import { useResumirPreviaFicha } from "./lib/use-resumir-previa-ficha";
  *
  * Global é o modelo da plataforma, compartilhado por todas as entidades e que
  * ninguém altera; fora dele, o rodapé avisa quando o modelo não é editável.
+ *
+ * Com `onSelecionar`, a prancheta inteira vira o alvo do clique: um botão
+ * esticado por cima dela, e não um botão em volta — `button` só aceita
+ * conteúdo de frase, e a folha tem listas. Fora de uma grade, `as="div"`.
  */
 export function CartaoModeloFicha({
     modelo,
+    as: Raiz = "li",
+    onSelecionar,
+    selecionando = false,
+    desabilitado = false,
 }: {
-    modelo: Pick<
-        ModeloFichaResumo,
-        "nome" | "versao" | "global" | "editavel" | "previa"
-    >;
+    modelo: ModeloFichaResumo;
+    as?: "li" | "div";
+    onSelecionar?: () => void;
+    selecionando?: boolean;
+    desabilitado?: boolean;
 }) {
     const {
         campos,
@@ -40,8 +51,18 @@ export function CartaoModeloFicha({
     return (
         // O respiro no topo é do prendedor, que sobe acima da prancheta: sem
         // ele, um contêiner com rolagem corta a primeira linha da grade.
-        <li className="group pt-2.5">
-            <div className="bg-muted/60 group-hover:border-primary/40 relative flex aspect-3/4 origin-top flex-col rounded-lg border p-1.5 transition group-hover:shadow-sm hover:cursor-pointer motion-safe:group-hover:rotate-2">
+        <Raiz className="group pt-2.5">
+            <Link
+                href={`/admin/fichas-avaliativas/${modelo.id}?v=${modelo.versao}`}
+                className={cn(
+                    "bg-muted/60 relative flex aspect-3/4 origin-top flex-col rounded-lg border p-1.5 transition",
+                    onSelecionar &&
+                        "group-has-focus-visible:ring-ring/50 group-has-focus-visible:border-ring group-has-focus-visible:ring-[3px]",
+                    !desabilitado &&
+                        "group-hover:border-primary/40 group-hover:shadow-sm motion-safe:group-hover:rotate-2",
+                    desabilitado && !selecionando && "opacity-60",
+                )}
+            >
                 <Prendedor />
 
                 <div className="bg-card flex flex-1 flex-col gap-2 overflow-hidden rounded-sm p-2.5 shadow-xs">
@@ -111,8 +132,28 @@ export function CartaoModeloFicha({
                         v{modelo.versao}
                     </span>
                 </div>
-            </div>
-        </li>
+
+                {selecionando && (
+                    <div className="bg-background/60 absolute inset-0 flex items-center justify-center rounded-lg">
+                        <CircleNotchIcon
+                            aria-hidden="true"
+                            className="text-primary size-6 animate-spin"
+                        />
+                    </div>
+                )}
+
+                {onSelecionar && (
+                    <button
+                        type="button"
+                        onClick={onSelecionar}
+                        disabled={desabilitado}
+                        aria-busy={selecionando}
+                        aria-label={`Selecionar ${modelo.nome}, versão ${modelo.versao}`}
+                        className="absolute inset-0 cursor-pointer rounded-lg outline-none disabled:cursor-default"
+                    />
+                )}
+            </Link>
+        </Raiz>
     );
 }
 
@@ -120,7 +161,7 @@ export function CartaoModeloFicha({
  * O prendedor da prancheta, como no ícone: base larga montada na borda e
  * a alça mais estreita por cima, com o furo por onde se pendura.
  */
-function Prendedor() {
+export function Prendedor() {
     return (
         <svg
             aria-hidden="true"
