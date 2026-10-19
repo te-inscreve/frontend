@@ -1,7 +1,22 @@
 import type * as React from "react";
 
-import { Badge, cn } from "@te-inscreve/components";
+import {
+    Badge,
+    cn,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@te-inscreve/components";
 
+import {
+    HorizontalScroll,
+    HorizontalScrollNext,
+    HorizontalScrollPrevious,
+    HorizontalScrollViewport,
+} from "~/shared/ui/horizontal-scroll";
 import type { CampoExibido } from "../editor-modelo-ficha/lib/campo-exibido";
 import {
     ROTULO_MODIFICADOR,
@@ -25,7 +40,7 @@ export interface AgrupamentoDaFolha {
  * O modelo de ficha como uma folha presa na prancheta, a mesma do cartão da
  * listagem, do tamanho da tela: os campos gerais como linhas a preencher, com
  * o tipo, a ajuda e o que cada um aceita, e cada agrupamento na faixa verde
- * com as mesmas linhas por baixo.
+ * com a grade em branco por baixo, uma linha por repetição.
  *
  * Só desenha, já com os campos na ordem: o detalhe a monta a partir do
  * backend, e a prévia do editor a partir do formulário. O `rodape` fica fora
@@ -108,7 +123,9 @@ export function FolhaModeloFicha({
                                     </span>
                                 </h2>
                                 {agrupamento.campos.length > 0 ? (
-                                    <ListaCampos campos={agrupamento.campos} />
+                                    <TabelaAgrupamento
+                                        agrupamento={agrupamento}
+                                    />
                                 ) : (
                                     <p className="text-muted-foreground text-sm">
                                         Agrupamento sem campos.
@@ -135,6 +152,152 @@ function resumo(campos: number, agrupamentos: number) {
         `${agrupamentos} ${agrupamentos === 1 ? "agrupamento" : "agrupamentos"}`,
     ];
     return partes.join(" · ");
+}
+
+/**
+ * O agrupamento como a grade que o avaliador vai preencher: uma coluna por
+ * campo e uma linha por repetição, todas em branco. Quando os campos não
+ * cabem na folha, a grade rola de lado, com as setas e o esmaecimento das
+ * pontas indicando que continua.
+ */
+function TabelaAgrupamento({
+    agrupamento,
+}: {
+    agrupamento: AgrupamentoDaFolha;
+}) {
+    const linhas = Array.from(
+        { length: agrupamento.quantidade },
+        (_, indice) => indice + 1,
+    );
+
+    return (
+        <HorizontalScroll>
+            <HorizontalScrollPrevious lateral />
+            <HorizontalScrollNext lateral />
+            {/* Um item só, mais largo que a faixa: sem encaixe, e esticado
+                até a largura da faixa quando os campos são poucos. */}
+            <HorizontalScrollViewport
+                label={`Campos de ${agrupamento.nome}`}
+                snap={false}
+                className="[&_[role=listitem]]:min-w-full"
+            >
+                <Table className="bg-card rounded-sm">
+                    <caption className="sr-only">
+                        {agrupamento.nome}, {agrupamento.quantidade}{" "}
+                        {agrupamento.quantidade === 1 ? "linha" : "linhas"} em
+                        branco
+                    </caption>
+                    <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="text-muted-foreground w-10 text-center align-bottom text-xs">
+                                <span aria-hidden="true">#</span>
+                                <span className="sr-only">Linha</span>
+                            </TableHead>
+                            {agrupamento.campos.map(({ chave, campo }) => (
+                                <CabecalhoCampo key={chave} campo={campo} />
+                            ))}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {linhas.map((linha) => (
+                            <TableRow key={linha}>
+                                <TableHead
+                                    scope="row"
+                                    className="text-muted-foreground h-auto text-center text-xs tabular-nums"
+                                >
+                                    {linha}
+                                </TableHead>
+                                {agrupamento.campos.map(({ chave, campo }) => (
+                                    <TableCell
+                                        key={chave}
+                                        className="border-l px-3"
+                                    >
+                                        <CelulaEmBranco campo={campo} />
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </HorizontalScrollViewport>
+        </HorizontalScroll>
+    );
+}
+
+/**
+ * O campo no topo da coluna: o nome e, por baixo, o que ele aceita. A ajuda
+ * vai no `title`, para não alargar a coluna.
+ */
+function CabecalhoCampo({ campo }: { campo: CampoExibido }) {
+    return (
+        <TableHead
+            scope="col"
+            title={campo.descricao || undefined}
+            className="h-auto min-w-32 border-l px-3 py-2 align-bottom"
+        >
+            <div className="flex flex-col gap-1">
+                <span className="text-sm leading-tight font-medium whitespace-normal">
+                    {campo.nome}
+                    {campo.obrigatorio && (
+                        <span className="text-destructive ml-0.5">
+                            <span aria-hidden="true">*</span>
+                            <span className="sr-only">(obrigatório)</span>
+                        </span>
+                    )}
+                </span>
+                <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-normal">
+                    {campo.tipo === "NUMERICO" ? (
+                        <>
+                            {campo.teto ? `0 - ${campo.teto}` : "Numérico"}
+                            {campo.modificadorNota && (
+                                <SeloModificador
+                                    modificador={campo.modificadorNota}
+                                />
+                            )}
+                        </>
+                    ) : (
+                        ROTULO_TIPO[campo.tipo]
+                    )}
+                </span>
+            </div>
+        </TableHead>
+    );
+}
+
+/**
+ * A célula ainda sem nota: zero nos campos numéricos, um traço nos demais,
+ * que não têm zero.
+ */
+function CelulaEmBranco({ campo }: { campo: CampoExibido }) {
+    if (campo.tipo === "NUMERICO") {
+        return <span className="font-bold tabular-nums">0</span>;
+    }
+
+    return (
+        <span className="text-muted-foreground">
+            <span aria-hidden="true">—</span>
+            <span className="sr-only">em branco</span>
+        </span>
+    );
+}
+
+function SeloModificador({
+    modificador,
+}: {
+    modificador: NonNullable<CampoExibido["modificadorNota"]>;
+}) {
+    return (
+        <span
+            className={cn(
+                "rounded-[4px] px-1.5 font-semibold",
+                modificador === "DESCONTA"
+                    ? "bg-destructive/15 text-destructive"
+                    : "bg-primary/15 text-primary",
+            )}
+        >
+            {ROTULO_MODIFICADOR[modificador]}
+        </span>
+    );
 }
 
 /**
@@ -189,21 +352,11 @@ function LinhaCampo({ campo }: { campo: CampoExibido }) {
 /** O que só o tipo tem: o modificador e o teto da nota, as alternativas. */
 function BadgeTipoNumerico({ campo }: { campo: CampoExibido }) {
     if (campo.tipo === "NUMERICO") {
-        const desconta = campo.modificadorNota === "DESCONTA";
         return (
             <>
                 <p className="text-muted-foreground flex items-center gap-2 text-xs">
                     {campo.modificadorNota && (
-                        <span
-                            className={cn(
-                                "rounded-[4px] px-1.5 font-semibold",
-                                desconta
-                                    ? "bg-destructive/15 text-destructive"
-                                    : "bg-primary/15 text-primary",
-                            )}
-                        >
-                            {ROTULO_MODIFICADOR[campo.modificadorNota]}
-                        </span>
+                        <SeloModificador modificador={campo.modificadorNota} />
                     )}
                 </p>
                 <span className="text-sm font-bold">0</span>
