@@ -108,7 +108,7 @@ export function FolhaModeloFicha({
                             <section
                                 key={agrupamento.chave}
                                 aria-labelledby={tituloId}
-                                className="flex flex-col rounded-sm"
+                                className="flex flex-col gap-3 rounded-sm"
                             >
                                 <h2
                                     id={tituloId}
