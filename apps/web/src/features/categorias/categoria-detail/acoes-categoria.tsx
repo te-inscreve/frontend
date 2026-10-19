@@ -4,6 +4,7 @@ import type { Icon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
+import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr/ClipboardText";
 import { DotsThreeVerticalIcon } from "@phosphor-icons/react/dist/ssr/DotsThreeVertical";
 import { FlagCheckeredIcon } from "@phosphor-icons/react/dist/ssr/FlagCheckered";
 import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
@@ -44,15 +45,27 @@ interface DescricaoAcao {
     rotulo: string;
     Icone: Icon;
     /**
-     * Cancelar e encerrar levam a situações finais, sem volta: essas passam
+     * Cancelar, encerrar e liberar a avaliação não têm volta: essas passam
      * por confirmação. Abrir e fechar se desfazem com a ação oposta.
      */
     confirmacao?: { titulo: string; descricao: string; botao: string };
+    /** Pinta o item e o botão de confirmação como destrutivos. */
+    destrutiva?: boolean;
 }
 
 const ACOES: Record<AcaoSituacaoCategoria, DescricaoAcao> = {
     abrir: { rotulo: "Abrir inscrições", Icone: LockSimpleOpenIcon },
     fechar: { rotulo: "Fechar inscrições", Icone: LockSimpleIcon },
+    liberar_avaliacao: {
+        rotulo: "Liberar avaliação",
+        Icone: ClipboardTextIcon,
+        confirmacao: {
+            titulo: "Liberar a avaliação desta categoria?",
+            descricao:
+                "Os avaliadores passam a avaliar as inscrições com a ficha vinculada. As inscrições não poderão ser reabertas.",
+            botao: "Liberar avaliação",
+        },
+    },
     encerrar: {
         rotulo: "Encerrar categoria",
         Icone: FlagCheckeredIcon,
@@ -62,6 +75,7 @@ const ACOES: Record<AcaoSituacaoCategoria, DescricaoAcao> = {
                 "A categoria deixa de receber inscrições e não poderá ser reaberta.",
             botao: "Encerrar",
         },
+        destrutiva: true,
     },
     cancelar: {
         rotulo: "Cancelar categoria",
@@ -72,6 +86,7 @@ const ACOES: Record<AcaoSituacaoCategoria, DescricaoAcao> = {
                 "A categoria não acontecerá e não poderá ser reaberta.",
             botao: "Cancelar categoria",
         },
+        destrutiva: true,
     },
 };
 
@@ -169,11 +184,12 @@ export function AcoesCategoria({ eventoId, modalidadeId, categoria }: Props) {
                     )}
 
                     {disponiveis.map((action) => {
-                        const { rotulo, Icone, confirmacao } = ACOES[action];
+                        const { rotulo, Icone, confirmacao, destrutiva } =
+                            ACOES[action];
                         return (
                             <DropdownMenuItem
                                 key={action}
-                                variant={confirmacao ? "destructive" : "default"}
+                                variant={destrutiva ? "destructive" : "default"}
                                 onSelect={(evento) => {
                                     if (!confirmacao) {
                                         executar(action);
@@ -245,7 +261,11 @@ export function AcoesCategoria({ eventoId, modalidadeId, categoria }: Props) {
                             o diálogo no clique, antes da resposta — e o erro
                             não teria onde aparecer. */}
                         <Button
-                            variant="destructive"
+                            variant={
+                                acaoConfirmando?.destrutiva
+                                    ? "destructive"
+                                    : "default"
+                            }
                             disabled={alterarSituacao.isPending}
                             onClick={() => confirmando && executar(confirmando)}
                         >
@@ -265,7 +285,7 @@ export function AcoesCategoria({ eventoId, modalidadeId, categoria }: Props) {
 }
 
 /**
- * A transição proibida chega em `detail`, e a ação inválida em `action`. Sem
+ * A transição proibida — e a liberação sem ficha avaliativa — chega em `detail`, e a ação inválida em `action`. Sem
  * nenhum dos dois, vale a mensagem genérica.
  */
 function mensagemDeErro(

@@ -1,3 +1,4 @@
+import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr/ClipboardText";
 import { FlagCheckeredIcon } from "@phosphor-icons/react/dist/ssr/FlagCheckered";
 import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 import { XCircleIcon } from "@phosphor-icons/react/dist/ssr/XCircle";
@@ -22,6 +23,11 @@ const ESTILOS: Record<SituacaoCategoria["value"], Estilo> = {
         icone: <LockSimpleIcon aria-hidden="true" weight="bold" />,
         badge: "outline",
         extra: "text-background bg-foreground border-warning border-transparent font-bold",
+    },
+    pronta_avaliacao: {
+        icone: <ClipboardTextIcon aria-hidden="true" weight="bold" />,
+        badge: "outline",
+        extra: "border-primary text-primary font-bold",
     },
     encerrada: {
         icone: <FlagCheckeredIcon aria-hidden="true" />,

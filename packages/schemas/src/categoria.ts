@@ -5,7 +5,13 @@ import { z } from "zod/v4";
  * lógica compara, `label` é o texto pronto para mostrar.
  */
 export const situacaoCategoriaSchema = z.object({
-    value: z.enum(["aberta", "fechada", "cancelada", "encerrada"]),
+    value: z.enum([
+        "aberta",
+        "fechada",
+        "pronta_avaliacao",
+        "cancelada",
+        "encerrada",
+    ]),
     label: z.string(),
 });
 
@@ -18,6 +24,7 @@ export const acaoSituacaoCategoriaSchema = z.enum([
     "fechar",
     "cancelar",
     "encerrar",
+    "liberar_avaliacao",
 ]);
 
 export type SituacaoCategoria = z.infer<typeof situacaoCategoriaSchema>;
@@ -27,13 +34,18 @@ export type AcaoSituacaoCategoria = z.infer<typeof acaoSituacaoCategoriaSchema>;
  * As transições que o backend aceita, a partir da situação atual. Cancelada e
  * encerrada são finais; pedir a ação da situação em que a categoria já está é
  * rejeitado, então ela nunca aparece na própria lista.
+ *
+ * A avaliação só é liberada com as inscrições fechadas, e dali a categoria só
+ * segue para encerrada. O backend também exige uma ficha avaliativa vinculada;
+ * essa regra não está aqui e volta como erro da ação.
  */
 export const acoesPorSituacaoCategoria: Record<
     SituacaoCategoria["value"],
     readonly AcaoSituacaoCategoria[]
 > = {
     aberta: ["fechar", "cancelar", "encerrar"],
-    fechada: ["abrir", "cancelar", "encerrar"],
+    fechada: ["abrir", "liberar_avaliacao", "cancelar", "encerrar"],
+    pronta_avaliacao: ["encerrar"],
     cancelada: [],
     encerrada: [],
 };
