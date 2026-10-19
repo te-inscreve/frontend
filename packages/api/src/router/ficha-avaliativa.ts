@@ -30,6 +30,21 @@ export const fichaAvaliativaRouter = {
             if (!result.ok) throw result.error;
             return result.data;
         }),
+    getById: authenticatedProcedure
+        .input(z.object({ id: z.number().int().positive() }))
+        .query(async ({ ctx, input }) => {
+            const result = await ctx.restClient.get<ModeloFichaDetalhe>(
+                `/fichas-avaliativas/modelos/${input.id}/`,
+                {
+                    next: {
+                        revalidate: 30,
+                        tags: tagsFichasAvaliativas(input.id),
+                    },
+                },
+            );
+            if (!result.ok) throw result.error;
+            return result.data;
+        }),
     /**
      * Cria um modelo de ficha da entidade de quem está logado — do zero, ou a
      * partir de `modeloFichaAvaliativaId` (nova versão de uma ficha da

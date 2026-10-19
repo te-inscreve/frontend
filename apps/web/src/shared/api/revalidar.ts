@@ -6,6 +6,7 @@ import {
     tagCategoria,
     tagCategoriasDaModalidade,
     tagEvento,
+    tagFichaDaCategoria,
     tagInscricoesDaCategoria,
     tagModalidade,
     tagModalidadesDoEvento,
@@ -83,6 +84,11 @@ export async function revalidarCategoria(
 export async function revalidarInscricoes(categoriaId: number) {
     updateTag(tagInscricoesDaCategoria(categoriaId));
     updateTag(tagCategoria(categoriaId));
+}
+
+/** Depois de vincular um modelo de ficha à categoria: a aba da ficha. */
+export async function revalidarFichaDaCategoria(categoriaId: number) {
+    updateTag(tagFichaDaCategoria(categoriaId));
 }
 
 /**

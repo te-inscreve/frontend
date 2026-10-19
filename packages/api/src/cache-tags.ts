@@ -38,6 +38,9 @@ export const tagCategoria = (categoriaId: number) => `categoria-${categoriaId}`;
 export const tagInscricoesDaCategoria = (categoriaId: number) =>
     `categoria-${categoriaId}-inscricoes`;
 
+export const tagFichaDaCategoria = (categoriaId: number) =>
+    `categoria-${categoriaId}-ficha-avaliativa`;
+
 /**
  * Os conjuntos que cada leitura grava, do geral para o específico — é o que
  * vai no `next: { tags }` de cada `fetch`.
@@ -74,6 +77,10 @@ export const tagsInscricoes = (categoriaId: number) => [
     tagInscricoesDaCategoria(categoriaId),
 ];
 
+export const tagsFichaDaCategoria = (categoriaId: number) => [
+    tagFichaDaCategoria(categoriaId),
+];
+
 export const tagsEntidades = () => ["entidades"];
 
 /**
@@ -85,4 +92,7 @@ export const tagsEntidades = () => ["entidades"];
  */
 export const tagsPerfil = () => ["perfil"];
 
-export const tagsFichasAvaliativas = () => ["fichas-avaliativas"];
+export const tagsFichasAvaliativas = (id?: number) => [
+    "fichas-avaliativas",
+    `ficha-avaliativa-${id}`,
+];
