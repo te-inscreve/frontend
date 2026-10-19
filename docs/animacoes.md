@@ -106,6 +106,12 @@ Três regras de uso:
     modal, e o avatar de 36 para 44. Com os dois lados no mesmo tamanho
     (`450×20`, 14px, avatar 36), a escala é 1 e não há o que esticar.
 
+    Quando o texto do gatilho precisa ser outro que o título — o botão diz
+    "Trocar", o modal diz "Trocar ficha avaliativa" —, ele não viaja: use
+    `ExpandableDialogTriggerText` no lugar de um `span` solto. Filho comum do
+    gatilho é escalado junto com a caixa; esse é contra-escalado pelo Motion
+    (`layout`) e some no começo da abertura.
+
     Na prática, o cabeçalho do modal é a linha — mesmo tamanho de fonte, mesmo
     avatar, mesmo `flex-1`. É também o que o exemplo de referência do Motion faz:
     no card e no modal, a imagem é `56×56` e o título usa a mesma classe.
@@ -150,6 +156,15 @@ alguma delas.
    aviso, o modal nasce deslocado assim que a lista está fora do início — é o que
    `HorizontalScrollViewport` (`apps/web/src/shared/ui/horizontal-scroll.tsx`)
    passa para a `motion.div` que rola.
+
+6. **Nenhum render do gatilho no meio do fechamento.** Sem `layoutDependency`,
+   o Motion mede o elemento a cada render; um render que move o gatilho
+   enquanto o modal fecha recomeça a animação de onde ela estava, e o botão
+   aparece pela metade com o modal ainda na tela. O primitivo já trava a
+   medição enquanto o modal está aberto; quem fecha depois de uma mutation
+   fecha **no mesmo render** que traz a página atualizada — `setOpen(false)` e
+   `router.refresh()` juntos num `startTransition`, depois de aguardar a
+   revalidação (ver `BotaoSelecionarModeloFicha`).
 
 ## 5. Movimento reduzido
 

@@ -75,6 +75,7 @@ export {
     ExpandableDialogLabel,
     ExpandableDialogTitle,
     ExpandableDialogTrigger,
+    ExpandableDialogTriggerText,
     EXPANSION_TRANSITION,
 } from "./components/expandable-dialog";
 export { Input, type InputProps } from "./components/input";

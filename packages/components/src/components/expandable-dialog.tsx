@@ -48,6 +48,21 @@ function useExpandableDialog(componente: string) {
     return contexto;
 }
 
+/**
+ * O `layoutDependency` das peças do gatilho: com o modal aberto, elas só se
+ * medem de novo quando ele fechar.
+ *
+ * Sem dependência, o Motion mede o elemento a cada render. Um render do gatilho
+ * com o modal aberto — a mutation que o modal dispara, a busca, o
+ * `router.refresh()` — vira uma animação de layout do gatilho, que sai da caixa
+ * do modal de volta para o lugar dele, visível, por baixo do modal ainda
+ * aberto. Fechado, a dependência fica indefinida e tudo continua medido a cada
+ * render, como antes: o cartão que muda de lugar na lista ainda anima.
+ */
+function dependenciaDoGatilho(open: boolean) {
+    return open ? true : undefined;
+}
+
 /** Nomes derivados do `id`, para gatilho e conteúdo não poderem divergir. */
 function layoutIds(id: string) {
     return {
@@ -123,7 +138,9 @@ function ExpandableDialogTrigger({
     style,
     ...props
 }: React.ComponentProps<typeof motion.button>) {
-    const { id, radius } = useExpandableDialog("ExpandableDialogTrigger");
+    const { id, radius, open } = useExpandableDialog(
+        "ExpandableDialogTrigger",
+    );
 
     return (
         <DialogPrimitive.Trigger asChild>
@@ -131,6 +148,7 @@ function ExpandableDialogTrigger({
                 data-slot="expandable-dialog-trigger"
                 type="button"
                 layoutId={layoutIds(id).caixa}
+                layoutDependency={dependenciaDoGatilho(open)}
                 // O raio vai em `style` porque é assim que o Motion consegue
                 // contra-escalá-lo durante o morph; em classe, as quinas
                 // achatam no meio do caminho.
@@ -152,12 +170,13 @@ function ExpandableDialogIcon({
     className,
     ...props
 }: React.ComponentProps<typeof motion.span>) {
-    const { id } = useExpandableDialog("ExpandableDialogIcon");
+    const { id, open } = useExpandableDialog("ExpandableDialogIcon");
 
     return (
         <motion.span
             data-slot="expandable-dialog-icon"
             layoutId={layoutIds(id).selo}
+            layoutDependency={dependenciaDoGatilho(open)}
             className={cn(
                 "bg-primary-foreground text-primary flex size-9 shrink-0 items-center justify-center rounded-full",
                 className,
@@ -176,12 +195,47 @@ function ExpandableDialogLabel({
     className,
     ...props
 }: React.ComponentProps<typeof motion.span>) {
-    const { id } = useExpandableDialog("ExpandableDialogLabel");
+    const { id, open } = useExpandableDialog("ExpandableDialogLabel");
 
     return (
         <motion.span
             data-slot="expandable-dialog-label"
             layoutId={layoutIds(id).rotulo}
+            layoutDependency={dependenciaDoGatilho(open)}
+            className={cn("text-sm font-medium", className)}
+            {...props}
+        />
+    );
+}
+
+/**
+ * Texto do gatilho que não viaja para o modal — quando o botão diz "Trocar" e o
+ * título diz "Trocar ficha avaliativa", por exemplo.
+ *
+ * Filho comum de um elemento com `layoutId` é escalado junto com a caixa, e
+ * texto escalado estica. O `layout` faz o Motion contra-escalar o texto, que
+ * mantém o tamanho; e ele some logo no começo da abertura, voltando só quando a
+ * caixa já está quase de volta ao gatilho.
+ */
+function ExpandableDialogTriggerText({
+    className,
+    ...props
+}: React.ComponentProps<typeof motion.span>) {
+    const { open } = useExpandableDialog("ExpandableDialogTriggerText");
+
+    return (
+        <motion.span
+            data-slot="expandable-dialog-trigger-text"
+            layout
+            layoutDependency={dependenciaDoGatilho(open)}
+            initial={false}
+            animate={{ opacity: open ? 0 : 1 }}
+            transition={{
+                ...EXPANSION_TRANSITION,
+                opacity: open
+                    ? { duration: 0.08 }
+                    : { duration: 0.15, delay: 0.2 },
+            }}
             className={cn("text-sm font-medium", className)}
             {...props}
         />
@@ -365,4 +419,5 @@ export {
     ExpandableDialogLabel,
     ExpandableDialogTitle,
     ExpandableDialogTrigger,
+    ExpandableDialogTriggerText,
 };
