@@ -11,13 +11,13 @@ import {
     TableRow,
 } from "@te-inscreve/components";
 
+import type { CampoExibido } from "../editor-modelo-ficha/lib/campo-exibido";
 import {
     HorizontalScroll,
     HorizontalScrollNext,
     HorizontalScrollPrevious,
     HorizontalScrollViewport,
 } from "~/shared/ui/horizontal-scroll";
-import type { CampoExibido } from "../editor-modelo-ficha/lib/campo-exibido";
 import {
     ROTULO_MODIFICADOR,
     ROTULO_TIPO,
@@ -108,11 +108,11 @@ export function FolhaModeloFicha({
                             <section
                                 key={agrupamento.chave}
                                 aria-labelledby={tituloId}
-                                className="bg-primary-foreground flex flex-col gap-3 rounded-sm px-4 pb-4"
+                                className="flex flex-col rounded-sm"
                             >
                                 <h2
                                     id={tituloId}
-                                    className="bg-primary text-primary-foreground -mx-4 flex items-center gap-2 rounded-sm px-4 py-1 text-sm font-semibold"
+                                    className="bg-primary text-primary-foreground flex items-center gap-2 rounded-sm px-4 py-1 text-sm font-semibold"
                                 >
                                     <span className="truncate">
                                         {agrupamento.nome}
@@ -179,9 +179,9 @@ function TabelaAgrupamento({
             <HorizontalScrollViewport
                 label={`Campos de ${agrupamento.nome}`}
                 snap={false}
-                className="[&_[role=listitem]]:min-w-full"
+                className="-my-1 [&_[role=listitem]]:min-w-full"
             >
-                <Table className="bg-card rounded-sm">
+                <Table className="bg-card">
                     <caption className="sr-only">
                         {agrupamento.nome}, {agrupamento.quantidade}{" "}
                         {agrupamento.quantidade === 1 ? "linha" : "linhas"} em
