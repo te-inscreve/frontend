@@ -2,6 +2,7 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import type {
+    CampoFicha,
     ModeloFichaDetalhe,
     ModeloFichaResumo,
 } from "@te-inscreve/schemas";
@@ -45,6 +46,25 @@ export const fichaAvaliativaRouter = {
             if (!result.ok) throw result.error;
             return result.data;
         }),
+    /**
+     * O catálogo de campos prontos que o editor oferece. O `GET campos/` pode
+     * trazer também campos exclusivos de outras fichas da entidade, mas uma
+     * posição nova só aceita `campoId` de campo global — o backend recusa o
+     * resto com "Campo não pertence à ficha." —, então só os globais saem.
+     */
+    getCamposGlobais: authenticatedProcedure.query(async ({ ctx }) => {
+        const result = await ctx.restClient.get<CampoFicha[]>(
+            "/fichas-avaliativas/campos/",
+            {
+                next: {
+                    revalidate: 30,
+                    tags: ["fichas-avaliativas", "campos-fichas-avaliativas"],
+                },
+            },
+        );
+        if (!result.ok) throw result.error;
+        return result.data.filter((campo) => campo.global);
+    }),
     /**
      * Cria um modelo de ficha da entidade de quem está logado — do zero, ou a
      * partir de `modeloFichaAvaliativaId` (nova versão de uma ficha da

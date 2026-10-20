@@ -16,7 +16,6 @@ Quando o backend tiver uma ordem única, esses três pontos podem ser liberados.
 
 ## Leituras que faltam
 
-O viewset `ModeloFichaViewSet` só aceita `post` e `patch`. O editor usa mocks no lugar de:
+O viewset `ModeloFichaViewSet` só aceita `post` e `patch`. O catálogo de campos globais já vem do `GET campos/` (`fichaAvaliativa.getCamposGlobais`); ainda faltam:
 
-- **catálogo de campos globais**: `lib/campos-globais-mock.ts`, gerado a partir da fixture. Os ids são os do banco, então o `POST` real aceita os `campoId` do mock;
 - **detalhe de um modelo** e **lista de versões de uma família**: sem eles não dá para editar um modelo existente nem criar uma versão nova a partir dele. Por isso a tela de criar não tem o seletor de versão.
