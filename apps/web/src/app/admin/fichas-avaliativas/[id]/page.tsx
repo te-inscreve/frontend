@@ -33,13 +33,9 @@ export default function ModeloFichaDetailPage({
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6 md:px-6 md:py-8">
-            <GoBackButton href="/admin/fichas-avaliativas" />
+            <GoBackButton />
 
-            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                <Suspense fallback={<DetalheModeloFichaSkeleton />}>
-                    <DetalheModeloFicha id={id} />
-                </Suspense>
-
+            <div className="grid items-start gap-6 lg:grid-cols-[25rem_minmax(0,1fr)]">
                 {/* Cada lista entra no seu próprio `<Suspense>` quando ganhar
                     query; até lá, só o lugar delas. */}
                 <aside className="flex flex-col gap-4 lg:sticky lg:top-6">
@@ -52,6 +48,9 @@ export default function ModeloFichaDetailPage({
                         descricao="As categorias de evento em que cada versão foi usada vão aparecer aqui."
                     />
                 </aside>
+                <Suspense fallback={<DetalheModeloFichaSkeleton />}>
+                    <DetalheModeloFicha id={id} />
+                </Suspense>
             </div>
         </div>
     );
