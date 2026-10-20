@@ -1,21 +1,17 @@
 # Avaliações
 
-Como as apresentações são avaliadas: os modelos de ficha que a entidade monta, as fichas que os jurados preenchem e as notas que delas saem.
+Como as apresentações são avaliadas: os modelos de ficha que a entidade monta, as avaliações que os avaliadores preenchem e as notas que delas saem.
 
 ## Language
 
 ### Modelos de ficha
 
 **Modelo de ficha**:
-O molde de uma avaliação: a sequência de campos que o jurado vai preencher. Tem nome e versão.
-_Avoid_: Ficha (quando se fala do molde), template, formulário
-
-**Ficha avaliativa**:
-A avaliação preenchida por um jurado a partir de um modelo de ficha.
-_Avoid_: Modelo (quando se fala da ficha preenchida)
+O molde de uma avaliação: a sequência de campos que o avaliador vai preencher. Tem nome e versão; cada categoria tem um.
+_Avoid_: Ficha avaliativa, ficha (quando se fala do molde), template, formulário
 
 **Campo**:
-Uma pergunta da ficha, de um tipo — numérico, alternativa múltipla, descritivo ou observação.
+Uma pergunta da ficha, de um tipo — numérico, alternativa única, alternativa múltipla, descritivo ou observação.
 _Avoid_: Quesito, item, pergunta
 
 **Campo global**:
@@ -27,17 +23,43 @@ Campo que nasce dentro de um modelo de ficha e só existe nele.
 _Avoid_: Campo local, campo personalizado, campo custom
 
 **Alternativa**:
-Uma das opções de um campo de alternativa múltipla. O jurado marca uma só: "múltipla" é a quantidade de opções, não de respostas.
+Uma das opções de um campo de alternativa. Na alternativa única o avaliador marca uma só; na múltipla, quantas quiser. É o tipo do campo que decide, nunca a quantidade de alternativas.
 _Avoid_: Opção, item de escolha
 
 **Posição**:
-O lugar que um campo ocupa na ordem de um modelo de ficha. O mesmo campo global pode ocupar várias posições.
+O lugar que um campo ocupa entre os campos gerais ou entre os campos de um agrupamento. O mesmo campo global pode ocupar várias posições.
 _Avoid_: Slot, linha
 
 **Agrupamento**:
-Um trecho de posições que o jurado preenche repetidas vezes — uma por dança, por jurado, por item —, com nome e quantidade de repetições.
+Um trecho de posições que o avaliador preenche repetidas vezes — uma por dança, por item —, com nome e quantidade de repetições.
 _Avoid_: Grupo, seção, bloco, unidade avaliativa
 
 **Quantidade**:
-Quantas vezes os campos de um agrupamento se repetem na ficha avaliativa.
+Quantas vezes os campos de um agrupamento se repetem na avaliação.
 _Avoid_: Tamanho, comprimento, length
+
+### Avaliações
+
+**Avaliador**:
+Usuário que avalia as apresentações de uma categoria liberada para avaliação.
+_Avoid_: Jurado
+
+**Avaliação**:
+O resultado de um avaliador para uma inscrição: as respostas aos campos do modelo de ficha da categoria e a nota que delas sai. Cada avaliador faz uma só por inscrição.
+_Avoid_: Ficha preenchida, julgamento
+
+**Rascunho**:
+Avaliação começada pelo avaliador e ainda não salva: pode ser deixada e retomada em qualquer etapa. O avaliador tem no máximo um.
+_Avoid_: Avaliação em andamento, pendente
+
+**Avaliação na fila**:
+Avaliação salva pelo avaliador que aguarda envio; ainda pode ser editada até o envio começar.
+_Avoid_: Avaliação pendente, não sincronizada
+
+**Avaliação sincronizada**:
+Avaliação aceita pelo backend; a partir daí não muda mais.
+_Avoid_: Avaliação enviada, concluída
+
+**Avaliação com erro**:
+Avaliação que o backend recusou de vez: sai da fila sem travar as outras e espera o avaliador corrigi-la ou descartá-la.
+_Avoid_: Avaliação falhada, rejeitada
