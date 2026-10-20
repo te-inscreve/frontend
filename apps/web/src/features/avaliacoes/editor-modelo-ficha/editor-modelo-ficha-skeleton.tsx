@@ -21,7 +21,7 @@ export function EditorModeloFichaSkeleton() {
                 <div className="bg-card hidden w-72 shrink-0 flex-col gap-3 border-r p-4 lg:flex">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-full" />
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                         {Array.from({ length: 8 }, (_, indice) => (
                             <Skeleton key={indice} className="h-32" />
                         ))}
