@@ -41,6 +41,7 @@ export const inscricaoIndividualSchema = z.object({
     dataCriacao: z.string(),
     entidade: entidadeDaInscricaoSchema,
     concorrente: integranteSchema.nullable(),
+    ordem: z.number().int(),
 });
 
 /**
@@ -54,6 +55,7 @@ export const inscricaoGrupoSchema = z.object({
     entidade: entidadeDaInscricaoSchema,
     nomeConcorrente: z.string().optional(),
     totalIntegrantes: z.number().int(),
+    ordem: z.number().int(),
 });
 
 /**
