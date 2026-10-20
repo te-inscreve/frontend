@@ -158,6 +158,8 @@ export {
     modificadorNotaSchema,
     posicaoFichaCriacaoSchema,
     posicaoFichaSchema,
+    TIPOS_COM_ALTERNATIVAS,
+    aceitaAlternativas,
     tipoCampoFichaSchema,
 } from "./ficha-avaliativa";
 export type {
@@ -172,5 +174,6 @@ export type {
     PosicaoFicha,
     PosicaoFichaCriacao,
     PreviaModeloFicha,
+    TipoCampoComAlternativas,
     TipoCampoFicha,
 } from "./ficha-avaliativa";

@@ -53,7 +53,7 @@ const TODOS = "todos";
  * num painel lateral que rola e fica sobre o canvas, e o morph saía dele
  * deslocado e por baixo de camadas vizinhas.
  *
- * O tipo é escolhido numa lista do `Command`, sem campo de busca — são quatro
+ * O tipo é escolhido numa lista do `Command`, sem campo de busca — são cinco
  * opções. Sem o input do `cmdk`, o foco fica no próprio `Command`, e é ele que
  * recebe as setas e o Enter.
  */

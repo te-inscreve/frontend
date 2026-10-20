@@ -7,6 +7,7 @@ import type {
     TipoCampoFicha,
 } from "@te-inscreve/schemas";
 import {
+    aceitaAlternativas,
     criarModeloFichaSchema,
     modificadorNotaSchema,
     tipoCampoFichaSchema,
@@ -21,7 +22,7 @@ import {
  * e o teto do campo numérico como texto, do jeito que é digitado.
  *
  * As regras de domínio — modificador obrigatório no numérico, alternativas só
- * na alternativa múltipla, ordem sem repetição — não são reescritas aqui: o
+ * nos tipos de alternativa, ordem sem repetição — não são reescritas aqui: o
  * `superRefine` converte os valores no corpo e passa por
  * `criarModeloFichaSchema`, devolvendo as recusas no mesmo caminho.
  */
@@ -85,7 +86,7 @@ export const agrupamentoFormSchema = z.object({
     campos: z.array(posicaoFormSchema),
 });
 
-/** Alternativa múltipla com menos que isso não dá escolha a quem avalia. */
+/** Campo de alternativa com menos que isso não dá escolha a quem avalia. */
 export const MINIMO_ALTERNATIVAS = 2;
 
 export const modeloFichaFormSchema = z
@@ -127,7 +128,7 @@ export const modeloFichaFormSchema = z
 
         for (const { caminho, campo } of camposExclusivos(valores)) {
             if (
-                campo.tipo === "ALTERNATIVA_MULTIPLA" &&
+                aceitaAlternativas(campo.tipo) &&
                 campo.alternativas.length < MINIMO_ALTERNATIVAS
             ) {
                 ctx.addIssue({
@@ -228,7 +229,7 @@ export function campoComTipo(
         valorMaximo: tipo === "NUMERICO" ? campo.valorMaximo : "",
         modificadorNota:
             tipo === "NUMERICO" ? (campo.modificadorNota ?? "SOMA") : null,
-        alternativas: tipo === "ALTERNATIVA_MULTIPLA" ? campo.alternativas : [],
+        alternativas: aceitaAlternativas(tipo) ? campo.alternativas : [],
     };
 }
 
@@ -315,7 +316,7 @@ function paraCampo(campo: CampoExclusivoForm): CampoFichaCriacao {
             modificadorNota: campo.modificadorNota,
         };
     }
-    if (campo.tipo === "ALTERNATIVA_MULTIPLA") {
+    if (aceitaAlternativas(campo.tipo)) {
         return {
             ...base,
             alternativas: campo.alternativas.map((alternativa) => ({

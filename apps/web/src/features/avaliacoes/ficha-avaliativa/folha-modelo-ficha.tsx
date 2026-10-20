@@ -10,6 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@te-inscreve/components";
+import { aceitaAlternativas } from "@te-inscreve/schemas";
 
 import type { CampoExibido } from "../editor-modelo-ficha/lib/campo-exibido";
 import {
@@ -372,14 +373,19 @@ function BadgeTipoNumerico({ campo }: { campo: CampoExibido }) {
 }
 
 function DetalheTipoAlternativa({ campo }: { campo: CampoExibido }) {
-    if (campo.tipo === "ALTERNATIVA_MULTIPLA" && campo.alternativas.length) {
+    if (aceitaAlternativas(campo.tipo) && campo.alternativas.length) {
         return (
             <ul className="text-muted-foreground bg-muted flex w-fit flex-wrap gap-x-4 gap-y-1 rounded-md px-4 py-2 text-xs">
                 {campo.alternativas.map((alternativa, indice) => (
                     <li key={indice} className="flex items-center gap-1.5">
                         <span
                             aria-hidden="true"
-                            className="bg-card size-2.5 shrink-0 rounded-full border"
+                            className={cn(
+                                "bg-card size-2.5 shrink-0 border",
+                                campo.tipo === "ALTERNATIVA_MULTIPLA"
+                                    ? "rounded-[2px]"
+                                    : "rounded-full",
+                            )}
                         />
                         {alternativa}
                     </li>

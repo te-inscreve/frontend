@@ -1,4 +1,5 @@
 import { cn } from "@te-inscreve/components/utils";
+import { aceitaAlternativas } from "@te-inscreve/schemas";
 
 import type { CampoExibido } from "./lib/campo-exibido";
 
@@ -16,8 +17,11 @@ export function MiniaturaCampo({ campo }: { campo: CampoExibido }) {
             className="bg-muted/50 flex h-16 items-center justify-center overflow-hidden rounded-sm border border-dashed px-3"
         >
             {campo.tipo === "NUMERICO" && <MiniaturaNumerico campo={campo} />}
-            {campo.tipo === "ALTERNATIVA_MULTIPLA" && (
-                <MiniaturaAlternativas alternativas={campo.alternativas} />
+            {aceitaAlternativas(campo.tipo) && (
+                <MiniaturaAlternativas
+                    alternativas={campo.alternativas}
+                    multipla={campo.tipo === "ALTERNATIVA_MULTIPLA"}
+                />
             )}
             {campo.tipo === "DESCRITIVO" && <MiniaturaDescritivo />}
             {campo.tipo === "OBSERVACAO" && <MiniaturaObservacao />}
@@ -52,7 +56,14 @@ function MiniaturaNumerico({ campo }: { campo: CampoExibido }) {
     );
 }
 
-function MiniaturaAlternativas({ alternativas }: { alternativas: string[] }) {
+/** Rádio na única, caixa de seleção na múltipla — como o avaliador vai ver. */
+function MiniaturaAlternativas({
+    alternativas,
+    multipla,
+}: {
+    alternativas: string[];
+    multipla: boolean;
+}) {
     const visiveis = alternativas.slice(0, 3);
     const linhas = visiveis.length > 0 ? visiveis : ["", ""];
 
@@ -60,7 +71,12 @@ function MiniaturaAlternativas({ alternativas }: { alternativas: string[] }) {
         <ul className="flex w-full flex-col gap-1">
             {linhas.map((alternativa, indice) => (
                 <li key={indice} className="flex items-center gap-1.5">
-                    <span className="bg-card size-2.5 shrink-0 rounded-full border" />
+                    <span
+                        className={cn(
+                            "bg-card size-2.5 shrink-0 border",
+                            multipla ? "rounded-[2px]" : "rounded-full",
+                        )}
+                    />
                     {alternativa ? (
                         <span className="text-muted-foreground truncate text-[10px] leading-none">
                             {alternativa}

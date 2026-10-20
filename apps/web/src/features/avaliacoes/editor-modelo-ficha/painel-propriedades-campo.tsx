@@ -23,6 +23,7 @@ import {
     Switch,
     Textarea,
 } from "@te-inscreve/components";
+import { aceitaAlternativas } from "@te-inscreve/schemas";
 
 import type {
     AlternativaForm,
@@ -295,7 +296,7 @@ function PropriedadesCampo({
                 </>
             )}
 
-            {campo.tipo === "ALTERNATIVA_MULTIPLA" && (
+            {aceitaAlternativas(campo.tipo) && (
                 <Alternativas
                     caminho={nome("alternativas")}
                     alternativas={campo.alternativas}

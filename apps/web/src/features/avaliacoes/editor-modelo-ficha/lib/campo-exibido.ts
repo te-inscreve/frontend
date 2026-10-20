@@ -3,6 +3,7 @@ import type {
     ModificadorNota,
     TipoCampoFicha,
 } from "@te-inscreve/schemas";
+import { aceitaAlternativas } from "@te-inscreve/schemas";
 
 import type { CampoExclusivoForm } from "./modelo-ficha-form-schema";
 
@@ -45,14 +46,12 @@ export function exibirCampoExclusivo(campo: CampoExclusivoForm): CampoExibido {
             campo.tipo === "NUMERICO" ? formatarTeto(campo.valorMaximo) : null,
         modificadorNota:
             campo.tipo === "NUMERICO" ? campo.modificadorNota : null,
-        alternativas:
-            campo.tipo === "ALTERNATIVA_MULTIPLA"
-                ? campo.alternativas.map(
-                      (alternativa, indice) =>
-                          alternativa.nome.trim() ||
-                          `Alternativa ${indice + 1}`,
-                  )
-                : [],
+        alternativas: aceitaAlternativas(campo.tipo)
+            ? campo.alternativas.map(
+                  (alternativa, indice) =>
+                      alternativa.nome.trim() || `Alternativa ${indice + 1}`,
+              )
+            : [],
     };
 }
 
@@ -65,6 +64,7 @@ function formatarTeto(valor: string): string | null {
 
 export const ROTULO_TIPO: Record<TipoCampoFicha, string> = {
     NUMERICO: "Numérico",
+    ALTERNATIVA_UNICA: "Alternativa única",
     ALTERNATIVA_MULTIPLA: "Alternativa múltipla",
     DESCRITIVO: "Descritivo",
     OBSERVACAO: "Observação",

@@ -15,10 +15,29 @@ import { z } from "zod/v4";
 
 export const tipoCampoFichaSchema = z.enum([
     "NUMERICO",
+    "ALTERNATIVA_UNICA",
     "ALTERNATIVA_MULTIPLA",
     "DESCRITIVO",
     "OBSERVACAO",
 ]);
+
+/**
+ * Os tipos de escolha: o avaliador marca uma alternativa na única, quantas
+ * quiser na múltipla. As alternativas têm a mesma forma nos dois; só o `tipo`
+ * diz qual controle usar — nunca a quantidade de alternativas.
+ */
+export const TIPOS_COM_ALTERNATIVAS = [
+    "ALTERNATIVA_UNICA",
+    "ALTERNATIVA_MULTIPLA",
+] as const satisfies readonly z.infer<typeof tipoCampoFichaSchema>[];
+
+export type TipoCampoComAlternativas = (typeof TIPOS_COM_ALTERNATIVAS)[number];
+
+export function aceitaAlternativas(
+    tipo: z.infer<typeof tipoCampoFichaSchema>,
+): tipo is TipoCampoComAlternativas {
+    return (TIPOS_COM_ALTERNATIVAS as readonly string[]).includes(tipo);
+}
 
 /** O que a nota de um campo numérico faz com o total: soma ou desconta. */
 export const modificadorNotaSchema = z.enum(["SOMA", "DESCONTA"]);
@@ -44,9 +63,9 @@ export const alternativaCriacaoSchema = z.strictObject({
  * Campo exclusivo da ficha, definido dentro da própria posição.
  *
  * O tipo decide o que mais o campo aceita: o numérico exige o modificador e
- * pode ter teto (`valorMaximo`, `decimal(12,4)` — número ou string); só o de
- * alternativa múltipla tem alternativas; descritivo e observação não têm nada
- * além do básico. `descricao` é obrigatória, mas pode ser vazia.
+ * pode ter teto (`valorMaximo`, `decimal(12,4)` — número ou string); só os de
+ * alternativa — única e múltipla — têm alternativas; descritivo e observação
+ * não têm nada além do básico. `descricao` é obrigatória, mas pode ser vazia.
  */
 export const campoFichaCriacaoSchema = z
     .strictObject({
@@ -84,7 +103,7 @@ export const campoFichaCriacaoSchema = z
             });
         }
         if (
-            campo.tipo !== "ALTERNATIVA_MULTIPLA" &&
+            !aceitaAlternativas(campo.tipo) &&
             campo.alternativas !== undefined
         ) {
             ctx.addIssue({
@@ -149,7 +168,7 @@ const alternativaFichaSchema = z.object({
 /**
  * Campo como o backend o devolve. `valorMaximo` e `modificadorNota` só vêm no
  * numérico — o teto como decimal em string (`"0.5000"`) —, e `alternativas`
- * só no de alternativa múltipla.
+ * só nos de alternativa, já na `ordem`, e podem vir vazias.
  */
 export const campoFichaSchema = z.object({
     id: z.number().int(),
