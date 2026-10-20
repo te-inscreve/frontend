@@ -179,7 +179,13 @@ export function BotaoSelecionarModeloFicha({
                         {/* O atalho de criar fica fora do filtro: a busca sem
                             resultado é justamente quando ele mais serve. */}
                         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                            <BotaoCriarModeloFicha />
+                            <BotaoCriarModeloFicha
+                                categoria={{
+                                    eventoId,
+                                    modalidadeId,
+                                    categoriaId,
+                                }}
+                            />
                             {consulta.isPending &&
                                 Array.from({ length: ESQUELETOS }, (_, i) => (
                                     <li key={i} aria-hidden="true">

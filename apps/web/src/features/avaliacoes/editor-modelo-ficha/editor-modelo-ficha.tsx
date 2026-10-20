@@ -53,6 +53,7 @@ import { FormProvider } from "@te-inscreve/components/components/field";
 
 import type { ModeloFichaFormValues } from "./lib/modelo-ficha-form-schema";
 import type { Recipiente } from "./use-composicao";
+import type { CategoriaDeOrigem } from "~/features/avaliacoes/ficha-avaliativa/lib/categoria-de-origem";
 import { CanvasModeloFicha } from "./canvas-modelo-ficha";
 import {
     CartaoCampoGlobal,
@@ -72,9 +73,8 @@ import {
 import { PainelPropriedadesCampo } from "./painel-propriedades-campo";
 import { PreviaModeloFicha } from "./previa-modelo-ficha";
 import { useComposicao } from "./use-composicao";
+import { useConcluirModeloCriado } from "./use-concluir-modelo-criado";
 import { useSalvarModeloFicha } from "./use-salvar-modelo-ficha";
-
-const LISTA = "/admin/fichas-avaliativas";
 
 type Passo = "montar" | "revisar";
 
@@ -89,16 +89,29 @@ type Passo = "montar" | "revisar";
  * dentro. Abaixo de `lg` o catálogo flutua sobre a ficha; o painel de
  * propriedades flutua abaixo de `2xl`, porque somado ao catálogo e à sidebar
  * do admin ele espremia a ficha numa coluna de poucas palavras.
+ *
+ * Com `categoria`, o editor foi aberto pelo seletor de ficha dela: criar já
+ * vincula o modelo, e criar ou cancelar voltam para a categoria.
  */
 export function EditorModeloFicha({
     camposGlobais,
+    categoria,
 }: {
     camposGlobais: CampoFicha[];
+    categoria?: CategoriaDeOrigem;
 }) {
     const router = useRouter();
-    const { form, salvar, salvando, salvo, errosGerais } = useSalvarModeloFicha(
-        { aoSalvar: () => router.push(LISTA) },
-    );
+    const { lista, voltar, concluir, concluindo, erroVinculo } =
+        useConcluirModeloCriado(categoria);
+    const {
+        form,
+        salvar,
+        salvando: criando,
+        salvo,
+        errosGerais,
+    } = useSalvarModeloFicha({ aoSalvar: concluir });
+    // Do `POST` até a navegação: criar, vincular e sair são uma ação só.
+    const salvando = criando || concluindo;
     const composicao = useComposicao(form);
     const catalogo = useMemo(
         () => new Map(camposGlobais.map((campo) => [campo.id, campo])),
@@ -294,11 +307,11 @@ export function EditorModeloFicha({
                                 <BreadcrumbItem>
                                     <BreadcrumbLink asChild>
                                         <Link
-                                            href={LISTA}
+                                            href={lista}
                                             onClick={(evento) => {
                                                 if (!sujo) return;
                                                 evento.preventDefault();
-                                                sair(LISTA);
+                                                sair(lista);
                                             }}
                                         >
                                             Fichas avaliativas
@@ -413,6 +426,14 @@ export function EditorModeloFicha({
                                 ))}
                             </ul>
                         )}
+                        {erroVinculo && (
+                            <p
+                                role="alert"
+                                className="text-destructive min-w-0 flex-1 text-sm"
+                            >
+                                {erroVinculo}
+                            </p>
+                        )}
                         <div className="ml-auto flex items-center gap-2">
                             {propriedadesAbertas && (
                                 <p
@@ -428,7 +449,7 @@ export function EditorModeloFicha({
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={() => sair(LISTA)}
+                                        onClick={() => sair(voltar)}
                                     >
                                         Cancelar
                                     </Button>
@@ -448,6 +469,15 @@ export function EditorModeloFicha({
                                         <ArrowRightIcon aria-hidden="true" />
                                     </Button>
                                 </>
+                            ) : erroVinculo ? (
+                                // O modelo já existe: criar de novo o
+                                // duplicaria.
+                                <Button asChild>
+                                    <Link href={voltar}>
+                                        <ArrowLeftIcon aria-hidden="true" />
+                                        Voltar à categoria
+                                    </Link>
+                                </Button>
                             ) : (
                                 <>
                                     <Button

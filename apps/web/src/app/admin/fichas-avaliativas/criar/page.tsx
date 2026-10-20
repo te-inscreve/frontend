@@ -1,8 +1,9 @@
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 
 import { EditorModeloFicha } from "~/features/avaliacoes/editor-modelo-ficha/editor-modelo-ficha";
 import { EditorModeloFichaSkeleton } from "~/features/avaliacoes/editor-modelo-ficha/editor-modelo-ficha-skeleton";
 import { camposGlobaisMock } from "~/features/avaliacoes/editor-modelo-ficha/lib/campos-globais-mock";
+import { lerCategoriaDeOrigem } from "~/features/avaliacoes/ficha-avaliativa/lib/categoria-de-origem";
 import { PortaoDaEntidade } from "~/features/entidades/solicitar-acesso/portao-da-entidade";
 
 export const metadata = {
@@ -20,11 +21,24 @@ export const metadata = {
  * mock local; quando virar query, o `prefetch` dele entra aqui, antes do
  * portão.
  */
-export default function CriarModeloFichaPage() {
+export default function CriarModeloFichaPage({
+    searchParams,
+}: {
+    /**
+     * `evento`, `modalidade` e `categoria` chegam do seletor de ficha de uma
+     * categoria: o modelo criado é vinculado a ela, e o editor volta para lá.
+     */
+    searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+    const categoria = lerCategoriaDeOrigem(use(searchParams));
+
     return (
         <Suspense fallback={<EditorModeloFichaSkeleton />}>
             <PortaoDaEntidade>
-                <EditorModeloFicha camposGlobais={camposGlobaisMock} />
+                <EditorModeloFicha
+                    camposGlobais={camposGlobaisMock}
+                    categoria={categoria}
+                />
             </PortaoDaEntidade>
         </Suspense>
     );
