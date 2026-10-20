@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { GlobeSimpleIcon } from "@phosphor-icons/react/dist/ssr/GlobeSimple";
@@ -22,9 +23,12 @@ import { useResumirPreviaFicha } from "./lib/use-resumir-previa-ficha";
  * Global é o modelo da plataforma, compartilhado por todas as entidades e que
  * ninguém altera; fora dele, o rodapé avisa quando o modelo não é editável.
  *
- * Com `onSelecionar`, a prancheta inteira vira o alvo do clique: um botão
- * esticado por cima dela, e não um botão em volta — `button` só aceita
- * conteúdo de frase, e a folha tem listas. Fora de uma grade, `as="div"`.
+ * Sem `onSelecionar`, a prancheta é um link para o detalhe do modelo. Com ele,
+ * a prancheta inteira vira o alvo do clique: um botão esticado por cima dela,
+ * e não um botão em volta — `button` só aceita conteúdo de frase, e a folha
+ * tem listas. Aí a prancheta deixa de ser link: o clique do botão subiria até
+ * o `<a>` e levaria ao detalhe, tirando a pessoa do seletor no meio do
+ * vínculo. Fora de uma grade, `as="div"`.
  */
 export function CartaoModeloFicha({
     modelo,
@@ -48,12 +52,14 @@ export function CartaoModeloFicha({
     } = useResumirPreviaFicha({
         previa: modelo.previa,
     });
+    const href = `/admin/fichas-avaliativas/${modelo.id}?v=${modelo.versao}`;
+
     return (
         // O respiro no topo é do prendedor, que sobe acima da prancheta: sem
         // ele, um contêiner com rolagem corta a primeira linha da grade.
         <Raiz className="group pt-2.5">
-            <Link
-                href={`/admin/fichas-avaliativas/${modelo.id}?v=${modelo.versao}`}
+            <Prancheta
+                href={onSelecionar ? undefined : href}
                 className={cn(
                     "bg-muted/60 relative flex aspect-3/4 origin-top flex-col rounded-lg border p-1.5 transition",
                     onSelecionar &&
@@ -152,8 +158,26 @@ export function CartaoModeloFicha({
                         className="absolute inset-0 cursor-pointer rounded-lg outline-none disabled:cursor-default"
                     />
                 )}
-            </Link>
+            </Prancheta>
         </Raiz>
+    );
+}
+
+/** Link para o detalhe, ou `div` quando um botão por cima cuida do clique. */
+function Prancheta({
+    href,
+    className,
+    children,
+}: {
+    href?: string;
+    className: string;
+    children: ReactNode;
+}) {
+    if (!href) return <div className={className}>{children}</div>;
+    return (
+        <Link href={href} className={className}>
+            {children}
+        </Link>
     );
 }
 
