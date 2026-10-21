@@ -7,18 +7,20 @@ import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 import type { ModeloFichaResumo } from "@te-inscreve/schemas";
 import { cn, Separator } from "@te-inscreve/components";
 
+import type { TrechoPrevia } from "./lib/use-resumir-previa-ficha";
 import { useResumirPreviaFicha } from "./lib/use-resumir-previa-ficha";
 
 /**
- * Um modelo de ficha na grade: a folha presa na prancheta do jurado, com o
+ * Um modelo de ficha na grade: a folha presa na prancheta do avaliador, com o
  * começo do que ele vai preencher.
  *
  * O agrupamento é a única cor dentro da folha — faixa verde com o nome e a
  * quantidade de repetições —, para que dê para achar, de relance, os modelos
- * que repetem campos. Quando há agrupamento, os campos gerais cedem espaço
- * para que o bloco repetido nunca fique de fora. Só o primeiro agrupamento é
- * desenhado; o que não coube — campos gerais, campos do agrupamento e os
- * demais agrupamentos — vira uma contagem logo depois do trecho cortado.
+ * que repetem campos. Campos gerais e agrupamentos aparecem na ordem da ficha.
+ * Quando há agrupamento, os campos gerais cedem espaço para que o bloco
+ * repetido nunca fique de fora. Só o primeiro agrupamento é desenhado; o que
+ * não coube — campos gerais, campos do agrupamento e os demais agrupamentos —
+ * vira uma contagem no ponto do corte (ver `useResumirPreviaFicha`).
  *
  * Global é o modelo da plataforma, compartilhado por todas as entidades e que
  * ninguém altera; fora dele, o rodapé avisa quando o modelo não é editável.
@@ -43,15 +45,7 @@ export function CartaoModeloFicha({
     selecionando?: boolean;
     desabilitado?: boolean;
 }) {
-    const {
-        campos,
-        agrupamento,
-        agrupamentosOcultos,
-        camposOcultos,
-        camposAgrupadosOcultos,
-    } = useResumirPreviaFicha({
-        previa: modelo.previa,
-    });
+    const { trechos } = useResumirPreviaFicha({ previa: modelo.previa });
     const href = `/admin/fichas-avaliativas/${modelo.id}?v=${modelo.versao}`;
 
     return (
@@ -81,36 +75,9 @@ export function CartaoModeloFicha({
                             {modelo.nome}
                         </span>
 
-                        <ListaCampos campos={campos} />
-                        <Contagem
-                            quantidade={camposOcultos}
-                            singular="campo"
-                            plural="campos"
-                        />
-                        {agrupamento && (
-                            <div className="bg-primary-foreground flex flex-col gap-1.5 rounded-[3px] px-2 pb-1.5">
-                                <div className="bg-primary text-primary-foreground -mx-2 flex items-center gap-1 rounded-[3px] px-2 text-[10px] font-semibold">
-                                    <span className="truncate">
-                                        {agrupamento.nome}
-                                    </span>
-                                    <span className="ml-auto tabular-nums">
-                                        <span className="sr-only">repete </span>
-                                        ×{agrupamento.quantidade}
-                                    </span>
-                                </div>
-                                <ListaCampos campos={agrupamento.campos} />
-                                <Contagem
-                                    quantidade={camposAgrupadosOcultos}
-                                    singular="campo"
-                                    plural="campos"
-                                />
-                            </div>
-                        )}
-                        <Contagem
-                            quantidade={agrupamentosOcultos}
-                            singular="agrupamento"
-                            plural="agrupamentos"
-                        />
+                        {trechos.map((trecho, indice) => (
+                            <Trecho key={indice} trecho={trecho} />
+                        ))}
                     </div>
                 </div>
 
@@ -200,23 +167,55 @@ export function Prendedor() {
     );
 }
 
-/** O que não coube na folha, entre fios: "+3 campos". */
+/** Um trecho da folha: campos gerais, o agrupamento ou o que não coube. */
+function Trecho({ trecho }: { trecho: TrechoPrevia }) {
+    switch (trecho.tipo) {
+        case "campos":
+            return <ListaCampos campos={trecho.campos} />;
+        case "ocultos":
+            return (
+                <Contagem
+                    campos={trecho.campos}
+                    agrupamentos={trecho.agrupamentos}
+                />
+            );
+        case "agrupamento":
+            return (
+                <div className="bg-primary-foreground flex flex-col gap-1.5 rounded-[3px] px-2 pb-1.5">
+                    <div className="bg-primary text-primary-foreground -mx-2 flex items-center gap-1 rounded-[3px] px-2 text-[10px] font-semibold">
+                        <span className="truncate">{trecho.nome}</span>
+                        <span className="ml-auto tabular-nums">
+                            <span className="sr-only">repete </span>×
+                            {trecho.quantidade}
+                        </span>
+                    </div>
+                    <ListaCampos campos={trecho.campos} />
+                    <Contagem campos={trecho.camposOcultos} agrupamentos={0} />
+                </div>
+            );
+    }
+}
+
+/** O que não coube na folha, entre fios: "+3 campos · +1 agrupamento". */
 function Contagem({
-    quantidade,
-    singular,
-    plural,
+    campos,
+    agrupamentos,
 }: {
-    quantidade: number;
-    singular: string;
-    plural: string;
+    campos: number;
+    agrupamentos: number;
 }) {
-    if (quantidade <= 0) return null;
+    const partes = [
+        campos > 0 && `+${campos} ${campos === 1 ? "campo" : "campos"}`,
+        agrupamentos > 0 &&
+            `+${agrupamentos} ${agrupamentos === 1 ? "agrupamento" : "agrupamentos"}`,
+    ].filter(Boolean);
+    if (partes.length === 0) return null;
 
     return (
         <div className="flex items-center gap-1.5">
             <Separator className="flex-1" />
             <span className="text-muted-foreground/70 shrink-0 text-[10px]">
-                +{quantidade} {quantidade === 1 ? singular : plural}
+                {partes.join(" · ")}
             </span>
             <Separator className="flex-1" />
         </div>

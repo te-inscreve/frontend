@@ -5,7 +5,7 @@ import { z } from "zod/v4";
  * devolve.
  *
  * Uma ficha é uma lista de posições: os `camposGerais`, avaliados uma vez, e os
- * `agrupamentos`, cujos campos se repetem `quantidade` vezes (um por jurado,
+ * `agrupamentos`, cujos campos se repetem `quantidade` vezes (uma por dança,
  * por par, por item). Cada posição aponta para um campo — global, do catálogo
  * do backend, ou exclusivo da ficha.
  *
@@ -246,20 +246,30 @@ export const modeloFichaDetalheSchema = z.object({
     ),
 });
 
+/** Um campo na prévia: só o nome, e a `ordem` para pô-lo no lugar. */
+const campoPreviaSchema = z.object({
+    nome: z.string(),
+    ordem: z.number().int(),
+});
+
 /**
  * O conteúdo de um modelo, para desenhar o cartão da listagem sem buscar o
  * detalhe: os campos vêm só pelo nome. O backend pode mandar as listas
  * inteiras ou cortadas; quando corta, os totais dizem quanto ficou de fora.
  * `totalCampos` conta posições, gerais e de agrupamento, sem multiplicar pela
  * `quantidade`.
+ *
+ * A `ordem` segue a do detalhe: campos gerais e agrupamentos numeram juntos,
+ * e os campos de cada agrupamento, à parte.
  */
 export const previaModeloFichaSchema = z.object({
-    camposGerais: z.array(z.string()),
+    camposGerais: z.array(campoPreviaSchema),
     agrupamentos: z.array(
         z.object({
             nome: z.string(),
             quantidade: z.number().int(),
-            campos: z.array(z.string()),
+            ordem: z.number().int(),
+            campos: z.array(campoPreviaSchema),
         }),
     ),
     totalCampos: z.number().int().optional(),
