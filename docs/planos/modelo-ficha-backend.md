@@ -4,15 +4,9 @@ O editor de `/admin/fichas-avaliativas/criar` (`features/avaliacoes/editor-model
 
 ## Ordem única entre campos gerais e agrupamentos
 
-O backend numera `camposGerais` e `agrupamentos` em sequências separadas: `ModeloFichaCampo.ordem` e `ModeloUnidadeAvaliativa.ordem` são únicos cada um na sua tabela, e nada registra se um agrupamento vem antes ou depois de um campo geral. A ficha global "Danças Tradicionais Pré-Mirim" (fixture `modelos-globais.json`) tem campos gerais de 1 a 6 e o agrupamento "Danças" também na ordem 1.
+Resolvido: o backend agora recusa uma `ordem` repetida entre `camposGerais` e `agrupamentos` — os dois dividem uma sequência só. O editor numera os dois juntos (`paraCriarModeloFicha`), `criarModeloFichaSchema` tem a mesma regra, e um agrupamento pode ir para qualquer ponto da ficha: entre dois campos gerais, por arraste, e o "+" debaixo de um agrupamento cria ali um campo geral ou outro agrupamento.
 
-Enquanto isso não muda, o editor:
-
-- desenha todos os campos gerais primeiro e os agrupamentos depois;
-- só oferece "Criar agrupamento" depois do último campo geral ou do último agrupamento;
-- não deixa arrastar uma posição de uma lista para outra (campo geral ↔ agrupamento, ou agrupamento A → B), só reordenar dentro da mesma lista e reordenar agrupamentos entre si. O bloqueio está em `aceita`, em `lib/arraste.ts`.
-
-Quando o backend tiver uma ordem única, esses três pontos podem ser liberados.
+Continua de fora: arrastar um campo de uma lista para outra (campo geral → agrupamento, ou agrupamento A → B). O bloqueio está em `aceita`, em `lib/arraste.ts`.
 
 ## Leituras que faltam
 

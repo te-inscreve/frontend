@@ -6,19 +6,43 @@ import { arrayMove } from "@dnd-kit/sortable";
 
 import type {
     AgrupamentoForm,
+    ItemDaFicha,
     ModeloFichaFormValues,
     PosicaoForm,
 } from "./lib/modelo-ficha-form-schema";
+import {
+    chaveDoItem,
+    listasDaSequencia,
+    sequenciaDaFicha,
+} from "./lib/modelo-ficha-form-schema";
 
 /**
- * Onde uma posição mora: a lista de campos gerais, ou os campos de um
- * agrupamento, identificado pela `chave` — o índice muda quando os
- * agrupamentos trocam de lugar, a chave não.
+ * Onde uma posição mora: um trecho de campos gerais seguidos, ou os campos de
+ * um agrupamento.
+ *
+ * O trecho é identificado pelo lugar, na sequência da ficha, do seu primeiro
+ * campo — entre dois trechos há sempre um agrupamento. O agrupamento, pela
+ * `chave`: o índice muda quando os agrupamentos trocam de lugar, a chave não.
  */
-export type Recipiente = "gerais" | { agrupamento: string };
+export type Recipiente = { gerais: number } | { agrupamento: string };
+
+const PREFIXO_GERAIS = "gerais:";
 
 export function idRecipiente(recipiente: Recipiente) {
-    return recipiente === "gerais" ? "gerais" : recipiente.agrupamento;
+    return "gerais" in recipiente
+        ? `${PREFIXO_GERAIS}${recipiente.gerais}`
+        : recipiente.agrupamento;
+}
+
+export function recipienteDe(id: string): Recipiente {
+    return id.startsWith(PREFIXO_GERAIS)
+        ? { gerais: Number(id.slice(PREFIXO_GERAIS.length)) }
+        : { agrupamento: id };
+}
+
+/** Se o recipiente é um trecho de campos gerais, pelo id de {@link idRecipiente}. */
+export function ehDosGerais(id: string) {
+    return id.startsWith(PREFIXO_GERAIS);
 }
 
 /**
@@ -29,6 +53,10 @@ export function idRecipiente(recipiente: Recipiente) {
  * qualquer lista, e um `useFieldArray` por agrupamento espalharia essas
  * operações pelos componentes. Aqui cada mudança reescreve a lista inteira com
  * `setValue`, e quem desenha lê com `useWatch`.
+ *
+ * O que mexe no topo da ficha — campo geral ou agrupamento — passa pela
+ * sequência: tira, põe ou move ali, e grava as duas listas renumeradas, para
+ * que a `ordem` de um nunca repita a de outro.
  */
 export function useComposicao(form: UseFormReturn<ModeloFichaFormValues>) {
     return useMemo(() => {
@@ -39,8 +67,31 @@ export function useComposicao(form: UseFormReturn<ModeloFichaFormValues>) {
             shouldValidate: form.formState.isSubmitted,
         });
 
+        function lerSequencia() {
+            return sequenciaDaFicha(form.getValues());
+        }
+
+        function gravarSequencia(itens: ItemDaFicha[]) {
+            const { camposGerais, agrupamentos } = listasDaSequencia(itens);
+            form.setValue("camposGerais", camposGerais, opcoes());
+            form.setValue("agrupamentos", agrupamentos, opcoes());
+        }
+
+        function inserirNaSequencia(item: ItemDaFicha, indice: number) {
+            const itens = lerSequencia();
+            itens.splice(indice, 0, item);
+            gravarSequencia(itens);
+        }
+
         function lerPosicoes(recipiente: Recipiente): PosicaoForm[] {
-            if (recipiente === "gerais") return form.getValues("camposGerais");
+            if ("gerais" in recipiente) {
+                const trecho: PosicaoForm[] = [];
+                for (const item of lerSequencia().slice(recipiente.gerais)) {
+                    if (item.tipo !== "campo") break;
+                    trecho.push(item.posicao);
+                }
+                return trecho;
+            }
             return (
                 form
                     .getValues("agrupamentos")
@@ -51,78 +102,113 @@ export function useComposicao(form: UseFormReturn<ModeloFichaFormValues>) {
             );
         }
 
-        function gravarPosicoes(
-            recipiente: Recipiente,
+        function gravarCamposDoAgrupamento(
+            chave: string,
             posicoes: PosicaoForm[],
         ) {
-            if (recipiente === "gerais") {
-                form.setValue("camposGerais", posicoes, opcoes());
-                return;
-            }
             const indice = form
                 .getValues("agrupamentos")
-                .findIndex(
-                    (agrupamento) =>
-                        agrupamento.chave === recipiente.agrupamento,
-                );
+                .findIndex((agrupamento) => agrupamento.chave === chave);
             if (indice === -1) return;
             form.setValue(`agrupamentos.${indice}.campos`, posicoes, opcoes());
         }
 
-        function gravarAgrupamentos(agrupamentos: AgrupamentoForm[]) {
-            form.setValue("agrupamentos", agrupamentos, opcoes());
+        function removerDaSequencia(chave: string) {
+            gravarSequencia(
+                lerSequencia().filter((item) => chaveDoItem(item) !== chave),
+            );
         }
 
         return {
             lerPosicoes,
 
-            /** Sem `indice`, entra no fim da lista. */
+            /** Sem `indice`, entra no fim da lista — do trecho, nos gerais. */
             inserirPosicao(
                 recipiente: Recipiente,
                 posicao: PosicaoForm,
                 indice?: number,
             ) {
+                if ("gerais" in recipiente) {
+                    inserirNaSequencia(
+                        { tipo: "campo", posicao },
+                        recipiente.gerais +
+                            (indice ?? lerPosicoes(recipiente).length),
+                    );
+                    return;
+                }
                 const posicoes = [...lerPosicoes(recipiente)];
                 posicoes.splice(indice ?? posicoes.length, 0, posicao);
-                gravarPosicoes(recipiente, posicoes);
+                gravarCamposDoAgrupamento(recipiente.agrupamento, posicoes);
             },
 
-            moverPosicao(recipiente: Recipiente, de: number, para: number) {
-                gravarPosicoes(
-                    recipiente,
-                    arrayMove(lerPosicoes(recipiente), de, para),
+            /** Reordena os campos de um agrupamento. */
+            moverPosicao(chaveAgrupamento: string, de: number, para: number) {
+                gravarCamposDoAgrupamento(
+                    chaveAgrupamento,
+                    arrayMove(
+                        lerPosicoes({ agrupamento: chaveAgrupamento }),
+                        de,
+                        para,
+                    ),
                 );
             },
 
             removerPosicao(recipiente: Recipiente, chave: string) {
-                gravarPosicoes(
-                    recipiente,
+                if ("gerais" in recipiente) {
+                    removerDaSequencia(chave);
+                    return;
+                }
+                gravarCamposDoAgrupamento(
+                    recipiente.agrupamento,
                     lerPosicoes(recipiente).filter(
                         (posicao) => posicao.chave !== chave,
                     ),
                 );
             },
 
-            /** Sempre no fim: agrupamento só existe depois dos campos gerais. */
-            inserirAgrupamento(agrupamento: AgrupamentoForm) {
-                gravarAgrupamentos([
-                    ...form.getValues("agrupamentos"),
-                    agrupamento,
-                ]);
+            /** Um campo geral em `indice` da sequência da ficha. */
+            inserirCampoGeral(posicao: PosicaoForm, indice: number) {
+                inserirNaSequencia({ tipo: "campo", posicao }, indice);
             },
 
-            moverAgrupamento(de: number, para: number) {
-                gravarAgrupamentos(
-                    arrayMove(form.getValues("agrupamentos"), de, para),
+            /** Um agrupamento em `indice` da sequência da ficha. */
+            inserirAgrupamento(agrupamento: AgrupamentoForm, indice: number) {
+                inserirNaSequencia(
+                    { tipo: "agrupamento", agrupamento },
+                    indice,
                 );
             },
 
-            removerAgrupamento(chave: string) {
-                gravarAgrupamentos(
-                    form
-                        .getValues("agrupamentos")
-                        .filter((agrupamento) => agrupamento.chave !== chave),
+            removerAgrupamento: removerDaSequencia,
+
+            /**
+             * Leva um item do topo para o lugar de outro, como numa lista
+             * reordenável: quem vem de cima passa para depois do alvo, quem
+             * vem de baixo, para antes.
+             */
+            moverParaOLugarDe(chave: string, chaveAlvo: string) {
+                const itens = lerSequencia();
+                const chaves = itens.map(chaveDoItem);
+                const de = chaves.indexOf(chave);
+                const para = chaves.indexOf(chaveAlvo);
+                if (de === -1 || para === -1 || de === para) return;
+                gravarSequencia(arrayMove(itens, de, para));
+            },
+
+            /**
+             * Leva um item do topo para o espaço antes do item em `indice` da
+             * sequência — `indice` igual ao tamanho dela é o fim.
+             */
+            moverParaEspaco(chave: string, indice: number) {
+                const itens = lerSequencia();
+                const de = itens.findIndex(
+                    (item) => chaveDoItem(item) === chave,
                 );
+                if (de === -1) return;
+                const [item] = itens.splice(de, 1);
+                if (!item) return;
+                itens.splice(indice > de ? indice - 1 : indice, 0, item);
+                gravarSequencia(itens);
             },
         };
     }, [form]);

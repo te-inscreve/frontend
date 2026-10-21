@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { DotsSixVerticalIcon } from "@phosphor-icons/react/dist/ssr/DotsSixVertical";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
 import { Controller, useFormContext, useFormState } from "react-hook-form";
@@ -33,6 +32,7 @@ import { NumberInput } from "~/shared/ui/number-input";
 import { useEditor } from "./editor-contexto";
 import { mensagemDaLista } from "./lib/erro-lista";
 import { ListaPosicoes } from "./lista-posicoes";
+import { useLadoDaSoltura } from "./use-lado-da-soltura";
 
 interface Props {
     agrupamento: AgrupamentoForm;
@@ -41,8 +41,13 @@ interface Props {
 
 /**
  * Um agrupamento na ficha em edição: um cartão à parte, com o entalhe à
- * esquerda para trocá-lo de lugar com os outros, o nome, a quantidade de
- * repetições e os campos que se repetem.
+ * esquerda para levá-lo a outro lugar da ficha — entre dois campos gerais,
+ * antes ou depois de outro agrupamento —, o nome, a quantidade de repetições
+ * e os campos que se repetem.
+ *
+ * Não é uma lista reordenável: os vizinhos do topo são de dois tipos, numa
+ * grade e numa coluna, e nenhum abre vaga. Quem arrasta vê a sobra presa ao
+ * ponteiro e a linha que marca onde o agrupamento vai cair.
  */
 export function CartaoAgrupamento({ agrupamento, indice }: Props) {
     const { control } = useFormContext<ModeloFichaFormValues>();
@@ -58,12 +63,15 @@ export function CartaoAgrupamento({ agrupamento, indice }: Props) {
     const {
         attributes,
         listeners,
-        setNodeRef,
+        setNodeRef: setArrastavelRef,
         setActivatorNodeRef,
-        transform,
-        transition,
         isDragging,
-    } = useSortable({ id: agrupamento.chave, data: dados });
+    } = useDraggable({ id: agrupamento.chave, data: dados });
+    const { setNodeRef: setAlvoRef } = useDroppable({
+        id: agrupamento.chave,
+        data: dados,
+    });
+    const lado = useLadoDaSoltura(agrupamento.chave);
 
     function remover() {
         const aberto = agrupamento.campos.some(
@@ -75,18 +83,26 @@ export function CartaoAgrupamento({ agrupamento, indice }: Props) {
 
     return (
         <section
-            ref={setNodeRef}
-            aria-label={`Agrupamento ${rotulo}`}
-            style={{
-                transform: CSS.Translate.toString(transform),
-                transition,
+            ref={(no) => {
+                setArrastavelRef(no);
+                setAlvoRef(no);
             }}
+            aria-label={`Agrupamento ${rotulo}`}
             className={cn(
                 "bg-muted/40 relative flex rounded-lg border",
-                isDragging && "z-10 opacity-70 shadow-lg",
+                isDragging && "opacity-50",
                 erroCampos && "border-destructive",
             )}
         >
+            {lado && (
+                <span
+                    aria-hidden="true"
+                    className={cn(
+                        "bg-primary absolute inset-x-0 h-0.5 rounded-full",
+                        lado === "antes" ? "-top-2.5" : "-bottom-2.5",
+                    )}
+                />
+            )}
             {/* O entalhe: a faixa da esquerda é a alça do cartão inteiro. */}
             <button
                 ref={setActivatorNodeRef}
@@ -180,7 +196,9 @@ export function CartaoAgrupamento({ agrupamento, indice }: Props) {
                 <ListaPosicoes
                     recipiente={{ agrupamento: agrupamento.chave }}
                     posicoes={agrupamento.campos}
-                    caminho={`${caminho}.campos`}
+                    caminhoDaPosicao={(indiceCampo) =>
+                        `${caminho}.campos.${indiceCampo}`
+                    }
                     rotulo={`agrupamento ${rotulo}`}
                     vazia={
                         <p>

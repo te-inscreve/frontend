@@ -2,18 +2,22 @@
 
 import { useWatch } from "react-hook-form";
 
-import type { CampoDaFolha } from "../ficha-avaliativa/folha-modelo-ficha";
+import type {
+    CampoDaFolha,
+    ItemDaFolha,
+} from "../ficha-avaliativa/folha-modelo-ficha";
 import type {
     ModeloFichaFormValues,
     PosicaoForm,
 } from "./lib/modelo-ficha-form-schema";
 import { FolhaModeloFicha } from "../ficha-avaliativa/folha-modelo-ficha";
 import { useEditor } from "./editor-contexto";
+import { sequenciaDaFicha } from "./lib/modelo-ficha-form-schema";
 import { campoDaPosicao } from "./posicao-editavel";
 
 /**
  * A ficha montada até aqui, na mesma prancheta do detalhe do modelo: o que o
- * formulário tem agora, sem esperar o salvar.
+ * formulário tem agora, sem esperar o salvar, na sequência em que foi montada.
  */
 export function PreviaModeloFicha() {
     const { camposGlobais } = useEditor();
@@ -30,16 +34,33 @@ export function PreviaModeloFicha() {
             return campo ? [{ chave: posicao.chave, campo }] : [];
         });
 
+    const itens = sequenciaDaFicha({ camposGerais, agrupamentos }).flatMap(
+        (item): ItemDaFolha[] => {
+            if (item.tipo === "campo") {
+                return camposDaFolha([item.posicao]).map((campo) => ({
+                    tipo: "campo",
+                    ...campo,
+                }));
+            }
+            const { agrupamento } = item;
+            return [
+                {
+                    tipo: "agrupamento",
+                    chave: agrupamento.chave,
+                    nome:
+                        agrupamento.nome.trim() ||
+                        `Agrupamento ${agrupamentos.indexOf(agrupamento) + 1}`,
+                    quantidade: agrupamento.quantidade,
+                    campos: camposDaFolha(agrupamento.campos),
+                },
+            ];
+        },
+    );
+
     return (
         <FolhaModeloFicha
             nome={nome.trim() || "Modelo sem nome"}
-            camposGerais={camposDaFolha(camposGerais)}
-            agrupamentos={agrupamentos.map((agrupamento, indice) => ({
-                chave: agrupamento.chave,
-                nome: agrupamento.nome.trim() || `Agrupamento ${indice + 1}`,
-                quantidade: agrupamento.quantidade,
-                campos: camposDaFolha(agrupamento.campos),
-            }))}
+            itens={itens}
             mensagemVazia="A ficha ainda não tem campos. Volte à edição para montá-la."
         />
     );

@@ -1,9 +1,10 @@
 import { GlobeSimpleIcon } from "@phosphor-icons/react/dist/ssr/GlobeSimple";
 import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 
-import type { PosicaoFicha } from "@te-inscreve/schemas";
+import type { ModeloFichaDetalhe, PosicaoFicha } from "@te-inscreve/schemas";
 import { Skeleton } from "@te-inscreve/components/skeleton";
 
+import type { ItemDaFolha } from "./folha-modelo-ficha";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { exibirCampoGlobal } from "../editor-modelo-ficha/lib/campo-exibido";
 import { FolhaModeloFicha } from "./folha-modelo-ficha";
@@ -23,13 +24,7 @@ export async function DetalheModeloFicha({ id }: { id: number }) {
     return (
         <FolhaModeloFicha
             nome={modelo.nome}
-            camposGerais={camposDaFolha(modelo.camposGerais)}
-            agrupamentos={porOrdem(modelo.agrupamentos).map((agrupamento) => ({
-                chave: agrupamento.id,
-                nome: agrupamento.nome,
-                quantidade: agrupamento.quantidade,
-                campos: camposDaFolha(agrupamento.campos),
-            }))}
+            itens={itensDaFolha(modelo)}
             mensagemVazia="Este modelo ainda não tem campos."
             rodape={
                 <>
@@ -63,6 +58,32 @@ export async function DetalheModeloFicha({ id }: { id: number }) {
 
 function porOrdem<T extends { ordem: number }>(itens: T[]) {
     return [...itens].sort((a, b) => a.ordem - b.ordem);
+}
+
+/**
+ * Campos gerais e agrupamentos numa sequência só: o backend numera os dois
+ * juntos, então a `ordem` diz quem vem antes de quem.
+ */
+function itensDaFolha(modelo: ModeloFichaDetalhe): ItemDaFolha[] {
+    const campos = modelo.camposGerais.map((posicao) => ({
+        ordem: posicao.ordem,
+        item: {
+            tipo: "campo",
+            chave: posicao.id,
+            campo: exibirCampoGlobal(posicao.campo),
+        } satisfies ItemDaFolha,
+    }));
+    const agrupamentos = modelo.agrupamentos.map((agrupamento) => ({
+        ordem: agrupamento.ordem,
+        item: {
+            tipo: "agrupamento",
+            chave: agrupamento.id,
+            nome: agrupamento.nome,
+            quantidade: agrupamento.quantidade,
+            campos: camposDaFolha(agrupamento.campos),
+        } satisfies ItemDaFolha,
+    }));
+    return porOrdem([...campos, ...agrupamentos]).map(({ item }) => item);
 }
 
 function camposDaFolha(posicoes: PosicaoFicha[]) {

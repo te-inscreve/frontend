@@ -1,11 +1,17 @@
 import type {
+    Active,
     Announcements,
     CollisionDetection,
     DataRef,
     DroppableContainer,
+    Modifier,
+    Over,
     ScreenReaderInstructions,
 } from "@dnd-kit/core";
 import { closestCenter, pointerWithin } from "@dnd-kit/core";
+import { getEventCoordinates } from "@dnd-kit/utilities";
+
+import { ehDosGerais } from "../use-composicao";
 
 /**
  * O que cada coisa arrastável ou alvo carrega em `data`.
@@ -13,7 +19,9 @@ import { closestCenter, pointerWithin } from "@dnd-kit/core";
  * - `global` — cartão do catálogo, que entra como posição nova;
  * - `posicao` — uma posição já na ficha, dentro do seu recipiente;
  * - `agrupamento` — o cartão de um agrupamento, pela alça;
- * - `recipiente` — o corpo de uma lista, alvo de quem cai no fim dela.
+ * - `recipiente` — o corpo de uma lista, alvo de quem cai no fim dela;
+ * - `espaco` — o vão antes ou depois de um agrupamento, alvo de quem entra no
+ *   topo da ficha naquele ponto: `indice` é o lugar na sequência.
  *
  * `rotulo` é o que o leitor de tela anuncia.
  */
@@ -21,7 +29,8 @@ export type DadosArraste =
     | { tipo: "global"; campoId: number; rotulo: string }
     | { tipo: "posicao"; recipiente: string; rotulo: string }
     | { tipo: "agrupamento"; rotulo: string }
-    | { tipo: "recipiente"; recipiente: string; rotulo: string };
+    | { tipo: "recipiente"; recipiente: string; rotulo: string }
+    | { tipo: "espaco"; indice: number; rotulo: string };
 
 export function dadosDe(
     ref: DataRef | undefined | null,
@@ -37,39 +46,61 @@ export function idGlobalArraste(campoId: number) {
     return `global:${campoId}`;
 }
 
+export function idEspacoArraste(indice: number) {
+    return `espaco:${indice}`;
+}
+
+/**
+ * O que mora no topo da ficha e troca de lugar nele: o agrupamento e o campo
+ * geral. Os dois dividem uma sequência só, então um vai para antes ou depois
+ * do outro.
+ */
+export function ehDoTopo(dados: DadosArraste | undefined) {
+    return (
+        dados?.tipo === "agrupamento" ||
+        (dados?.tipo === "posicao" && ehDosGerais(dados.recipiente))
+    );
+}
+
 /**
  * Quem pode cair onde.
  *
- * Uma posição só troca de lugar dentro do próprio recipiente: o backend numera
- * campos gerais e agrupamentos em sequências separadas, e mover entre eles
- * espera a ordem única descrita em `docs/planos/modelo-ficha-backend.md`.
+ * Campo geral e agrupamento se movem pelo topo da ficha: sobre outro campo
+ * geral, sobre outro agrupamento ou num espaço entre eles. O campo de um
+ * agrupamento só troca de lugar dentro dele.
  */
 function aceita(ativo: DadosArraste | undefined, alvo: DroppableContainer) {
     const dadosAlvo = dadosDe(alvo.data);
     if (!ativo || !dadosAlvo) return false;
 
+    if (ehDoTopo(ativo)) {
+        return ehDoTopo(dadosAlvo) || dadosAlvo.tipo === "espaco";
+    }
+
     switch (ativo.tipo) {
         case "global":
             return (
-                dadosAlvo.tipo === "posicao" || dadosAlvo.tipo === "recipiente"
+                dadosAlvo.tipo === "posicao" ||
+                dadosAlvo.tipo === "recipiente" ||
+                dadosAlvo.tipo === "espaco"
             );
         case "posicao":
             return (
                 dadosAlvo.tipo === "posicao" &&
                 dadosAlvo.recipiente === ativo.recipiente
             );
-        case "agrupamento":
-            return dadosAlvo.tipo === "agrupamento";
-        case "recipiente":
+        default:
             return false;
     }
 }
 
 /**
- * Para o campo do catálogo vale o que está sob o ponteiro — a posição antes do
- * recipiente que a contém, porque cair sobre ela insere naquele ponto. Pelo
- * teclado não há ponteiro, e vale o alvo mais próximo. Reordenar usa o centro
- * mais próximo, como em qualquer lista.
+ * Vale o que está sob o ponteiro. Para o campo do catálogo, a posição antes do
+ * recipiente que a contém, porque cair sobre ela insere naquele ponto. No
+ * topo, o campo geral ou o espaço antes do agrupamento que os contém — o
+ * cartão do agrupamento pega o ponteiro em toda a sua altura, e a sobra do
+ * arraste dele fica longe do ponteiro. Entre dois alvos, e pelo teclado, sem
+ * ponteiro, vale o centro mais próximo, como em qualquer lista.
  */
 export const deteccaoColisao: CollisionDetection = (args) => {
     const ativo = dadosDe(args.active.data);
@@ -78,18 +109,77 @@ export const deteccaoColisao: CollisionDetection = (args) => {
     );
     const filtrado = { ...args, droppableContainers: alvos };
 
-    if (ativo?.tipo === "global" && args.pointerCoordinates) {
-        const idsPosicao = new Set(
+    if (
+        args.pointerCoordinates &&
+        (ativo?.tipo === "global" || ehDoTopo(ativo))
+    ) {
+        const sob = pointerWithin(filtrado);
+        const idsQueContem = new Set(
             alvos
-                .filter((alvo) => dadosDe(alvo.data)?.tipo === "posicao")
+                .filter((alvo) => {
+                    const tipo = dadosDe(alvo.data)?.tipo;
+                    return tipo === "recipiente" || tipo === "agrupamento";
+                })
                 .map((alvo) => alvo.id),
         );
-        const sob = pointerWithin(filtrado);
-        const posicoes = sob.filter((colisao) => idsPosicao.has(colisao.id));
-        return posicoes.length > 0 ? posicoes : sob;
+        const precisos = sob.filter((colisao) => !idsQueContem.has(colisao.id));
+        if (precisos.length > 0) return precisos;
+        if (sob.length > 0) return sob;
     }
 
     return closestCenter(filtrado);
+};
+
+/**
+ * Onde o item do topo arrastado vai cair em relação ao alvo `chave`: antes ou
+ * depois dele, pela regra de `moverParaOLugarDe`, da composição. `null`
+ * quando o alvo não é esse, ou quando o arraste é dentro de um mesmo trecho
+ * de campos gerais — ali a grade já abre a vaga.
+ */
+export function ladoDaSoltura(
+    active: Active | null,
+    over: Over | null,
+    chave: string,
+    chavesDoTopo: string[],
+): "antes" | "depois" | null {
+    if (!active || over?.id !== chave || active.id === chave) return null;
+    const ativo = dadosDe(active.data);
+    if (!ehDoTopo(ativo)) return null;
+
+    const alvo = dadosDe(over.data);
+    if (
+        ativo?.tipo === "posicao" &&
+        alvo?.tipo === "posicao" &&
+        alvo.recipiente === ativo.recipiente
+    ) {
+        return null;
+    }
+
+    const de = chavesDoTopo.indexOf(String(active.id));
+    const para = chavesDoTopo.indexOf(chave);
+    if (de === -1 || para === -1) return null;
+    return de > para ? "antes" : "depois";
+}
+
+/**
+ * Prende a sobra do arraste ao ponteiro, um pouco acima e à esquerda dele. O
+ * agrupamento se arrasta pela alça, que cobre a altura do cartão: sem isso, a
+ * sobra nasceria no canto do cartão, longe de onde a pessoa pegou. Pelo
+ * teclado não há ponteiro, e nada muda.
+ */
+export const prenderAoPonteiro: Modifier = ({
+    activatorEvent,
+    draggingNodeRect,
+    transform,
+}) => {
+    if (!activatorEvent || !draggingNodeRect) return transform;
+    const ponto = getEventCoordinates(activatorEvent);
+    if (!ponto) return transform;
+    return {
+        ...transform,
+        x: transform.x + ponto.x - draggingNodeRect.left - 16,
+        y: transform.y + ponto.y - draggingNodeRect.top - 16,
+    };
 };
 
 export const instrucoesLeitorTela: ScreenReaderInstructions = {

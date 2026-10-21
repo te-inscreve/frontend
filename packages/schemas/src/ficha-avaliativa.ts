@@ -47,12 +47,31 @@ const ordemSchema = z.number().int().min(1);
 
 /**
  * A `ordem` é a posição na coleção, então não se repete dentro dela. Coleções
- * diferentes — os campos de dois agrupamentos — podem repetir.
+ * diferentes — os campos de dois agrupamentos — podem repetir. Campos gerais e
+ * agrupamentos são a exceção: dividem uma sequência só, a do topo da ficha
+ * (ver `ordensDoTopoUnicas`).
  */
 const ordensUnicas = (itens: { ordem: number }[]) =>
     new Set(itens.map((item) => item.ordem)).size === itens.length;
 
 const ORDEM_DUPLICADA = "ordem duplicado na coleção.";
+
+/**
+ * Campos gerais e agrupamentos se intercalam no topo da ficha: um agrupamento
+ * pode vir entre dois campos gerais. Por isso a `ordem` de um não repete a de
+ * nenhum outro, de qualquer das duas coleções.
+ */
+const ordensDoTopoUnicas = (modelo: {
+    camposGerais?: { ordem: number }[];
+    agrupamentos?: { ordem: number }[];
+}) =>
+    ordensUnicas([
+        ...(modelo.camposGerais ?? []),
+        ...(modelo.agrupamentos ?? []),
+    ]);
+
+const ORDEM_DUPLICADA_NO_TOPO =
+    "ordem repetida entre campos gerais e agrupamentos.";
 
 /** Na criação, a alternativa ainda não tem `id`: o backend a numera. */
 export const alternativaCriacaoSchema = z.strictObject({
@@ -148,16 +167,24 @@ export const agrupamentoFichaCriacaoSchema = z.strictObject({
  *   (`original`), vira uma família nova da entidade. Omitir `camposGerais` e
  *   `agrupamentos` copia a composição da origem inteira; mandar qualquer um
  *   dos dois a substitui exatamente pelo que foi mandado.
+ *
+ * Campos gerais e agrupamentos numeram juntos: a `ordem` de cada um é única
+ * entre todos eles.
  */
-export const criarModeloFichaSchema = z.strictObject({
-    nome: z.string().min(1).max(255),
-    modeloFichaAvaliativaId: idSchema.optional(),
-    camposGerais: posicoesCriacaoSchema.optional(),
-    agrupamentos: z
-        .array(agrupamentoFichaCriacaoSchema)
-        .refine(ordensUnicas, ORDEM_DUPLICADA)
-        .optional(),
-});
+export const criarModeloFichaSchema = z
+    .strictObject({
+        nome: z.string().min(1).max(255),
+        modeloFichaAvaliativaId: idSchema.optional(),
+        camposGerais: posicoesCriacaoSchema.optional(),
+        agrupamentos: z
+            .array(agrupamentoFichaCriacaoSchema)
+            .refine(ordensUnicas, ORDEM_DUPLICADA)
+            .optional(),
+    })
+    .refine(ordensDoTopoUnicas, {
+        message: ORDEM_DUPLICADA_NO_TOPO,
+        path: ["agrupamentos"],
+    });
 
 const alternativaFichaSchema = z.object({
     id: z.number().int(),

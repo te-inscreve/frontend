@@ -25,6 +25,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
 import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { CheckIcon } from "@phosphor-icons/react/dist/ssr/Check";
+import { DotsSixVerticalIcon } from "@phosphor-icons/react/dist/ssr/DotsSixVertical";
 import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
 import { SidebarSimpleIcon } from "@phosphor-icons/react/dist/ssr/SidebarSimple";
 import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr/SpinnerGap";
@@ -52,7 +53,6 @@ import {
 import { FormProvider } from "@te-inscreve/components/components/field";
 
 import type { ModeloFichaFormValues } from "./lib/modelo-ficha-form-schema";
-import type { Recipiente } from "./use-composicao";
 import type { CategoriaDeOrigem } from "~/features/avaliacoes/ficha-avaliativa/lib/categoria-de-origem";
 import { CanvasModeloFicha } from "./canvas-modelo-ficha";
 import {
@@ -64,7 +64,9 @@ import {
     anunciosArraste,
     dadosDe,
     deteccaoColisao,
+    ehDoTopo,
     instrucoesLeitorTela,
+    prenderAoPonteiro,
 } from "./lib/arraste";
 import {
     camposExclusivos,
@@ -72,11 +74,16 @@ import {
 } from "./lib/modelo-ficha-form-schema";
 import { PainelPropriedadesCampo } from "./painel-propriedades-campo";
 import { PreviaModeloFicha } from "./previa-modelo-ficha";
-import { useComposicao } from "./use-composicao";
+import { recipienteDe, useComposicao } from "./use-composicao";
 import { useConcluirModeloCriado } from "./use-concluir-modelo-criado";
 import { useSalvarModeloFicha } from "./use-salvar-modelo-ficha";
 
 type Passo = "montar" | "revisar";
+
+/** O que a sobra do arraste desenha: o cartão do catálogo, ou o agrupamento. */
+type Arrastado =
+    | { tipo: "global"; campo: CampoFicha }
+    | { tipo: "agrupamento"; rotulo: string };
 
 /**
  * A tela de criar modelo de ficha, em dois passos. Em **montar**, o catálogo
@@ -129,9 +136,7 @@ export function EditorModeloFicha({
     );
     const catalogoAberto = escolhaCatalogo ?? telaLarga;
     const [destinoSaida, setDestinoSaida] = useState<string | null>(null);
-    const [campoArrastado, setCampoArrastado] = useState<CampoFicha | null>(
-        null,
-    );
+    const [arrastado, setArrastado] = useState<Arrastado | null>(null);
 
     const editando = passo === "montar";
     // Com o painel aberto, a pessoa está no meio de um campo: seguir para a
@@ -186,20 +191,26 @@ export function EditorModeloFicha({
 
     function aoComecarArraste({ active }: DragStartEvent) {
         const dados = dadosDe(active.data);
-        setCampoArrastado(
-            dados?.tipo === "global"
-                ? (catalogo.get(dados.campoId) ?? null)
-                : null,
-        );
+        const campo =
+            dados?.tipo === "global" ? catalogo.get(dados.campoId) : undefined;
+        if (campo) setArrastado({ tipo: "global", campo });
+        else if (dados?.tipo === "agrupamento") {
+            setArrastado({ tipo: "agrupamento", rotulo: dados.rotulo });
+        } else setArrastado(null);
     }
 
     function aoSoltar({ active, over }: DragEndEvent) {
-        setCampoArrastado(null);
+        setArrastado(null);
         const ativo = dadosDe(active.data);
         const alvo = dadosDe(over?.data);
         if (!over || !ativo || !alvo) return;
 
         if (ativo.tipo === "global") {
+            const posicao = novaPosicaoGlobal(ativo.campoId);
+            if (alvo.tipo === "espaco") {
+                composicao.inserirCampoGeral(posicao, alvo.indice);
+                return;
+            }
             if (alvo.tipo !== "posicao" && alvo.tipo !== "recipiente") return;
             const recipiente = recipienteDe(alvo.recipiente);
             const indice =
@@ -208,15 +219,24 @@ export function EditorModeloFicha({
                           .lerPosicoes(recipiente)
                           .findIndex((posicao) => posicao.chave === over.id)
                     : undefined;
-            composicao.inserirPosicao(
-                recipiente,
-                novaPosicaoGlobal(ativo.campoId),
-                indice,
-            );
+            composicao.inserirPosicao(recipiente, posicao, indice);
             return;
         }
 
         if (active.id === over.id) return;
+
+        // Campo geral ou agrupamento: muda de lugar no topo da ficha.
+        if (ehDoTopo(ativo)) {
+            if (alvo.tipo === "espaco") {
+                composicao.moverParaEspaco(String(active.id), alvo.indice);
+            } else {
+                composicao.moverParaOLugarDe(
+                    String(active.id),
+                    String(over.id),
+                );
+            }
+            return;
+        }
 
         if (
             ativo.tipo === "posicao" &&
@@ -224,22 +244,12 @@ export function EditorModeloFicha({
             ativo.recipiente === alvo.recipiente
         ) {
             const recipiente = recipienteDe(ativo.recipiente);
+            if (!("agrupamento" in recipiente)) return;
             const chaves = composicao
                 .lerPosicoes(recipiente)
                 .map((posicao) => posicao.chave);
             composicao.moverPosicao(
-                recipiente,
-                chaves.indexOf(String(active.id)),
-                chaves.indexOf(String(over.id)),
-            );
-            return;
-        }
-
-        if (ativo.tipo === "agrupamento" && alvo.tipo === "agrupamento") {
-            const chaves = form
-                .getValues("agrupamentos")
-                .map((agrupamento) => agrupamento.chave);
-            composicao.moverAgrupamento(
+                recipiente.agrupamento,
                 chaves.indexOf(String(active.id)),
                 chaves.indexOf(String(over.id)),
             );
@@ -338,7 +348,7 @@ export function EditorModeloFicha({
                         }}
                         onDragStart={aoComecarArraste}
                         onDragEnd={aoSoltar}
-                        onDragCancel={() => setCampoArrastado(null)}
+                        onDragCancel={() => setArrastado(null)}
                     >
                         <div className="relative flex min-h-0 flex-1">
                             {editando && catalogoAberto && (
@@ -405,12 +415,31 @@ export function EditorModeloFicha({
                             )}
                         </div>
 
-                        <DragOverlay dropAnimation={null}>
-                            {campoArrastado && (
+                        <DragOverlay
+                            dropAnimation={null}
+                            modifiers={
+                                arrastado?.tipo === "agrupamento"
+                                    ? [prenderAoPonteiro]
+                                    : undefined
+                            }
+                        >
+                            {arrastado?.tipo === "global" && (
                                 <CartaoCampoGlobal
-                                    campo={campoArrastado}
+                                    campo={arrastado.campo}
                                     className="w-32 cursor-grabbing shadow-lg"
                                 />
+                            )}
+                            {arrastado?.tipo === "agrupamento" && (
+                                <div className="bg-card flex w-max max-w-64 cursor-grabbing items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium shadow-lg">
+                                    <DotsSixVerticalIcon
+                                        aria-hidden="true"
+                                        weight="bold"
+                                        className="text-muted-foreground shrink-0"
+                                    />
+                                    <span className="truncate">
+                                        {arrastado.rotulo}
+                                    </span>
+                                </div>
                             )}
                         </DragOverlay>
                     </DndContext>
@@ -588,10 +617,6 @@ function Etapas({ passo }: { passo: Passo }) {
             })}
         </ol>
     );
-}
-
-function recipienteDe(id: string): Recipiente {
-    return id === "gerais" ? "gerais" : { agrupamento: id };
 }
 
 const TELA_LARGA = "(min-width: 1024px)";

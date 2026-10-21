@@ -28,7 +28,7 @@ interface Props {
      * grade, onde não há "entre dois" para o "+" morar.
      */
     cartao?: boolean;
-    /** No cartão: realça quando um campo do catálogo vai cair no fim. */
+    /** Realça quando algo arrastado vai cair ali: no fim, ou no vão. */
     recebendo?: boolean;
 }
 
@@ -105,6 +105,7 @@ export function Insercao({
                 className={cn(
                     "bg-primary/40 absolute inset-x-0 top-1/2 h-px opacity-0 transition-opacity group-focus-within/insercao:opacity-100 group-hover/insercao:opacity-100",
                     sempreVisivel && "hidden",
+                    recebendo && "bg-primary block h-0.5 opacity-100",
                 )}
             />
             <div

@@ -37,32 +37,43 @@ export interface AgrupamentoDaFolha {
     campos: CampoDaFolha[];
 }
 
+/** Um item do topo da folha, na ordem: um campo geral ou um agrupamento. */
+export type ItemDaFolha =
+    | ({ tipo: "campo" } & CampoDaFolha)
+    | ({ tipo: "agrupamento" } & AgrupamentoDaFolha);
+
+type BlocoDaFolha =
+    | { tipo: "campos"; campos: CampoDaFolha[] }
+    | ({ tipo: "agrupamento" } & AgrupamentoDaFolha);
+
 /**
  * O modelo de ficha como uma folha presa na prancheta, a mesma do cartão da
  * listagem, do tamanho da tela: os campos gerais como linhas a preencher, com
  * o tipo, a ajuda e o que cada um aceita, e cada agrupamento na faixa verde
- * com a grade em branco por baixo, uma linha por repetição.
+ * com a grade em branco por baixo, uma linha por repetição. Campos gerais e
+ * agrupamentos se intercalam: os campos seguidos formam um bloco só.
  *
- * Só desenha, já com os campos na ordem: o detalhe a monta a partir do
+ * Só desenha, já com os itens na ordem: o detalhe a monta a partir do
  * backend, e a prévia do editor a partir do formulário. O `rodape` fica fora
  * da folha, na borda da prancheta, como no cartão.
  */
 export function FolhaModeloFicha({
     nome,
-    camposGerais,
-    agrupamentos,
+    itens,
     mensagemVazia,
     rodape,
 }: {
     nome: string;
-    camposGerais: CampoDaFolha[];
-    agrupamentos: AgrupamentoDaFolha[];
+    itens: ItemDaFolha[];
     mensagemVazia: string;
     rodape?: React.ReactNode;
 }) {
-    const vazia =
-        camposGerais.length === 0 &&
-        agrupamentos.every((agrupamento) => agrupamento.campos.length === 0);
+    const blocos = blocosDaFolha(itens);
+    const totalCampos = itens.filter((item) => item.tipo === "campo").length;
+    const totalAgrupamentos = itens.length - totalCampos;
+    const vazia = itens.every(
+        (item) => item.tipo === "agrupamento" && item.campos.length === 0,
+    );
 
     return (
         <article aria-labelledby="titulo-modelo-ficha" className="pt-2.5">
@@ -78,7 +89,7 @@ export function FolhaModeloFicha({
                             {nome}
                         </h1>
                         <p className="text-muted-foreground text-sm">
-                            {resumo(camposGerais.length, agrupamentos.length)}
+                            {resumo(totalCampos, totalAgrupamentos)}
                         </p>
                     </header>
 
@@ -88,22 +99,28 @@ export function FolhaModeloFicha({
                         </p>
                     )}
 
-                    {camposGerais.length > 0 && (
-                        <section
-                            aria-labelledby="campos-gerais"
-                            className="flex flex-col gap-3"
-                        >
-                            <h2
-                                id="campos-gerais"
-                                className="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                            >
-                                Campos gerais
-                            </h2>
-                            <ListaCampos campos={camposGerais} />
-                        </section>
-                    )}
+                    {blocos.map((bloco) => {
+                        if (bloco.tipo === "campos") {
+                            const [primeiro] = bloco.campos;
+                            const tituloId = `campos-gerais-${primeiro?.chave}`;
+                            return (
+                                <section
+                                    key={tituloId}
+                                    aria-labelledby={tituloId}
+                                    className="flex flex-col gap-3"
+                                >
+                                    <h2
+                                        id={tituloId}
+                                        className="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
+                                    >
+                                        Campos gerais
+                                    </h2>
+                                    <ListaCampos campos={bloco.campos} />
+                                </section>
+                            );
+                        }
 
-                    {agrupamentos.map((agrupamento) => {
+                        const agrupamento = bloco;
                         const tituloId = `agrupamento-${agrupamento.chave}`;
                         return (
                             <section
@@ -145,6 +162,22 @@ export function FolhaModeloFicha({
             </div>
         </article>
     );
+}
+
+/** Os campos gerais seguidos num bloco só; cada agrupamento, no seu. */
+function blocosDaFolha(itens: ItemDaFolha[]): BlocoDaFolha[] {
+    const blocos: BlocoDaFolha[] = [];
+    for (const item of itens) {
+        if (item.tipo === "agrupamento") {
+            blocos.push(item);
+            continue;
+        }
+        const ultimo = blocos.at(-1);
+        const campo = { chave: item.chave, campo: item.campo };
+        if (ultimo?.tipo === "campos") ultimo.campos.push(campo);
+        else blocos.push({ tipo: "campos", campos: [campo] });
+    }
+    return blocos;
 }
 
 function resumo(campos: number, agrupamentos: number) {

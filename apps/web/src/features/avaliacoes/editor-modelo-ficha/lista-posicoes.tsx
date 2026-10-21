@@ -20,8 +20,11 @@ import { idRecipiente } from "./use-composicao";
 interface Props {
     recipiente: Recipiente;
     posicoes: PosicaoForm[];
-    /** Caminho da lista no formulário: `camposGerais` ou `agrupamentos.2.campos`. */
-    caminho: string;
+    /**
+     * Caminho de cada posição no formulário, pelo índice na lista:
+     * `camposGerais.4` ou `agrupamentos.2.campos.0`.
+     */
+    caminhoDaPosicao: (indice: number) => string;
     rotulo: string;
     /** Opções a mais do "+" do fim da lista — o agrupamento, nos gerais. */
     opcoesFinais?: OpcaoInsercao[];
@@ -29,9 +32,10 @@ interface Props {
 }
 
 /**
- * Uma lista de posições — os campos gerais, ou os de um agrupamento — numa
- * grade de cartões que quebra linha: reordena por arraste, recebe campos do
- * catálogo e termina num cartão "+" para criar um campo exclusivo.
+ * Uma lista de posições — um trecho de campos gerais, ou os campos de um
+ * agrupamento — numa grade de cartões que quebra linha: reordena por arraste,
+ * recebe campos do catálogo e termina num cartão "+" para criar um campo
+ * exclusivo.
  *
  * Numa grade não há "entre dois" onde morar um "+", então o exclusivo nasce
  * no fim e vai para o lugar arrastado. O campo do catálogo continua caindo
@@ -40,7 +44,7 @@ interface Props {
 export function ListaPosicoes({
     recipiente,
     posicoes,
-    caminho,
+    caminhoDaPosicao,
     rotulo,
     opcoesFinais = [],
     vazia,
@@ -107,7 +111,7 @@ export function ListaPosicoes({
                                 key={posicao.chave}
                                 posicao={posicao}
                                 recipiente={recipiente}
-                                caminho={`${caminho}.${indice}`}
+                                caminho={caminhoDaPosicao(indice)}
                             />
                         ))}
                         <Insercao

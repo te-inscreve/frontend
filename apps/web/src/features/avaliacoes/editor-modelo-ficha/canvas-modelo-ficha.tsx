@@ -1,10 +1,6 @@
 "use client";
 
 import {
-    SortableContext,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import {
     Controller,
     useFormContext,
     useFormState,
@@ -15,34 +11,65 @@ import { Field, FieldError, FieldLabel } from "@te-inscreve/components";
 import { cn } from "@te-inscreve/components/utils";
 
 import type { OpcaoInsercao } from "./insercao";
-import type { ModeloFichaFormValues } from "./lib/modelo-ficha-form-schema";
+import type {
+    AgrupamentoForm,
+    ModeloFichaFormValues,
+    PosicaoForm,
+} from "./lib/modelo-ficha-form-schema";
 import { CartaoAgrupamento } from "./cartao-agrupamento";
 import { useEditor } from "./editor-contexto";
-import { Insercao } from "./insercao";
+import { EspacoDaFicha } from "./espaco-da-ficha";
 import { mensagemDaLista } from "./lib/erro-lista";
-import { novoAgrupamento } from "./lib/modelo-ficha-form-schema";
+import {
+    novoAgrupamento,
+    sequenciaDaFicha,
+} from "./lib/modelo-ficha-form-schema";
 import { ListaPosicoes } from "./lista-posicoes";
 
+/** Um bloco do canvas: campos gerais seguidos, ou um agrupamento. */
+type Bloco =
+    | {
+          tipo: "gerais";
+          inicio: number;
+          posicoes: PosicaoForm[];
+          /** O índice do primeiro campo em `camposGerais`. */
+          primeiro: number;
+      }
+    | {
+          tipo: "agrupamento";
+          inicio: number;
+          agrupamento: AgrupamentoForm;
+          indice: number;
+      };
+
 /**
- * A ficha em edição, ao centro: o nome do modelo como título, os campos gerais
- * e, depois deles, os agrupamentos.
+ * A ficha em edição, ao centro: o nome do modelo como título e, por baixo, a
+ * sequência da ficha — campos gerais e agrupamentos na ordem em que o
+ * avaliador vai encontrá-los. Campos gerais seguidos formam uma grade; cada
+ * agrupamento é um cartão.
  *
- * Agrupamento só entra depois do último campo geral: o backend numera campos
- * gerais e agrupamentos à parte e não guarda a ordem entre eles (ver
- * `docs/planos/modelo-ficha-backend.md`).
+ * Depois de cada agrupamento — e antes do primeiro, quando a ficha começa por
+ * um — fica um vão com o "+", que cria ali um campo geral ou um agrupamento.
  */
 export function CanvasModeloFicha() {
     const { control } = useFormContext<ModeloFichaFormValues>();
     const { errors } = useFormState<ModeloFichaFormValues>();
     const { composicao } = useEditor();
-    const camposGerais = useWatch({ control, name: "camposGerais" });
-    const agrupamentos = useWatch({ control, name: "agrupamentos" });
+    const [camposGerais, agrupamentos] = useWatch({
+        control,
+        name: ["camposGerais", "agrupamentos"],
+    });
 
-    const adicionarAgrupamento: OpcaoInsercao = {
-        rotulo: "Criar agrupamento",
-        aoEscolher: () => composicao.inserirAgrupamento(novoAgrupamento()),
-    };
+    const blocos = blocosDaSequencia(camposGerais, agrupamentos);
     const erroComposicao = mensagemDaLista(errors, "camposGerais");
+
+    function agrupamentoEm(indice: number): OpcaoInsercao {
+        return {
+            rotulo: "Criar agrupamento",
+            aoEscolher: () =>
+                composicao.inserirAgrupamento(novoAgrupamento(), indice),
+        };
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -72,61 +99,147 @@ export function CanvasModeloFicha() {
                 )}
             />
 
-            <section aria-labelledby="campos-gerais-titulo">
-                <h2
-                    id="campos-gerais-titulo"
-                    className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase"
-                >
-                    Campos gerais
-                </h2>
-                <ListaPosicoes
-                    recipiente="gerais"
-                    posicoes={camposGerais}
-                    caminho="camposGerais"
-                    rotulo="campos gerais"
-                    opcoesFinais={
-                        agrupamentos.length === 0 ? [adicionarAgrupamento] : []
-                    }
-                    vazia={
-                        <p>
-                            Arraste um campo global para começar, ou crie um
-                            campo exclusivo deste modelo.
-                        </p>
-                    }
-                />
-                {erroComposicao && (
-                    <p role="alert" className="text-destructive mt-2 text-sm">
-                        {erroComposicao}
-                    </p>
+            <div className="flex flex-col gap-4">
+                {blocos.length === 0 && (
+                    <TrechoGerais
+                        inicio={0}
+                        primeiro={0}
+                        posicoes={[]}
+                        opcoesFinais={[agrupamentoEm(0)]}
+                    />
                 )}
-            </section>
 
-            {agrupamentos.length > 0 && (
-                <section
-                    aria-label="Agrupamentos"
-                    className="flex flex-col gap-4"
-                >
-                    <SortableContext
-                        items={agrupamentos.map(
-                            (agrupamento) => agrupamento.chave,
-                        )}
-                        strategy={verticalListSortingStrategy}
-                    >
-                        {agrupamentos.map((agrupamento, indice) => (
+                {blocos[0]?.tipo === "agrupamento" && (
+                    <EspacoDaFicha indice={0} descricao="no início da ficha" />
+                )}
+
+                {blocos.map((bloco, posicaoBloco) => {
+                    if (bloco.tipo === "gerais") {
+                        return (
+                            <TrechoGerais
+                                key={`gerais-${bloco.posicoes[0]?.chave}`}
+                                inicio={bloco.inicio}
+                                primeiro={bloco.primeiro}
+                                posicoes={bloco.posicoes}
+                                opcoesFinais={[
+                                    agrupamentoEm(
+                                        bloco.inicio + bloco.posicoes.length,
+                                    ),
+                                ]}
+                            />
+                        );
+                    }
+
+                    const { agrupamento, indice } = bloco;
+                    const rotulo =
+                        agrupamento.nome.trim() || `Agrupamento ${indice + 1}`;
+                    return (
+                        <div
+                            key={agrupamento.chave}
+                            className="flex flex-col gap-4"
+                        >
                             <CartaoAgrupamento
-                                key={agrupamento.chave}
                                 agrupamento={agrupamento}
                                 indice={indice}
                             />
-                        ))}
-                    </SortableContext>
-                    <Insercao
-                        sempreVisivel
-                        descricao="depois do último agrupamento"
-                        opcoes={[adicionarAgrupamento]}
-                    />
-                </section>
-            )}
+                            <EspacoDaFicha
+                                indice={bloco.inicio + 1}
+                                descricao={`depois do agrupamento ${rotulo}`}
+                                sempreVisivel={
+                                    posicaoBloco === blocos.length - 1
+                                }
+                            />
+                        </div>
+                    );
+                })}
+
+                {erroComposicao && (
+                    <p role="alert" className="text-destructive text-sm">
+                        {erroComposicao}
+                    </p>
+                )}
+            </div>
         </div>
     );
+}
+
+/** Campos gerais seguidos, entre agrupamentos ou nas pontas da ficha. */
+function TrechoGerais({
+    inicio,
+    primeiro,
+    posicoes,
+    opcoesFinais,
+}: {
+    inicio: number;
+    primeiro: number;
+    posicoes: PosicaoForm[];
+    opcoesFinais: OpcaoInsercao[];
+}) {
+    const tituloId = `campos-gerais-titulo-${inicio}`;
+    return (
+        <section aria-labelledby={tituloId}>
+            <h2
+                id={tituloId}
+                className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase"
+            >
+                Campos gerais
+            </h2>
+            <ListaPosicoes
+                recipiente={{ gerais: inicio }}
+                posicoes={posicoes}
+                caminhoDaPosicao={(indice) =>
+                    `camposGerais.${primeiro + indice}`
+                }
+                rotulo="campos gerais"
+                opcoesFinais={opcoesFinais}
+                vazia={
+                    <p>
+                        Arraste um campo global para começar, ou crie um campo
+                        exclusivo deste modelo.
+                    </p>
+                }
+            />
+        </section>
+    );
+}
+
+/**
+ * Agrupa a sequência da ficha em blocos: os campos gerais seguidos num trecho
+ * só, cada agrupamento no seu. `inicio` é o lugar do bloco na sequência;
+ * `primeiro` e `indice`, os do trecho e do agrupamento nas listas do
+ * formulário.
+ */
+function blocosDaSequencia(
+    camposGerais: PosicaoForm[],
+    agrupamentos: AgrupamentoForm[],
+): Bloco[] {
+    const blocos: Bloco[] = [];
+    let indiceAgrupamento = 0;
+    let indiceGeral = 0;
+
+    sequenciaDaFicha({ camposGerais, agrupamentos }).forEach((item, inicio) => {
+        if (item.tipo === "agrupamento") {
+            blocos.push({
+                tipo: "agrupamento",
+                inicio,
+                agrupamento: item.agrupamento,
+                indice: indiceAgrupamento,
+            });
+            indiceAgrupamento += 1;
+            return;
+        }
+        const ultimo = blocos.at(-1);
+        if (ultimo?.tipo === "gerais") ultimo.posicoes.push(item.posicao);
+        else {
+            blocos.push({
+                tipo: "gerais",
+                inicio,
+                posicoes: [item.posicao],
+                primeiro: indiceGeral,
+            });
+        }
+        indiceGeral += 1;
+    });
+
+    return blocos;
 }

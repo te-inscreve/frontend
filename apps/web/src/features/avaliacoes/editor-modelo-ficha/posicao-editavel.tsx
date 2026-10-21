@@ -26,6 +26,7 @@ import {
     ROTULO_TIPO,
 } from "./lib/campo-exibido";
 import { idRecipiente } from "./use-composicao";
+import { useLadoDaSoltura } from "./use-lado-da-soltura";
 
 interface Props {
     posicao: PosicaoForm;
@@ -68,10 +69,13 @@ export function PosicaoEditavel({ posicao, recipiente, caminho }: Props) {
         isDragging,
     } = useSortable({ id: posicao.chave, data: dados });
 
-    // O campo do catálogo não abre vaga na grade: a linha à esquerda marca
-    // onde ele entra.
+    // O campo do catálogo e o que vem de fora do trecho — um agrupamento,
+    // um campo geral de outro trecho — não abrem vaga na grade: a linha marca
+    // onde entram. O do catálogo entra sempre antes.
     const recebendoGlobal =
         dadosDe(active?.data)?.tipo === "global" && over?.id === posicao.chave;
+    const lado =
+        useLadoDaSoltura(posicao.chave) ?? (recebendoGlobal ? "antes" : null);
 
     if (!campo) return null;
 
@@ -99,10 +103,13 @@ export function PosicaoEditavel({ posicao, recipiente, caminho }: Props) {
                 isDragging && "z-10 opacity-60",
             )}
         >
-            {recebendoGlobal && (
+            {lado && (
                 <span
                     aria-hidden="true"
-                    className="bg-primary absolute inset-y-0 -left-2 w-0.5 rounded-full"
+                    className={cn(
+                        "bg-primary absolute inset-y-0 w-0.5 rounded-full",
+                        lado === "antes" ? "-left-2" : "-right-2",
+                    )}
                 />
             )}
             <CartaoCampo

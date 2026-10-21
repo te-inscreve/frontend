@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
 import type {
+    AgrupamentoFichaCriacao,
     CampoFichaCriacao,
     CriarModeloFicha,
     PosicaoFichaCriacao,
@@ -20,6 +21,11 @@ import {
  * `camposGerais[i].campo.nome` lá —, com o que só a tela precisa a mais: uma
  * `chave` estável por item, para arrastar e selecionar antes de existir `id`,
  * e o teto do campo numérico como texto, do jeito que é digitado.
+ *
+ * Campos gerais e agrupamentos dividem uma sequência só — um agrupamento pode
+ * vir entre dois campos gerais. Quem guarda o lugar é o agrupamento, na
+ * `ordem`; os campos gerais ocupam, na ordem da lista, os lugares que sobram
+ * (ver `sequenciaDaFicha`).
  *
  * As regras de domínio — modificador obrigatório no numérico, alternativas só
  * nos tipos de alternativa, ordem sem repetição — não são reescritas aqui: o
@@ -74,6 +80,8 @@ export const posicaoFormSchema = z.discriminatedUnion("origem", [
 
 export const agrupamentoFormSchema = z.object({
     chave: z.string(),
+    /** O lugar na sequência do topo, a partir de 1. Só a composição muda. */
+    ordem: z.number().int(),
     nome: z
         .string()
         .trim()
@@ -206,8 +214,15 @@ export function novaPosicaoExclusiva(): PosicaoExclusivaForm {
     };
 }
 
+/** A `ordem` fica para a composição, que numera ao inserir. */
 export function novoAgrupamento(): AgrupamentoForm {
-    return { chave: novaChave(), nome: "", quantidade: 1, campos: [] };
+    return {
+        chave: novaChave(),
+        ordem: 0,
+        nome: "",
+        quantidade: 1,
+        campos: [],
+    };
 }
 
 export function novaAlternativa(): AlternativaForm {
@@ -269,31 +284,91 @@ export function camposExclusivos(valores: ModeloFichaFormValues) {
     return encontrados;
 }
 
+/** Um item do topo da ficha: um campo geral ou um agrupamento. */
+export type ItemDaFicha =
+    | { tipo: "campo"; posicao: PosicaoForm }
+    | { tipo: "agrupamento"; agrupamento: AgrupamentoForm };
+
+export function chaveDoItem(item: ItemDaFicha) {
+    return item.tipo === "campo" ? item.posicao.chave : item.agrupamento.chave;
+}
+
 /**
- * Os valores da tela no corpo do `POST`. A `ordem` é a posição na lista,
- * contada a partir de 1 em cada coleção — campos gerais, agrupamentos e os
- * campos de cada agrupamento numeram à parte, como o backend espera.
+ * Campos gerais e agrupamentos numa sequência só, na ordem da ficha: cada
+ * agrupamento no lugar da sua `ordem`, e os campos gerais, na ordem da lista,
+ * nos lugares que sobram. Uma `ordem` fora do lugar — repetida, além do fim —
+ * não perde item: o agrupamento entra no primeiro lugar livre depois dela.
+ */
+export function sequenciaDaFicha(
+    valores: Pick<ModeloFichaFormValues, "camposGerais" | "agrupamentos">,
+): ItemDaFicha[] {
+    const { camposGerais, agrupamentos } = valores;
+    const itens: ItemDaFicha[] = [];
+    let geral = 0;
+    let agrupamento = 0;
+
+    while (geral < camposGerais.length || agrupamento < agrupamentos.length) {
+        const proximo = agrupamentos[agrupamento];
+        const posicao = camposGerais[geral];
+        if (proximo && (!posicao || proximo.ordem <= itens.length + 1)) {
+            itens.push({ tipo: "agrupamento", agrupamento: proximo });
+            agrupamento += 1;
+        } else if (posicao) {
+            itens.push({ tipo: "campo", posicao });
+            geral += 1;
+        }
+    }
+
+    return itens;
+}
+
+/**
+ * O inverso de {@link sequenciaDaFicha}: separa a sequência nas duas listas
+ * do formulário, com cada agrupamento numerado pelo seu lugar.
+ */
+export function listasDaSequencia(
+    itens: ItemDaFicha[],
+): Pick<ModeloFichaFormValues, "camposGerais" | "agrupamentos"> {
+    const camposGerais: PosicaoForm[] = [];
+    const agrupamentos: AgrupamentoForm[] = [];
+    itens.forEach((item, indice) => {
+        if (item.tipo === "campo") camposGerais.push(item.posicao);
+        else agrupamentos.push({ ...item.agrupamento, ordem: indice + 1 });
+    });
+    return { camposGerais, agrupamentos };
+}
+
+/**
+ * Os valores da tela no corpo do `POST`. Campos gerais e agrupamentos numeram
+ * juntos, a partir de 1, na sequência da ficha — o backend recusa uma `ordem`
+ * repetida entre os dois. Os campos de cada agrupamento numeram à parte.
  */
 export function paraCriarModeloFicha(
     valores: ModeloFichaFormValues,
 ): CriarModeloFicha {
-    return {
-        nome: valores.nome.trim(),
-        camposGerais: valores.camposGerais.map(paraPosicao),
-        agrupamentos: valores.agrupamentos.map((agrupamento, indice) => ({
-            nome: agrupamento.nome.trim(),
-            quantidade: agrupamento.quantidade,
-            ordem: indice + 1,
-            campos: agrupamento.campos.map(paraPosicao),
-        })),
-    };
+    const camposGerais: PosicaoFichaCriacao[] = [];
+    const agrupamentos: AgrupamentoFichaCriacao[] = [];
+
+    sequenciaDaFicha(valores).forEach((item, indice) => {
+        const ordem = indice + 1;
+        if (item.tipo === "campo") {
+            camposGerais.push(paraPosicao(item.posicao, ordem));
+            return;
+        }
+        agrupamentos.push({
+            nome: item.agrupamento.nome.trim(),
+            quantidade: item.agrupamento.quantidade,
+            ordem,
+            campos: item.agrupamento.campos.map((posicao, indiceCampo) =>
+                paraPosicao(posicao, indiceCampo + 1),
+            ),
+        });
+    });
+
+    return { nome: valores.nome.trim(), camposGerais, agrupamentos };
 }
 
-function paraPosicao(
-    posicao: PosicaoForm,
-    indice: number,
-): PosicaoFichaCriacao {
-    const ordem = indice + 1;
+function paraPosicao(posicao: PosicaoForm, ordem: number): PosicaoFichaCriacao {
     if (posicao.origem === "global") {
         return { ordem, campoId: posicao.campoId };
     }
