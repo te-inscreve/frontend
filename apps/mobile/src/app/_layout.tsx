@@ -29,6 +29,13 @@ export default function RootLayout() {
     return (
         <QueryClientProvider client={queryClient}>
             {/*
+             * Antes do navegador de propósito: o RN aplica o último
+             * `StatusBar` montado, e o React monta os irmãos em ordem. Assim a
+             * do app logado, que acompanha o cabeçalho verde, sempre vence
+             * esta, que só vale para o login e a splash.
+             */}
+            <StatusBar />
+            {/*
              * O tema leva os tokens a todos os navegadores: o cabeçalho de
              * cada aba e o fundo das telas seguem o tema em vigor, o do sistema
              * ou o escolhido em Configurações.
@@ -49,7 +56,6 @@ export default function RootLayout() {
                     </Stack.Protected>
                 </Stack>
             </ThemeProvider>
-            <StatusBar />
         </QueryClientProvider>
     );
 }
