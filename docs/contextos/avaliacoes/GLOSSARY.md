@@ -31,12 +31,16 @@ O lugar que um campo ocupa entre os campos gerais ou entre os campos de um agrup
 _Avoid_: Slot, linha
 
 **Agrupamento**:
-Um trecho de posições que o avaliador preenche repetidas vezes — uma por dança, por item —, com nome e quantidade de repetições.
+Um trecho de posições que o avaliador preenche repetidas vezes — uma por dança, por par, por item —, com nome e quantidade de repetições.
 _Avoid_: Grupo, seção, bloco, unidade avaliativa
 
 **Quantidade**:
 Quantas vezes os campos de um agrupamento se repetem na avaliação.
 _Avoid_: Tamanho, comprimento, length
+
+**Ocorrência**:
+Uma das repetições de um agrupamento dentro de uma avaliação, com sua ordem e seu nome — "Danças 2", ou o nome que o avaliador lhe der. O agrupamento é o trecho do modelo; a ocorrência é o trecho preenchido.
+_Avoid_: Unidade avaliativa, repetição, instância
 
 ### Avaliações
 
