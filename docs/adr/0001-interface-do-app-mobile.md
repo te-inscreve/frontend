@@ -1,0 +1,20 @@
+# Interface do app mobile: Uniwind com componentes próprios e só quatro controles nativos
+
+O app mobile (`apps/mobile`) tem identidade visual própria, igual no iOS e no Android e alinhada ao web. A estilização é Uniwind sobre o mesmo `theme.css` do web, e os ícones são Phosphor (`phosphor-react-native`) em todo lugar. Botões, campos de texto, cartões, badges e a barra inferior são componentes nossos, no padrão `cn` + `cva` do web. Do Expo UI (`@expo/ui`) entram só `Picker`, `DateTimePicker`, `Switch` e `BottomSheet`, os pontos em que o controle nativo de cada plataforma faz melhor do que um nosso e que não levam ícone. A barra inferior usa as abas customizadas do expo-router (`expo-router/ui`) com um `TabBar` nosso, para ter controle total e o mesmo visual nas duas plataformas.
+
+Decidido em [Adotar Uniwind ou esperar o NativeWind 5 estável](https://linear.app/te-inscreve/issue/TE-77), a partir da pesquisa [Estilo e biblioteca de componentes do app mobile](https://linear.app/te-inscreve/issue/TE-75) e do teste em aparelho [Testar o Uniwind com o tema compartilhado em dispositivo](https://linear.app/te-inscreve/issue/TE-76). Relatório da pesquisa: `docs/pesquisas/estilo-componentes-mobile.md`, na branch `research/estilo-componentes-mobile`.
+
+## Opções consideradas
+
+- **NativeWind 5:** ainda é release candidate, que a própria documentação não recomenda para produção, e o `react-native-css` quebra no RN 0.88 (SDK 58). Volta à mesa se sair estável com essa correção.
+- **react-native-reusables (shadcn para RN):** o Select, o Dialog e o Button dele ficam redundantes ao lado dos controles nativos, e no Uniwind gratuito as variantes `group-*` não funcionam, então o texto não muda de cor quando o pai é pressionado. Os arquivos dele servem de ponto de partida para os nossos componentes, sem virar dependência.
+- **HeroUI Native, Tamagui, gluestack-ui:** cada um traz um sistema de design próprio, nenhum segue a plataforma, e o tema do web não chega até eles sem renomear ou gerar tokens.
+- **Expo UI para todos os controles e abas nativas:** os controles nativos recebem ícone por nome (SF Symbols ou Material), não um componente React, então o Phosphor não entra neles. As abas nativas só aceitam imagem como ícone e, no SDK 57, ainda são `unstable-native-tabs`. Escolher Phosphor em todo lugar e uma barra inferior sob controle total exclui as duas opções.
+
+## Consequências
+
+- Só o que não é Uniwind (os quatro controles do Expo UI e o cabeçalho da navegação) recebe cores por props, de um único hook que lê os tokens com `useCSSVariable`. O verde da marca é o destaque, as cores dinâmicas do Android (Material You) ficam desligadas e o escuro segue o sistema.
+- No Uniwind gratuito, `group-*` não tem efeito. O `Button` passa o estado pressionado do `Pressable` para o texto explicitamente.
+- O build do Uniwind avisa "Theme light is missing variable" para cada token, porque o `theme.css` declara o claro em `:root` e não em `@variant light`. É falso positivo: o runtime monta cada tema a partir de `:root` mais as sobrescritas.
+- O v1 não tem toast. Estado de salvamento e de sync aparece no próprio lugar (badge e banner), com `Alert.alert` para confirmações e erros. Revisão em [Reavaliar toast no app mobile](https://linear.app/te-inscreve/issue/TE-78).
+- Usar qualquer outro componente do Expo UI exige decisão nova.
