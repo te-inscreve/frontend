@@ -10,6 +10,8 @@ export interface CategoriaPronta {
     eventoNome: string;
     modalidadeId: number;
     modalidadeNome: string;
+    /** Da modalidade: decide o bilhete das inscrições no detalhe. */
+    isGrupo: boolean;
     idadeMinima: number;
     idadeMaxima: number;
     countInscricoes: number;
@@ -60,6 +62,7 @@ export async function listarCategoriasProntas(): Promise<CategoriaPronta[]> {
                             eventoNome: evento.nome,
                             modalidadeId: modalidade.id,
                             modalidadeNome: modalidade.nome,
+                            isGrupo: modalidade.isGrupo,
                             idadeMinima: categoria.idadeMinima,
                             idadeMaxima: categoria.idadeMaxima,
                             countInscricoes: categoria.countInscricoes,

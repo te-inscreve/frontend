@@ -14,6 +14,7 @@ export default function CategoriasLayout() {
                 name="index"
                 options={{ title: "Categorias", headerShown: false }}
             />
+            <Stack.Screen name="[id]" />
         </Stack>
     );
 }
