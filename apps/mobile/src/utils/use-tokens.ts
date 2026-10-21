@@ -8,8 +8,8 @@ import { useCSSVariable, useUniwind } from "uniwind";
  * navegação e os controles do Expo UI (ADR 0001). É o único lugar que lê cor
  * por variável CSS; o resto do app usa classes do Uniwind.
  *
- * Os valores trocam junto com o tema do sistema, porque o `useCSSVariable`
- * reage à mudança.
+ * Os valores trocam junto com o tema, do sistema ou escolhido em
+ * Configurações, porque o `useCSSVariable` reage à mudança.
  */
 export function useTokens() {
     const [background, foreground, card, border, primary] = useCSSVariable([

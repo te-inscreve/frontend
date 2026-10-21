@@ -5,9 +5,14 @@ import { QueryClientProvider } from "@tanstack/react-query";
 
 import { queryClient } from "~/utils/api";
 import { useSession } from "~/utils/auth";
+import { aplicarTemaSalvo } from "~/utils/tema";
 import { useTemaNavegacao } from "~/utils/use-tokens";
 
 import "../styles.css";
+
+// Antes de qualquer render, e depois do `styles.css`, que registra os temas no
+// Uniwind: a primeira pintura já sai no tema escolhido.
+aplicarTemaSalvo();
 
 // A splash cobre a primeira leitura da sessão: sem ela, quem já entrou veria o
 // login piscar antes de o guard mandá-lo para o app.
@@ -25,7 +30,8 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
             {/*
              * O tema leva os tokens a todos os navegadores: o cabeçalho de
-             * cada aba e o fundo das telas seguem o claro/escuro do sistema.
+             * cada aba e o fundo das telas seguem o tema em vigor, o do sistema
+             * ou o escolhido em Configurações.
              */}
             <ThemeProvider value={tema}>
                 <Stack screenOptions={{ headerShown: false }}>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert, Text, View } from "react-native";
 
 import { Button } from "~/components/ui/button";
+import { AlternarTema } from "~/features/configuracoes/components/alternar-tema";
 import { queryClient } from "~/utils/api";
 import { signOut, useSession } from "~/utils/auth";
 
@@ -30,6 +31,8 @@ export default function Configuracoes() {
 
     return (
         <View className="flex-1 gap-4 p-4">
+            <AlternarTema />
+
             <View className="border-border rounded-lg border p-4">
                 <Text className="text-foreground">
                     Sessão ativa: {session?.user.email}
