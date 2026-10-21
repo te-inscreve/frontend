@@ -6,7 +6,7 @@ Fonte da verdade da API para ficha e envio: `docs/planos/exemplo-frontend-envio-
 
 ## Pedido original
 
-App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem as inscrições das categorias liberadas para avaliação. Banco local WatermelonDB, reuso do tRPC de `packages/api`, tema igual ao `apps/web`. Precisa **funcionar sem internet**.
+App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem as inscrições das categorias liberadas para avaliação. Banco local (pedido como WatermelonDB; ver Decidido), reuso do tRPC de `packages/api`, tema igual ao `apps/web`. Precisa **funcionar sem internet**.
 
 - Login.
 - Barra inferior com 3 itens: categorias, avaliações, configurações.
@@ -18,6 +18,8 @@ App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem
 ## Decidido
 
 - **Destino:** spec de handoff do app — telas, modelo de dados offline, protocolo de sync e política de falhas, e o contrato de API que o app exige. Nada fica por decidir antes de fatiar em issues de implementação.
+- **Banco local: expo-sqlite + Drizzle**, no lugar do WatermelonDB pedido originalmente ([WatermelonDB no Expo 57 / RN 0.86](https://linear.app/te-inscreve/issue/TE-66)). O WatermelonDB está sem versão nova desde abr/2025, só roda na nova arquitetura por interop e patches e não compila no RN 0.88. Do expo-sqlite + Drizzle vêm transação exclusiva para trocar o download de uma vez, `useLiveQuery` e migrações geradas pelo drizzle-kit; op-sqlite fica de reserva.
+- **Tema:** o mobile importa o mesmo `theme.css` do web; no nativo o escuro segue o sistema (`@custom-variant dark` por media query em `apps/mobile/src/styles.css`, já na `develop`) ([Compartilhar os tokens de tema do web com NativeWind](https://linear.app/te-inscreve/issue/TE-67)). Em aberto para a implementação: fonte (`--font-geist-sans` só existe no web) e `rem` (14 no nativo, 16 no web).
 - **Backend fora do escopo.** A API (Django REST) é do usuário; o que faltar de contrato vira dependência documentada, e os fatos da API são pedidos a ele.
 - **Categorias:** por ora lista todas em `PRONTA_AVALIACAO`, sem filtrar por avaliador; o filtro por avaliador vem quando a API tiver o vínculo.
 - **Vocabulário** (já em `docs/contextos/avaliacoes/GLOSSARY.md`): Avaliador (jurado é sinônimo a evitar); Avaliação = resultado de um avaliador para uma inscrição; Modelo de ficha = ficha avaliativa (o molde); inscrição é o que se avalia, "apresentação" é só o ato; Rascunho, Avaliação na fila, Avaliação sincronizada, Avaliação com erro.
@@ -59,7 +61,7 @@ Já existem e são `publicProcedure` no tRPC: `evento.getAll`, `modalidade.getAl
 
 ## Possível já, sem esperar a API
 
-Login (`signIn.rest`), barra inferior, tela de configurações inteira, WatermelonDB e schema local, indicador de conexão, port do tema, lista de categorias provisória, detalhe da categoria, drawer, download/refresh, renderização do formulário, builder Zod e nota, ciclo do rascunho, motor da fila contra o contrato (envio stubado).
+Login (`signIn.rest`), barra inferior, tela de configurações inteira, expo-sqlite + Drizzle e schema local, indicador de conexão, port do tema, lista de categorias provisória, detalhe da categoria, drawer, download/refresh, renderização do formulário, builder Zod e nota, ciclo do rascunho, motor da fila contra o contrato (envio stubado).
 
 ## Glossário
 
