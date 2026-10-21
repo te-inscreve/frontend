@@ -1,7 +1,9 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Link } from "expo-router";
 
 import type { CategoriaPronta } from "../lib/listar-categorias-prontas";
 import { formatDate } from "~/utils/format-date";
+import { rotaDetalheCategoria } from "../lib/rota-detalhe-categoria";
 import { SituacaoCategoriaBadge } from "./situacao-categoria-badge";
 
 /**
@@ -9,53 +11,57 @@ import { SituacaoCategoriaBadge } from "./situacao-categoria-badge";
  * externa, e o canhoto com a faixa etária e o miolo ficam dentro dela.
  *
  * Diferente do web, ocupa a largura da lista e mostra evento e modalidade
- * abaixo do nome, porque a lista do mobile mistura eventos.
+ * abaixo do nome, porque a lista do mobile mistura eventos. O toque empilha o
+ * detalhe da categoria na aba.
  */
 export function CategoriaCard({ categoria }: { categoria: CategoriaPronta }) {
     return (
-        <View className="bg-border flex-row rounded-xl p-px">
-            <CanhotoIdade categoria={categoria} />
+        <Link href={rotaDetalheCategoria(categoria)} asChild>
+            <Pressable className="bg-border flex-row rounded-xl p-px active:opacity-80">
+                <CanhotoIdade categoria={categoria} />
 
-            <View className="bg-card flex-1 gap-2 overflow-hidden rounded-r-xl p-2">
-                <View className="flex-row items-start justify-between gap-2">
-                    <View className="flex-1 gap-0.5">
-                        <Text
-                            role="heading"
-                            className="text-card-foreground text-base leading-tight font-bold"
-                        >
-                            {categoria.nome}
-                        </Text>
-                        <Text className="text-muted-foreground text-sm">
-                            {categoria.eventoNome} · {categoria.modalidadeNome}
-                        </Text>
+                <View className="bg-card flex-1 gap-2 overflow-hidden rounded-r-xl p-2">
+                    <View className="flex-row items-start justify-between gap-2">
+                        <View className="flex-1 gap-0.5">
+                            <Text
+                                role="heading"
+                                className="text-card-foreground text-base leading-tight font-bold"
+                            >
+                                {categoria.nome}
+                            </Text>
+                            <Text className="text-muted-foreground text-sm">
+                                {categoria.eventoNome} ·{" "}
+                                {categoria.modalidadeNome}
+                            </Text>
+                        </View>
+                        <SituacaoCategoriaBadge situacao={categoria.situacao} />
                     </View>
-                    <SituacaoCategoriaBadge situacao={categoria.situacao} />
-                </View>
 
-                <View className="flex-row gap-2">
-                    <Dado
-                        termo="Inscrições"
-                        // Nulo é categoria sem teto, e não zero inscrições.
-                        valor={
-                            categoria.maxInscricoes === null
-                                ? categoria.countInscricoes.toString()
-                                : `${categoria.countInscricoes} / ${categoria.maxInscricoes}`
-                        }
-                    />
-                    <Dado
-                        termo="Início em"
-                        // Nulo é categoria ainda fora do cronograma.
-                        valor={
-                            categoria.dataApresentacao === null
-                                ? null
-                                : formatDate(
-                                      new Date(categoria.dataApresentacao),
-                                  )
-                        }
-                    />
+                    <View className="flex-row gap-2">
+                        <Dado
+                            termo="Inscrições"
+                            // Nulo é categoria sem teto, e não zero inscrições.
+                            valor={
+                                categoria.maxInscricoes === null
+                                    ? categoria.countInscricoes.toString()
+                                    : `${categoria.countInscricoes} / ${categoria.maxInscricoes}`
+                            }
+                        />
+                        <Dado
+                            termo="Início em"
+                            // Nulo é categoria ainda fora do cronograma.
+                            valor={
+                                categoria.dataApresentacao === null
+                                    ? null
+                                    : formatDate(
+                                          new Date(categoria.dataApresentacao),
+                                      )
+                            }
+                        />
+                    </View>
                 </View>
-            </View>
-        </View>
+            </Pressable>
+        </Link>
     );
 }
 
