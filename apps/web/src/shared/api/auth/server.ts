@@ -34,7 +34,9 @@ const djangoAuthResponseSchema = z.object({
 
 export const auth = initAuth({
     baseUrl: {
-        allowedHosts: ["localhost:*", ...env.ALLOWED_ORIGINS],
+        // `127.0.0.1` é o mesmo loopback do `localhost`, e é por ele que o app
+        // mobile chega aqui com `expo start --localhost` + `adb reverse`.
+        allowedHosts: ["localhost:*", "127.0.0.1:*", ...env.ALLOWED_ORIGINS],
     },
     secret: env.AUTH_SECRET,
     restClient: httpClient,

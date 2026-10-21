@@ -6,6 +6,7 @@ import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import { Controller, useForm } from "react-hook-form";
 
+import type { SignInFormValues } from "@te-inscreve/schemas";
 import {
     Button,
     Field,
@@ -14,9 +15,8 @@ import {
     FieldLabel,
     Input,
 } from "@te-inscreve/components";
+import { signInFormSchema } from "@te-inscreve/schemas";
 
-import type { SignInFormValues } from "../lib/signin-schema";
-import { signInFormSchema } from "../lib/signin-schema";
 import { useSignIn } from "../lib/use-signin";
 import { PasswordInput } from "./password-input";
 

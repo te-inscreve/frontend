@@ -1,32 +1,51 @@
-import { SafeAreaView, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, Text, View } from "react-native";
 import { Stack } from "expo-router";
 
-import { useSession } from "~/utils/auth";
+import { Button } from "~/components/ui/button";
+import { queryClient } from "~/utils/api";
+import { signOut, useSession } from "~/utils/auth";
 
 export default function Index() {
     const { data: session } = useSession();
+    const [saindo, setSaindo] = useState(false);
+
+    async function sair() {
+        setSaindo(true);
+        // Sem resposta, o `signOut` rejeita em vez de devolver `{ error }`.
+        const { error } = await signOut()
+            .catch(() => ({ error: true }))
+            .finally(() => setSaindo(false));
+
+        if (error) {
+            Alert.alert(
+                "Não foi possível sair",
+                "Confira sua conexão e tente novamente.",
+            );
+            return;
+        }
+        // O guard do layout já leva ao login; o cache não pode sobrar para o
+        // próximo avaliador que entrar neste aparelho.
+        queryClient.clear();
+    }
 
     return (
-        <SafeAreaView className="bg-background">
+        <View className="bg-background flex-1 gap-4 p-4">
             <Stack.Screen options={{ title: "te inscreve" }} />
-            <View className="h-full w-full gap-4 p-4">
-                <Text className="text-foreground text-3xl font-bold">
-                    te <Text className="text-primary">inscreve</Text>
-                </Text>
 
-                <Text className="text-muted-foreground">
-                    O app consome o mesmo tRPC do app web, que por sua vez
-                    repassa para a API REST.
+            <View className="border-border rounded-lg border p-4">
+                <Text className="text-foreground">
+                    Sessão ativa: {session?.user.email}
                 </Text>
-
-                <View className="border-border rounded-lg border p-4">
-                    <Text className="text-foreground">
-                        {session
-                            ? `Sessão ativa: ${session.user.email}`
-                            : "Nenhuma sessão ativa."}
-                    </Text>
-                </View>
             </View>
-        </SafeAreaView>
+
+            <Button
+                variant="outline"
+                disabled={saindo}
+                onPress={() => void sair()}
+            >
+                Sair
+            </Button>
+        </View>
     );
 }
