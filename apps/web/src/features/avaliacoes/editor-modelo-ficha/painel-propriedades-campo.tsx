@@ -155,7 +155,7 @@ function PropriedadesCampo({
                             value={texto(field.value)}
                             id={id("descricao")}
                             rows={3}
-                            placeholder="Orientação para o jurado"
+                            placeholder="Orientação para o avaliador"
                             aria-invalid={fieldState.invalid}
                         />
                         {fieldState.invalid && (
