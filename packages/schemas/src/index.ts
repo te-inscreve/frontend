@@ -17,6 +17,21 @@ export const signInSchema = z.object({
 export type SignInInput = z.infer<typeof signInSchema>;
 
 /**
+ * O formulário de login do web e do mobile. Espelha o `signInSchema`, mas com
+ * os nomes e as mensagens que a UI mostra: os campos aparecem em português e o
+ * backend só fala inglês nas falhas. Mora aqui, e não em `features/auth`, só
+ * porque os dois apps usam o mesmo.
+ */
+export const signInFormSchema = z.object({
+    email: z.email("Informe um e-mail válido."),
+    senha: z
+        .string()
+        .min(1, "Informe sua senha.")
+        .min(8, "A senha deve ter ao menos 8 caracteres."),
+});
+export type SignInFormValues = z.infer<typeof signInFormSchema>;
+
+/**
  * O que `/auth/registration/` recebe. Os nomes são os do backend (camelCase, já
  * que a API usa `djangorestframework-camel-case`) — a tradução para os rótulos
  * em português acontece no formulário.
