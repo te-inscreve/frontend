@@ -2,7 +2,7 @@
 
 O app mobile (`apps/mobile`) tem identidade visual própria, igual no iOS e no Android e alinhada ao web. A estilização é Uniwind sobre o mesmo `theme.css` do web, e os ícones são Phosphor (`phosphor-react-native`) em todo lugar. Botões, campos de texto, cartões, badges e a barra inferior são componentes nossos, no padrão `cn` + `cva` do web. Do Expo UI (`@expo/ui`) entram só `Picker`, `DateTimePicker`, `Switch` e `BottomSheet`, os pontos em que o controle nativo de cada plataforma faz melhor do que um nosso e que não levam ícone. A barra inferior usa as abas customizadas do expo-router (`expo-router/ui`) com um `TabBar` nosso, para ter controle total e o mesmo visual nas duas plataformas.
 
-Decidido em [Adotar Uniwind ou esperar o NativeWind 5 estável](https://linear.app/te-inscreve/issue/TE-77), a partir da pesquisa [Estilo e biblioteca de componentes do app mobile](https://linear.app/te-inscreve/issue/TE-75) e do teste em aparelho [Testar o Uniwind com o tema compartilhado em dispositivo](https://linear.app/te-inscreve/issue/TE-76). Relatório da pesquisa: `docs/pesquisas/estilo-componentes-mobile.md`, na branch `research/estilo-componentes-mobile`.
+Decidido em [Adotar Uniwind ou esperar o NativeWind 5 estável](https://linear.app/te-inscreve/issue/TE-77), a partir da pesquisa [Estilo e biblioteca de componentes do app mobile](https://linear.app/te-inscreve/issue/TE-75) e do teste em aparelho [Testar o Uniwind com o tema compartilhado em dispositivo](https://linear.app/te-inscreve/issue/TE-76). Relatório da pesquisa: [`docs/pesquisas/estilo-componentes-mobile.md`](../pesquisas/estilo-componentes-mobile.md).
 
 ## Opções consideradas
 
