@@ -83,6 +83,7 @@ export type Session = Auth["$Infer"]["Session"];
 export {
     restAuthResponseSchema,
     restCredentials,
+    secondsUntilRefresh,
     type RestAuthResponse,
     type RestCredentialsOptions,
     type RestCredentialsPlugin,

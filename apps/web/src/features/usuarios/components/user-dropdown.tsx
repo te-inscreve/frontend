@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { GearIcon } from "@phosphor-icons/react/dist/ssr/Gear";
@@ -18,18 +19,19 @@ import { auth } from "~/shared/api/auth/server";
 import { getPerfil } from "../lib/get-perfil";
 import { AvatarUsuario } from "./avatar-usuario";
 
+/**
+ * O menu do usuário no topbar do painel.
+ *
+ * Só a sessão é esperada aqui, e ela sai do cookie — sem rede. A foto, que vem
+ * de `/profile`, fica atrás de um `Suspense`: sem ele a espera subiria até o
+ * boundary acima do layout do `/admin` e seguraria a casca inteira, sidebar
+ * junto. Assim o topbar pinta completo e a foto entra depois, por streaming.
+ */
 export async function UserDropdown() {
     const session = await auth.api.getSession({
         headers: await headers(),
     });
     if (!session) return null;
-
-    // A foto é enfeite: se `/profile` falhar, o topbar continua de pé com o
-    // ícone genérico em vez de derrubar a página inteira.
-    const perfil = await getPerfil().catch((erro: unknown) => {
-        console.error("[perfil] não foi possível carregar a foto", erro);
-        return null;
-    });
 
     return (
         <DropdownMenu>
@@ -39,12 +41,17 @@ export async function UserDropdown() {
                     size="sm"
                     className="ml-auto rounded-full hover:cursor-pointer"
                 >
-                    <AvatarUsuario
-                        photo={perfil?.photo}
-                        nome={session.user.name}
-                        size={24}
-                        alt=""
-                    />
+                    <Suspense
+                        fallback={
+                            <AvatarUsuario
+                                nome={session.user.name}
+                                size={24}
+                                alt=""
+                            />
+                        }
+                    >
+                        <FotoDoPerfil nome={session.user.name} />
+                    </Suspense>
                     <span className="text-sm font-medium">
                         {session.user.name}
                     </span>
@@ -74,4 +81,21 @@ export async function UserDropdown() {
             </DropdownMenuContent>
         </DropdownMenu>
     );
+}
+
+/**
+ * A foto do perfil, ou o ícone genérico quando não há uma.
+ *
+ * O fallback do `Suspense` é este mesmo avatar sem foto: mesmo tamanho, mesma
+ * forma, então a troca não desloca nada do topbar. A foto é enfeite — se
+ * `/profile` falhar, o menu continua de pé com o ícone em vez de derrubar a
+ * página inteira.
+ */
+async function FotoDoPerfil({ nome }: { nome: string }) {
+    const perfil = await getPerfil().catch((erro: unknown) => {
+        console.error("[perfil] não foi possível carregar a foto", erro);
+        return null;
+    });
+
+    return <AvatarUsuario photo={perfil?.photo} nome={nome} size={24} alt="" />;
 }

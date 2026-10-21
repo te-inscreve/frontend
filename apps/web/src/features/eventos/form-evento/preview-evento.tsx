@@ -39,7 +39,8 @@ export function PreviewEvento() {
 
             <div className="overflow-hidden rounded-lg border">
                 {cartazUrl ? (
-                    // Blob local, sem host remoto para o next/image otimizar.
+                    // Blob local do rascunho, ou a URL do cartaz já salvo:
+                    // nenhum dos dois passa pelo otimizador do next/image.
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                         src={cartazUrl}

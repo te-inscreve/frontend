@@ -1,27 +1,71 @@
-import type { DetalheEvento } from "~/app/admin/eventos/[slug]/mock";
-import { HorizontalScrollList } from "~/shared/ui/horizontal-scroll-list";
+import { useMemo } from "react";
+
+import type { CategoriaAninhada } from "@te-inscreve/schemas";
+
+import type { PeriodoEvento } from "~/features/categorias/form-categoria/campos-categoria";
+import {
+    HorizontalScroll,
+    HorizontalScrollNext,
+    HorizontalScrollPrevious,
+    HorizontalScrollViewport,
+} from "~/shared/ui/horizontal-scroll";
+import { BotaoCriarCategoria } from "./botao-criar-categoria";
 import { CardCategoria } from "./card-categoria";
 
-type Modalidade = DetalheEvento["modalidades"][number];
-
 interface Props {
-    modalidade: Modalidade;
+    eventoId: number;
+    modalidadeId: number;
+    /** Nome da modalidade, usado só para rotular a lista. */
+    modalidadeNome: string;
+    categorias: CategoriaAninhada[];
+    periodoEvento: PeriodoEvento;
 }
 
-export function ListCategorias({ modalidade }: Props) {
+/**
+ * Fila de categorias da modalidade aberta, com o atalho de criar como último
+ * item — assim ele acompanha os cartões em vez de flutuar acima deles, e
+ * continua à vista quando ainda não há categoria nenhuma.
+ *
+ * As categorias chegam prontas de `modalidade.getById`: aqui não se busca nada.
+ */
+export function ListCategorias({
+    eventoId,
+    modalidadeId,
+    modalidadeNome,
+    categorias,
+    periodoEvento,
+}: Props) {
+    const sortedCategorias = useMemo(
+        () =>
+            categorias.slice().sort((a, b) => {
+                // A ordenação é por idade mínima, e depois por idade máxima.
+                const minDiff = a.idadeMinima - b.idadeMinima;
+                if (minDiff !== 0) return minDiff;
+                return a.idadeMaxima - b.idadeMaxima;
+            }),
+        [categorias],
+    );
+
     return (
-        <HorizontalScrollList
-            label={`Categorias de ${modalidade.nome}`}
-            emptyState={
-                <p className="text-muted-foreground rounded-md border border-dashed p-6 text-sm">
-                    Esta modalidade ainda não tem categorias. Crie a primeira
-                    para abrir inscrições.
-                </p>
-            }
-        >
-            {modalidade.categorias.map((categoria) => (
-                <CardCategoria key={categoria.nome} categoria={categoria} />
-            ))}
-        </HorizontalScrollList>
+        <HorizontalScroll>
+            <HorizontalScrollPrevious lateral />
+            <HorizontalScrollNext lateral />
+            <HorizontalScrollViewport label={`Categorias de ${modalidadeNome}`}>
+                <BotaoCriarCategoria
+                    eventoId={eventoId}
+                    modalidadeId={modalidadeId}
+                    periodoEvento={periodoEvento}
+                    sozinho={categorias.length === 0}
+                />
+                {sortedCategorias.map((categoria) => (
+                    <CardCategoria
+                        key={categoria.id}
+                        categoria={categoria}
+                        eventoId={eventoId}
+                        modalidadeId={modalidadeId}
+                    />
+                ))}
+            </HorizontalScrollViewport>
+        </HorizontalScroll>
     );
 }

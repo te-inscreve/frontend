@@ -7,9 +7,18 @@ import { cn } from "@te-inscreve/components/utils";
 
 interface CampoRegulamentoProps {
     id: string;
-    file: File | null;
+    /** `File` escolhido agora, ou a URL do PDF que já está salvo. */
+    file: File | string | null;
     onChange: (file: File | null) => void;
     invalido?: boolean;
+}
+
+/** Nome exibido do anexo: o do arquivo local, ou o último trecho da URL. */
+function nomeDoArquivo(file: File | string): string {
+    if (file instanceof File) return file.name;
+
+    const caminho = file.split("?")[0] ?? file;
+    return decodeURIComponent(caminho.split("/").pop() ?? "") || "Regulamento";
 }
 
 export function CampoRegulamento({
@@ -59,7 +68,7 @@ export function CampoRegulamento({
 
             <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold">
-                    {file ? file.name : "Anexar regulamento"}
+                    {file ? nomeDoArquivo(file) : "Anexar regulamento"}
                 </span>
                 <span className="text-muted-foreground block text-xs">
                     {file ? "Clique para substituir" : "PDF de até 10 MB"}

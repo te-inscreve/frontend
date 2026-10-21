@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { CalendarDotsIcon, FilesIcon, InfoIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 
+import type { Evento } from "@te-inscreve/schemas";
 import {
-    Button,
     Card,
     CardContent,
     CardDescription,
@@ -19,11 +19,12 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 import { FormProvider } from "@te-inscreve/components/components/field";
+import { cn } from "@te-inscreve/components/utils";
 
 import type { EventoFormValues } from "./evento-form-schema";
-import { FormEventoSaveIcon } from "~/features/eventos/form-evento/form-evento-save-icon";
 import { GoBackButton } from "~/shared/ui/back-btn";
 import { ChecklistEvento } from "./checklist-evento";
+import { AvisoPeriodos } from "./fields/aviso-periodos";
 import { CartazField } from "./fields/cartaz-field";
 import { DescricaoField } from "./fields/descricao-field";
 import { LocalField } from "./fields/local-field";
@@ -36,12 +37,21 @@ import { UnicoField } from "./fields/unico-field";
 import { PreviewEvento } from "./preview-evento";
 import { useFormEvento } from "./use-form-evento";
 
-export function FormEvento() {
+interface Props {
+    /**
+     * Evento a editar. Sem ele o formulário cria um novo — é a mesma tela nos
+     * dois casos, só muda o que já vem preenchido e para onde o salvar manda.
+     */
+    evento?: Evento;
+}
+
+export function FormEvento({ evento }: Props) {
     const router = useRouter();
+    const editando = evento !== undefined;
     const { form, salvamento, salvar, erro } = useFormEvento({
-        onSucess: () => {
-            // router.push(`/admin/eventos/${evento.slug}`);
-            router.push(`/admin/eventos/`);
+        evento,
+        onSucess: (salvo) => {
+            router.push(`/admin/eventos/${salvo.id}`);
             router.refresh();
         },
     });
@@ -58,24 +68,36 @@ export function FormEvento() {
                 <div className="bg-card sticky top-0 z-20 border-b">
                     <header className="mx-auto w-full max-w-7xl px-4 py-4 md:px-6">
                         <nav aria-label="Voltar">
-                            <GoBackButton href="/admin/eventos" />
+                            <GoBackButton
+                                href={
+                                    editando
+                                        ? `/admin/eventos/${evento.id}`
+                                        : "/admin/eventos"
+                                }
+                            />
                         </nav>
 
                         <h1 className="text-3xl font-extrabold tracking-tight">
-                            Criar evento
+                            {editando ? "Editar evento" : "Criar evento"}
                         </h1>
                         <p className="text-muted-foreground my-1.5 w-full text-sm">
-                            Preencha as informações abaixo. Você pode salvar
-                            como rascunho e publicar quando estiver pronto.
+                            {editando
+                                ? "Revise as informações do evento. As alterações valem assim que você salvar."
+                                : "Preencha as informações abaixo. Você pode salvar como rascunho e publicar quando estiver pronto."}
                         </p>
                     </header>
                 </div>
 
                 <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-4 py-6 md:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
                     <Tabs defaultValue="geral" className="w-full shrink-0 grow">
+                        {/* A régua do detalhe do evento: cada aba com a largura
+                            do próprio rótulo, alinhadas à esquerda, e a linha de
+                            baixo atravessando a coluna inteira. A grade de
+                            colunas iguais apertava "Arquivos" e cortava a linha
+                            no fim da terceira aba. */}
                         <TabsList
-                            className="grid w-full grid-cols-3 sm:w-80"
-                            variant={"line"}
+                            variant="line"
+                            className="w-max min-w-full justify-start border-b"
                         >
                             <EventoTabTrigger
                                 value="geral"
@@ -134,9 +156,17 @@ export function FormEvento() {
                                     </CardDescription>
                                 </CardHeader>
 
-                                <CardContent className="flex flex-col gap-4">
-                                    <PeriodoInscricoesField />
-                                    <PeriodoEventoField />
+                                {/* Lado a lado enquanto os dois couberem, e um embaixo do
+                                    outro depois — decidido pela largura do cartão, e
+                                    não da tela, porque a coluna do cartaz também
+                                    disputa espaço. Cada campo parte de 18rem e divide
+                                    a sobra com o vizinho; o tamanho do calendário é
+                                    contido dentro do campo. `items-start` porque
+                                    abrir um calendário não deve esticar o vizinho. */}
+                                <CardContent className="flex flex-wrap items-start gap-4">
+                                    <PeriodoInscricoesField className="flex-1 basis-72" />
+                                    <PeriodoEventoField className="flex-1 basis-72" />
+                                    <AvisoPeriodos />
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -166,7 +196,7 @@ export function FormEvento() {
                     que mede 141px a partir do breakpoint `lg`. */}
                     <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-40">
                         <PreviewEvento />
-                        <ChecklistEvento />
+                        <ChecklistEvento salvamento={salvamento} />
                         {erro && (
                             <p
                                 role="alert"
@@ -176,22 +206,6 @@ export function FormEvento() {
                                 dados e tente novamente.
                             </p>
                         )}
-                        <Button
-                            type="submit"
-                            size="lg"
-                            disabled={salvamento === "loading"}
-                        >
-                            <FormEventoSaveIcon
-                                current={
-                                    salvamento === "idle"
-                                        ? "floppy-disk"
-                                        : salvamento === "loading"
-                                          ? "spinner-gap"
-                                          : "check"
-                                }
-                            />
-                            Salvar
-                        </Button>
                     </aside>
                 </div>
             </form>
@@ -229,11 +243,11 @@ function EventoTabTrigger({
             value={value}
             data-invalid={invalida}
             aria-describedby={invalida ? descricaoErroId : undefined}
-            className={
-                invalida
-                    ? "text-destructive data-[state=active]:text-destructive dark:data-[state=active]:text-destructive"
-                    : undefined
-            }
+            className={cn(
+                "flex-none",
+                invalida &&
+                    "text-destructive data-[state=active]:text-destructive dark:data-[state=active]:text-destructive after:bg-destructive",
+            )}
         >
             {icon}
             {children}

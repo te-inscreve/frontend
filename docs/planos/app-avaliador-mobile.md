@@ -1,0 +1,77 @@
+# App mobile do avaliador — spec
+
+Spec de handoff do app mobile do avaliador. O mapa do `/wayfinder` é [Mapa: spec do app mobile do avaliador](https://linear.app/te-inscreve/issue/TE-64) no Linear: ele indexa as decisões em aberto, e cada ticket resolvido atualiza este arquivo.
+
+Fonte da verdade da API para ficha e envio: `docs/planos/exemplo-frontend-envio-avaliacao.md` — com uma correção: o payload terá `agrupamentos[]`, não `unidades[]`. Exemplo real de GET de modelo: `GET /api/v1/fichas-avaliativas/modelos/11006/` (campos gerais com `ordem` 1–4, agrupamentos com `ordem` 1–2, dois agrupamentos com o mesmo nome, um `valorMaximo: null`). É um modelo anterior à validação de `ordem` única no topo.
+
+## Pedido original
+
+App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem as inscrições das categorias liberadas para avaliação. Banco local (pedido como WatermelonDB; ver Decidido), reuso do tRPC de `packages/api`, tema igual ao `apps/web`. Precisa **funcionar sem internet**.
+
+- Login.
+- Barra inferior com 3 itens: categorias, avaliações, configurações.
+- Categorias com situação `PRONTA_AVALIACAO` → detalhe com as inscrições (ordenadas por `ordem`) → drawer com detalhes e botão "avaliar".
+- Avaliações: o rascunho, inscrições ainda não avaliadas, na fila, com erro, sincronizadas de categoria em andamento e, ocultas, as de categorias encerradas.
+- Formulário em etapas, montado a partir do modelo de ficha da categoria; pode ser deixado a qualquer momento; "salvar" coloca na fila.
+- Configurações: logout, dados do usuário, limpar dados locais, quantidade não sincronizada, indicador de conexão e última vez online.
+
+## Decidido
+
+- **Destino:** spec de handoff do app — telas, modelo de dados offline, protocolo de sync e política de falhas, e o contrato de API que o app exige. Nada fica por decidir antes de fatiar em issues de implementação.
+- **Banco local: expo-sqlite + Drizzle**, no lugar do WatermelonDB pedido originalmente ([WatermelonDB no Expo 57 / RN 0.86](https://linear.app/te-inscreve/issue/TE-66)). O WatermelonDB está sem versão nova desde abr/2025, só roda na nova arquitetura por interop e patches e não compila no RN 0.88. Do expo-sqlite + Drizzle vêm transação exclusiva para trocar o download de uma vez, `useLiveQuery` e migrações geradas pelo drizzle-kit; op-sqlite fica de reserva.
+- **Stack:** Expo SDK 57 (`~57.0.30`), RN 0.86.3, React 19.2.3 e TypeScript 6 no monorepo ([Atualizar as dependências de apps/mobile](https://linear.app/te-inscreve/issue/TE-65)). O SDK 58 (RN 0.88) fica para depois.
+- **Tema:** o mobile importa o mesmo `theme.css` do web, agora pelo **Uniwind** (no lugar do NativeWind 5 rc). O `apps/mobile/src/styles.css` redeclara o variant `dark` do Uniwind depois do import; sem isso, os tokens escuros somem. No nativo, o escuro segue o sistema e troca em tempo de execução (testado em aparelho em [Testar o Uniwind com o tema compartilhado em dispositivo](https://linear.app/te-inscreve/issue/TE-76); antes, [Compartilhar os tokens de tema do web com NativeWind](https://linear.app/te-inscreve/issue/TE-67)). O `rem` é 16, igual ao web. Em aberto para a implementação: a fonte (`--font-geist-sans` só existe no web).
+- **Interface** ([ADR 0001](../adr/0001-interface-do-app-mobile.md), [Adotar Uniwind ou esperar o NativeWind 5 estável](https://linear.app/te-inscreve/issue/TE-77)):
+  - **Visual:** identidade própria, igual no iOS e no Android e alinhada ao web.
+  - **Ícones:** Phosphor (`phosphor-react-native`) em todo lugar.
+  - **Componentes:** sem react-native-reusables. Componentes próprios em Uniwind no padrão `cn` + `cva` do web: `Button` (variantes do web, espaço para ícone Phosphor, estado pressionado passado ao texto sem `group-*`), `Input` sobre o `TextInput` do RN (composto com RHF `Controller` como no web), cartão, badge, skeleton.
+  - **Expo UI:** só `Picker`, `DateTimePicker`, `Switch` e `BottomSheet`. Qualquer outro componente dele exige decisão nova.
+  - **Barra inferior:** abas customizadas do expo-router (`expo-router/ui`) com um `TabBar` nosso, igual nas duas plataformas, cuidando de área segura e de `role="tab"`/`aria-selected`.
+  - **Cores fora do Uniwind** (os quatro controles do Expo UI e o cabeçalho): saem de um hook único que lê os tokens. O verde da marca é o destaque, e as cores dinâmicas do Android ficam desligadas.
+  - **Sem toast no v1:** estado de salvamento e de sync aparece no lugar (badge "na fila", "sincronizada", "com erro" e banner), com `Alert.alert` para confirmações e erros ([Reavaliar toast no app mobile](https://linear.app/te-inscreve/issue/TE-78)).
+- **Backend fora do escopo.** A API (Django REST) é do usuário; o que faltar de contrato vira dependência documentada, e os fatos da API são pedidos a ele.
+- **Categorias:** por ora lista todas em `PRONTA_AVALIACAO`, sem filtrar por avaliador; o filtro por avaliador vem quando a API tiver o vínculo.
+- **Vocabulário** (já em `docs/contextos/avaliacoes/GLOSSARY.md`): Avaliador (jurado é sinônimo a evitar); Avaliação = resultado de um avaliador para uma inscrição; Modelo de ficha = ficha avaliativa (o molde); inscrição é o que se avalia, "apresentação" é só o ato; Rascunho, Avaliação na fila, Avaliação sincronizada, Avaliação com erro.
+- **Ordem das inscrições:** atributo `ordem`, que a API já devolve também na modalidade individual.
+- **Na fila é editável** até o envio começar; a edição troca o payload e mantém o lugar na fila. Sincronizada é imutável (uma por inscrição, sem PUT).
+- **Política de sync (FIFO):**
+  - Temporária (sem rede, timeout, 5xx): o item da cabeça fica, a fila pausa e tenta de novo com backoff e quando a conexão volta — detectada com `@react-native-community/netinfo`.
+  - 401: pausa a fila inteira e pede novo login; nada se perde.
+  - Recusa definitiva (400, 403, 404, 409, categoria encerrada, versão do modelo): o item vai para **com erro**, não trava a fila, exige ação do avaliador (corrigir e salvar de novo → fim da fila, ou descartar). O modelo só é a causa quando o `modeloFichaAvaliativaId` enviado não é compatível com o modelo atual da categoria no banco.
+- **Download offline:** automático ao abrir a categoria, mais pull-to-refresh e badge "disponível offline"; ícone simples durante e ao fim do download. Cada refresh **reescreve inteiro** o download anterior, sem restos. Sem download, "avaliar" fica desabilitado.
+- **Modelo mudou na API:**
+  - avaliação já concluída offline (na fila) → vira com erro pela política acima;
+  - rascunho → **congela na hora** (não exclui), impedindo o avaliador de continuar numa versão velha.
+- **Um rascunho só.** A fila controla o que espera sync; o rascunho existe para o avaliador não perder a avaliação ao sair da tela.
+- **Rascunho congelado:** só leitura, com faixa explicando o motivo; a única ação é "descartar e recomeçar na versão nova". Continua contando como o único rascunho.
+- **"Avaliar" com outro rascunho aberto:** o app pergunta "continuar o rascunho de X" ou "descartar e começar este".
+- **Cópia do modelo por avaliação:** cada avaliação local guarda a própria cópia da versão do modelo, para o refresh poder reescrever o download inteiro. Com erro por mudança de modelo só pode ser descartada.
+- **Categoria encerrada no refresh:** o rascunho dela congela; as avaliações na fila seguem e o servidor as recusa → com erro.
+- **Lista provisória de categorias:** fan-out eventos → modalidades → categorias filtrando `PRONTA_AVALIACAO`, atrás de uma função trocável pelo endpoint dedicado.
+- **Etapas:** uma etapa por ocorrência de agrupamento, intercaladas com os campos gerais pela ordem; campos gerais consecutivos formam uma etapa (3 gerais, agrupamento com quantidade 1, 3 gerais = 3 etapas).
+- **Ordem no topo:** campos gerais e agrupamentos dividem uma sequência só de `ordem` (`ordensDoTopoUnicas` em `packages/schemas/src/ficha-avaliativa.ts`, também validada na API). Modelos antigos com ordem repetida (ex.: 11006) ainda podem chegar: no empate, o campo geral vem antes do agrupamento — sem tratar como erro.
+- **Ocorrência:** cada repetição de um agrupamento na avaliação (termo do glossário; "unidade avaliativa" a evitar). Seu nome vem pré-preenchido com "<nome do agrupamento> <ordem>" (ex.: "Danças 2") e o avaliador o altera pelo lápis, como em `apps/web/src/features/inscricoes/campo-nome-concorrente.tsx`. O nome sempre vai no envio — o padrão, se o avaliador não mudou.
+- **Payload de envio:** `respostasGerais[]` e `agrupamentos[]`, cada item com `agrupamentoId`, `ordem`, `nome` e `respostas[]`.
+- **Etapa de revisão** no fim: resumo e nota calculada antes de salvar; tocar numa etapa volta para ela.
+- **Alternativa única × múltipla:** a API e o web passaram a distinguir `ALTERNATIVA_UNICA` e `ALTERNATIVA_MULTIPLA`. **Aguarda a API**: o payload de envio dos dois casos ainda não existe.
+- **Validação no cliente:** obrigatórios; `NUMERICO` entre 0 e `valorMaximo` (sem teto quando nulo), 4 casas; texto livre em descritivo/observação; prévia da nota pela fórmula do exemplo, nota final ≤ 10. Um *builder* modelo de ficha → schema Zod e o cálculo da nota ficam em `packages/schemas`, reutilizáveis pelo web.
+- **Logout e "limpar dados" bloqueados** enquanto houver algo na fila ou com erro, salvo confirmação explícita de descarte. Cada avaliação local leva o id do avaliador; só a fila dele é enviada.
+
+## Dependências da API (nada específico do mobile existe hoje)
+
+- POST de avaliação (`.../inscricoes/<id>/avaliacoes/`) — ainda não implementado.
+- Payload de resposta para `ALTERNATIVA_UNICA` e `ALTERNATIVA_MULTIPLA`, e confirmação do formato de `agrupamentos[]` no envio (com `nome`).
+- Vínculo avaliador ↔ categoria e listagem das categorias do avaliador (hoje `Categoria.avaliadores` é só um inteiro).
+- Listagem de categorias `PRONTA_AVALIACAO` entre eventos.
+- **Listagem das avaliações do usuário**: por categoria e paginada no geral. A tela de avaliações do mobile depende dela para saber o que já foi sincronizado (reinstalação, outro aparelho).
+- Leitura do modelo de ficha por avaliador sem entidade vinculada.
+
+Já existem e são `publicProcedure` no tRPC: `evento.getAll`, `modalidade.getAll`, `categoria.getAll`, `categoria.getFichaAvaliativa`, `inscricao.getAll`.
+
+## Possível já, sem esperar a API
+
+Login (`signIn.rest`), barra inferior, tela de configurações inteira, expo-sqlite + Drizzle e schema local, indicador de conexão, port do tema, lista de categorias provisória, detalhe da categoria, drawer, download/refresh, renderização do formulário, builder Zod e nota, ciclo do rascunho, motor da fila contra o contrato (envio stubado).
+
+## Glossário
+
+Resolvido em `docs/contextos/avaliacoes/GLOSSARY.md`: Modelo de ficha é o nome canônico do molde, com "ficha avaliativa" a evitar, mesmo que o código e a API usem esse nome; Ocorrência entrou como termo; Agrupamento é "por dança, por par, por item", sem "por jurado". Os glossários de Eventos e Inscrições apontados por `GLOSSARY-MAP.md` ainda não existem e estão no fog do mapa.

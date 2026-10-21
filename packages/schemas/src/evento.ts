@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
 import { publicEntidadeSchema } from "./entidade";
+import { modalidadePreviewSchema } from "./modalidade";
 
 /**
  * Reference domain schema. Mirrors what the REST API returns for an evento —
@@ -8,16 +9,21 @@ import { publicEntidadeSchema } from "./entidade";
  */
 export const eventoSchema = z.object({
     id: z.number().int(),
-    slug: z.string(),
+    // slug: z.string(),
     nome: z.string(),
     descricao: z.string(),
     dataInicio: z.string(),
     dataFim: z.string(),
-    dataInicioInscricao: z.string(),
-    dataFimInscricao: z.string(),
+    dataInicioInscricoes: z.string(),
+    dataFimInscricoes: z.string(),
     unico: z.boolean(),
     local: z.string(),
     promotor: publicEntidadeSchema,
+    /**
+     * As modalidades do evento, só com id e nome. O detalhe de cada uma
+     * (regras e categorias) vem de `modalidade.getById`, quando a aba abre.
+     */
+    modalidades: z.array(modalidadePreviewSchema),
     logo: z.string().optional(),
     cartaz: z.string().optional(),
     regulamento: z.string().optional(),
@@ -30,7 +36,6 @@ export const eventoSchema = z.object({
         ])
         .optional(),
 });
-export type Evento = z.infer<typeof eventoSchema>;
 
 /**
  * O que o organizador informa ao criar um evento. `id` e `slug` são gerados
@@ -39,7 +44,23 @@ export type Evento = z.infer<typeof eventoSchema>;
  */
 export const createEventoSchema = eventoSchema.omit({
     id: true,
-    slug: true,
+    // slug: true,
     promotor: true,
+    modalidades: true,
 });
+
+export const eventoPreviewSchema = eventoSchema.pick({
+    id: true,
+    nome: true,
+    dataInicio: true,
+    dataFim: true,
+    local: true,
+    logo: true,
+    cartaz: true,
+    situacao: true,
+});
+
+export type EventoPreview = z.infer<typeof eventoPreviewSchema>;
+export type Evento = z.infer<typeof eventoSchema>;
+
 export type CreateEventoInput = z.infer<typeof createEventoSchema>;

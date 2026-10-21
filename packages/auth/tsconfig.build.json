@@ -1,0 +1,18 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "./tsconfig.json",
+    // Only `src`, as in the compiled packages: `env.ts` and `eslint.config.ts`
+    // would drag the inferred `rootDir` up and move `dist/index.d.ts`. `./env`
+    // and `./client` stay exported as source; only `.` points at `dist`, which
+    // is what `@te-inscreve/api` needs to emit its own declarations.
+    "include": ["src"],
+    "compilerOptions": {
+        "rootDir": "src",
+        "noEmit": false,
+        "declaration": true,
+        "declarationMap": true,
+        "emitDeclarationOnly": true,
+        "outDir": "${configDir}/dist",
+        "tsBuildInfoFile": "${configDir}/.cache/tsbuildinfo.build.json"
+    }
+}

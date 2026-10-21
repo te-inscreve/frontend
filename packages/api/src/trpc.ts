@@ -97,13 +97,21 @@ const createTRPCRouter = t.router;
  * This is what lets procedures stay one-liners: let the error propagate and it
  * is classified here. Catch it yourself only when a status is a *meaningful*
  * outcome (see `evento.byId`). Applied to every procedure below.
+ *
+ * `next()` never throws in tRPC v11: the resolver's error comes back as
+ * `{ ok: false, error }`, already wrapped in a generic INTERNAL_SERVER_ERROR
+ * with the original in `cause`. A `try`/`catch` around it never fires — that
+ * is how every 400 used to reach the client as a 500 with no `fieldErrors`.
+ * The classification has to read the result instead.
  */
 const restErrorMiddleware = t.middleware(async ({ next }) => {
-    try {
-        return await next();
-    } catch (error) {
-        throw toTRPCError(error);
-    }
+    const result = await next();
+    if (result.ok) return result;
+
+    return {
+        ...result,
+        error: toTRPCError(result.error.cause ?? result.error),
+    };
 });
 
 const authenticatedMiddleware = t.middleware(({ ctx, next }) => {

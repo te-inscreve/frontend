@@ -1,11 +1,12 @@
 "use client";
 
 import type { UseFormSetError } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
 import type { SignUpFormValues } from "./signup-schema";
 import { signUp } from "~/shared/api/auth/client";
+import { destinoPosAuth } from "./destino-pos-auth";
 
 type CampoDoFormulario = keyof SignUpFormValues;
 
@@ -128,7 +129,6 @@ export function useSignUp({
     /** `setError` do formulário: é por ele que a recusa da API vira erro de campo. */
     setError: UseFormSetError<SignUpFormValues>;
 }) {
-    const searchParams = useSearchParams();
     const router = useRouter();
     const mutation = useMutation({
         mutationFn: async (valores: SignUpFormValues) => {
@@ -160,7 +160,7 @@ export function useSignUp({
         // O cadastro já devolve o JWT, então a conta entra logada: não faz
         // sentido devolver o usuário para o login.
         onSuccess: () => {
-            router.push(searchParams.get("next") ?? "/");
+            router.push(destinoPosAuth());
             router.refresh();
         },
     });

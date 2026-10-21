@@ -37,8 +37,143 @@ export type SignUpInput = z.infer<typeof signUpSchema>;
 
 export { cpfSchema, isValidCpf } from "./cpf";
 
-export type { Evento, CreateEventoInput } from "./evento";
-export { eventoSchema, createEventoSchema } from "./evento";
+export {
+    createEventoSchema,
+    eventoPreviewSchema,
+    eventoSchema,
+} from "./evento";
+export type { CreateEventoInput, Evento, EventoPreview } from "./evento";
 
+export {
+    formModalidadeSchema as createModalidadeSchema,
+    editModalidadeSchema,
+    modalidadeDetalheSchema,
+    modalidadePreviewSchema,
+    modalidadeSchema,
+} from "./modalidade";
+export type {
+    EditModalidade,
+    FormModalidade as CreateModalidade,
+    Modalidade,
+    ModalidadeDetalhe,
+    ModalidadePreview,
+} from "./modalidade";
+
+export {
+    acaoSituacaoCategoriaSchema,
+    acoesPorSituacaoCategoria,
+    categoriaAninhadaSchema,
+    categoriaDetalheSchema,
+    categoriaSchema,
+    formCategoriaSchema,
+    situacaoCategoriaSchema,
+} from "./categoria";
+export type {
+    AcaoSituacaoCategoria,
+    Categoria,
+    CategoriaAninhada,
+    CategoriaDetalhe,
+    FormCategoria,
+    SituacaoCategoria,
+} from "./categoria";
+
+export {
+    entidadeOpcaoSchema,
+    formEntidadeSchema,
+    minhaEntidadeSchema,
+    privateEntidadeSchema,
+    publicEntidadeSchema,
+} from "./entidade";
+export type {
+    EntidadeOpcao,
+    FormEntidade,
+    MinhaEntidade,
+    PrivateEntidade,
+    PublicEntidade,
+} from "./entidade";
+
+export { perfilSchema, temEntidade } from "./perfil";
 export type { Perfil } from "./perfil";
-export { perfilSchema } from "./perfil";
+
+export { paginadoSchema, proximaPagina } from "./paginacao";
+export type { Paginado } from "./paginacao";
+
+export {
+    formIntegranteSchema,
+    grupoDoIntegranteSchema,
+    integranteDetalheSchema,
+    integranteSchema,
+    paginaIntegrantesSchema,
+} from "./integrante";
+export type {
+    FormIntegrante,
+    GrupoDoIntegrante,
+    Integrante,
+    IntegranteDetalhe,
+    PaginaIntegrantes,
+} from "./integrante";
+
+export {
+    formacaoGrupoSchema,
+    formGrupoSchema,
+    grupoComPreviaSchema,
+    grupoDetalheSchema,
+    grupoSchema,
+    integranteDoGrupoSchema,
+    paginaGruposSchema,
+} from "./grupo";
+export type {
+    FormacaoGrupo,
+    FormGrupo,
+    Grupo,
+    GrupoComPrevia,
+    GrupoDetalhe,
+    IntegranteDoGrupo,
+    PaginaGrupos,
+} from "./grupo";
+
+export {
+    criarInscricaoSchema,
+    inscricaoGrupoSchema,
+    inscricaoIndividualSchema,
+    inscricoesCriadasSchema,
+    inscricoesDaCategoriaSchema,
+} from "./inscricao";
+export type {
+    CriarInscricao,
+    InscricaoGrupo,
+    InscricaoIndividual,
+    InscricoesCriadas,
+    InscricoesDaCategoria,
+} from "./inscricao";
+
+export {
+    agrupamentoFichaCriacaoSchema,
+    agrupamentoFichaSchema,
+    alternativaCriacaoSchema,
+    campoFichaCriacaoSchema,
+    campoFichaSchema,
+    criarModeloFichaSchema,
+    modeloFichaDetalheSchema,
+    modificadorNotaSchema,
+    posicaoFichaCriacaoSchema,
+    posicaoFichaSchema,
+    TIPOS_COM_ALTERNATIVAS,
+    aceitaAlternativas,
+    tipoCampoFichaSchema,
+} from "./ficha-avaliativa";
+export type {
+    AgrupamentoFicha,
+    AgrupamentoFichaCriacao,
+    CampoFicha,
+    CampoFichaCriacao,
+    CriarModeloFicha,
+    ModeloFichaDetalhe,
+    ModeloFichaResumo,
+    ModificadorNota,
+    PosicaoFicha,
+    PosicaoFichaCriacao,
+    PreviaModeloFicha,
+    TipoCampoComAlternativas,
+    TipoCampoFicha,
+} from "./ficha-avaliativa";

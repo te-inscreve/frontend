@@ -47,16 +47,17 @@ identity, so better-auth runs in **stateless mode** (`packages/auth`): no
 1. `POST /api/auth/sign-in/rest` — a custom better-auth plugin
    (`packages/auth/src/rest-credentials.ts`) forwards the credentials to the
    Django login endpoint.
-2. Django returns a JWT. The plugin stores it in `session.token` and writes the
-   encrypted session cookie. The cookie's lifetime comes from the JWT's `exp`, so
-   the session can never outlive the token it carries.
-3. On every tRPC call, `createTRPCContext` decrypts the cookie, pulls the JWT out
+2. Django returns access and refresh JWTs. The plugin stores the access token in
+   `session.token` and keeps the refresh token in a separate encrypted, HTTP-only
+   cookie.
+3. Session reads renew the access token through Django when it has one minute or
+   less remaining. Rotated refresh tokens replace the previous encrypted value.
+4. On every tRPC call, `createTRPCContext` decrypts the cookie, pulls the JWT out
    and hands back a REST client already bound to it — procedures just use
    `ctx.restClient` and the `Authorization: Bearer …` header is handled for them.
 
-**Trade-off:** stateless sessions cannot be revoked server-side before they
-expire. To force a logout everywhere, the Django API has to reject the JWT itself
-(short expiry + a denylist, or token rotation).
+**Trade-off:** stateless sessions cannot be revoked by the Next.js server before
+they expire. Logout and refresh-token rejection are enforced by the Django API.
 
 ### Calling the API from a procedure
 

@@ -1,8 +1,17 @@
+import { Suspense } from "react";
+
+import { Skeleton } from "@te-inscreve/components/skeleton";
+
 import { getSession } from "~/shared/api/auth/server";
 
-export default async function HomePage() {
-    const session = await getSession();
-
+/**
+ * A página inicial da vitrine.
+ *
+ * Síncrona de propósito: o texto é o mesmo para todo mundo e é o que precisa
+ * aparecer primeiro. Só a caixa de sessão espera a rede, atrás do próprio
+ * boundary. Ver `docs/fcp.md`.
+ */
+export default function HomePage() {
     return (
         <main className="container mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-6 px-4 py-16">
             <h1 className="text-4xl font-bold tracking-tight">
@@ -15,12 +24,22 @@ export default async function HomePage() {
             </p>
 
             <div className="rounded-lg border p-4">
-                <p className="text-sm font-medium">
-                    {session
-                        ? `Sessão ativa: ${session.user.email}`
-                        : "Nenhuma sessão ativa."}
-                </p>
+                <Suspense fallback={<Skeleton className="h-5 w-56" />}>
+                    <EstadoDaSessao />
+                </Suspense>
             </div>
         </main>
+    );
+}
+
+async function EstadoDaSessao() {
+    const session = await getSession();
+
+    return (
+        <p className="text-sm font-medium">
+            {session
+                ? `Sessão ativa: ${session.user.email}`
+                : "Nenhuma sessão ativa."}
+        </p>
     );
 }

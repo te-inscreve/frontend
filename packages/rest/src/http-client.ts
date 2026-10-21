@@ -157,6 +157,20 @@ export class HttpClient implements Client {
         } as RequestInit;
     }
 
+    /**
+     * Metodo genérico de requisição HTTP. Retorna um {@link Result} que descreve o resultado da requisição.
+     *
+     * @param method - O método HTTP a ser usado (GET, POST, PUT, PATCH, DELETE, OPTIONS).
+     * @param path - O caminho da URL a ser acessado.
+     * @param body - O corpo da requisição, se houver.
+     * @param init - Opções adicionais para a requisição.
+     * @returns Um {@link Result} que descreve o resultado da requisição.
+     *
+     * OBS:
+     *  - Não lança exceções em caso de falha:
+     *      todas as requisições resolvem com um {@link Result} que o compilador obriga você a verificar em `.ok` antes de ler `.data`.
+     *
+     */
     private async request<T>(
         method: string,
         path: string,

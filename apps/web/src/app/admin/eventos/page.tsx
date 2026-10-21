@@ -38,7 +38,7 @@ export default function EventosPage({
                 <Button asChild className="w-full sm:w-auto">
                     <Link href="/admin/eventos/criar">
                         <PlusIcon />
-                        Novo evento
+                        Criar evento
                     </Link>
                 </Button>
             </div>
