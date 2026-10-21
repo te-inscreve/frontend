@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { SplashScreen, Stack } from "expo-router";
+import { SplashScreen, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useCSSVariable } from "uniwind";
 
 import { queryClient } from "~/utils/api";
 import { useSession } from "~/utils/auth";
+import { useTemaNavegacao } from "~/utils/use-tokens";
 
 import "../styles.css";
 
@@ -14,7 +14,7 @@ import "../styles.css";
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-    const background = useCSSVariable("--background") as string | undefined;
+    const tema = useTemaNavegacao();
     const { data: session, isPending } = useSession();
 
     useEffect(() => {
@@ -23,26 +23,26 @@ export default function RootLayout() {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <Stack
-                screenOptions={{
-                    contentStyle: { backgroundColor: background },
-                }}
-            >
-                {/*
-                 * O guard decide a rota pela sessão: entrar ou sair muda o
-                 * `useSession`, e o expo-router leva para a primeira tela
-                 * liberada. Por isso o login e o logout não navegam.
-                 */}
-                <Stack.Protected guard={!!session}>
-                    <Stack.Screen name="index" />
-                </Stack.Protected>
-                <Stack.Protected guard={!session}>
-                    <Stack.Screen
-                        name="login"
-                        options={{ headerShown: false }}
-                    />
-                </Stack.Protected>
-            </Stack>
+            {/*
+             * O tema leva os tokens a todos os navegadores: o cabeçalho de
+             * cada aba e o fundo das telas seguem o claro/escuro do sistema.
+             */}
+            <ThemeProvider value={tema}>
+                <Stack screenOptions={{ headerShown: false }}>
+                    {/*
+                     * O guard decide a rota pela sessão: entrar ou sair muda o
+                     * `useSession`, e o expo-router leva para a primeira tela
+                     * liberada. Por isso o login e o logout não navegam.
+                     */}
+                    <Stack.Protected guard={!!session}>
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="(app)" />
+                    </Stack.Protected>
+                    <Stack.Protected guard={!session}>
+                        <Stack.Screen name="login" />
+                    </Stack.Protected>
+                </Stack>
+            </ThemeProvider>
             <StatusBar />
         </QueryClientProvider>
     );
