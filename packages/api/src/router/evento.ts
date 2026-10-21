@@ -8,6 +8,20 @@ import { tagsEvento, tagsEventos } from "../cache-tags";
 import { authenticatedProcedure, publicProcedure } from "../trpc";
 
 /**
+ * O `FormData` que a mutação lê no servidor. O tipo global depende de quem
+ * compila o router: no app mobile ele é o do React Native, sem `get` nem
+ * `delete`, e o typecheck quebraria por um método que só roda no servidor.
+ */
+type FormDataNoServidor = FormData & {
+    get(name: string): unknown;
+    delete(name: string): void;
+};
+
+const formDataNoServidor = z.custom<FormDataNoServidor>(
+    (valor) => valor instanceof FormData,
+);
+
+/**
  * Reference router — the pattern every domain router should follow.
  *
  * Types come from `@te-inscreve/schemas`, the single source of truth for
@@ -73,7 +87,7 @@ export const eventoRouter = {
      * precisa caber em um `FormData`.
      */
     update: authenticatedProcedure
-        .input(z.instanceof(FormData))
+        .input(formDataNoServidor)
         .mutation(async ({ ctx, input }) => {
             const id = Number(input.get("id"));
 
