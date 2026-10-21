@@ -9,3 +9,9 @@
 @import "nativewind/theme";
 
 @import "@te-inscreve/tailwind-config/theme";
+
+/*
+ * O tema declara o escuro com `@variant dark`, que no web é a classe `.dark`.
+ * O compilador nativo descarta esse seletor; no nativo o escuro é o do sistema.
+ */
+@custom-variant dark (@media (prefers-color-scheme: dark));
