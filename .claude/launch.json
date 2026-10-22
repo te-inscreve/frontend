@@ -24,7 +24,7 @@
                 "--clear",
                 "--port",
                 "8082",
-                "--localhost"
+                "--lan"
             ],
             "port": 8082,
             "autoPort": false
