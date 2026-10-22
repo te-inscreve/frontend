@@ -1,121 +1,34 @@
-import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import {
-    Alert,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    View,
-} from "react-native";
-import Animated, {
-    LayoutAnimationConfig,
-    useSharedValue,
-} from "react-native-reanimated";
+import { Alert, Keyboard, ScrollView, Text, View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowArcRightIcon, ArrowDownIcon } from "phosphor-react-native";
-import { ArrowLeftIcon } from "phosphor-react-native/src/icons/ArrowLeft";
-import { ArrowRightIcon } from "phosphor-react-native/src/icons/ArrowRight";
 import { FloppyDiskIcon } from "phosphor-react-native/src/icons/FloppyDisk";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { withUniwind } from "uniwind";
 
 import type { ModeloFichaDetalhe } from "@te-inscreve/schemas";
 
-import type { DirecaoEtapa } from "../lib/deslize-etapa";
-import type { EtapaFicha, ValoresFicha } from "../lib/formulario-ficha-mock";
+import type { ValoresFicha } from "../lib/formulario-ficha-mock";
 import { Button } from "~/components/ui/button";
-import { FieldGroup } from "~/components/ui/field";
-import { cn } from "~/utils/cn";
-import { entradaDaEtapa, saidaDaEtapa } from "../lib/deslize-etapa";
 import {
-    etapasDaFicha,
+    abaDoTrecho,
     montarFormularioFicha,
+    resumoDoValor,
+    trechosDaFicha,
 } from "../lib/formulario-ficha-mock";
-import { CampoFichaControlado } from "./campo-ficha";
-import { FolhaRevisao } from "./folha-revisao";
+import { EdicaoTrecho } from "./edicao-trecho";
+import { FolhaFicha } from "./folha-ficha";
 
-const IconeVoltar = withUniwind(ArrowLeftIcon);
-const IconeProxima = withUniwind(ArrowRightIcon);
-const IconeVoltarRevisao = withUniwind(ArrowArcRightIcon);
 const IconeSalvar = withUniwind(FloppyDiskIcon);
-const IconeFicar = withUniwind(ArrowDownIcon);
-
-/** Barra segmentada: uma fatia por etapa, mais a revisão. */
-function Progresso({
-    total,
-    atual,
-    titulo,
-}: {
-    total: number;
-    atual: number;
-    titulo: string;
-}) {
-    return (
-        <View
-            role="progressbar"
-            aria-valuemin={1}
-            aria-valuemax={total}
-            aria-valuenow={atual + 1}
-            aria-valuetext={`Etapa ${atual + 1} de ${total}: ${titulo}`}
-            className="bg-background border-border gap-2 border-b px-4 py-3"
-        >
-            <View className="flex-row gap-1" aria-hidden>
-                {Array.from({ length: total }, (_, i) => (
-                    <View
-                        key={i}
-                        className={cn(
-                            "h-1.5 flex-1 rounded-full",
-                            i <= atual ? "bg-primary" : "bg-muted",
-                        )}
-                    />
-                ))}
-            </View>
-            <Text className="text-muted-foreground text-sm">
-                Etapa {atual + 1} de {total}
-            </Text>
-        </View>
-    );
-}
-
-function Cabecalho({
-    titulo,
-    subtitulo,
-}: {
-    titulo: string;
-    subtitulo?: string;
-}) {
-    return (
-        <View className="gap-0.5">
-            <Text
-                role="heading"
-                className="text-foreground text-xl font-semibold"
-            >
-                {titulo}
-            </Text>
-            {subtitulo && (
-                <Text className="text-muted-foreground text-sm">
-                    {subtitulo}
-                </Text>
-            )}
-        </View>
-    );
-}
-
-function Rodape({ children }: { children: ReactNode }) {
-    return (
-        <View className="bg-background border-border flex-row gap-3 border-t p-4">
-            {children}
-        </View>
-    );
-}
 
 /**
- * MOCK (TE-82): o formulário em etapas da spec — gerais consecutivos numa
- * etapa, uma etapa por ocorrência, revisão no fim. Valida só a etapa atual ao
- * avançar; na revisão, tocar numa etapa volta para ela. Nome editável da
- * ocorrência, prévia da nota, rascunho e envio ficam para TE-70/TE-95.
+ * MOCK (TE-82): o formulário de avaliação como a ficha inteira, em branco, de
+ * entrada. O avaliador vê tudo antes e preenche aos poucos, na ordem que
+ * quiser, uma aba por vez: os campos gerais se preenchem na própria ficha, e
+ * cada ocorrência de um agrupamento abre o seu trecho numa folha inferior.
+ * "Aplicar" valida o trecho e só fecha a folha sem erros; arrastar, o fundo e
+ * o voltar fecham sempre, validando sem barrar, e a ficha marca o que ficou
+ * com erro. "Salvar" valida tudo e vai à aba do primeiro trecho com pendência. Nome editável da ocorrência, nota, rascunho e envio
+ * ficam para TE-70/TE-95.
  */
 export function FormularioFichaMock({
     modelo,
@@ -126,53 +39,81 @@ export function FormularioFichaMock({
         () => montarFormularioFicha(modelo),
         [modelo],
     );
-    const etapas = useMemo(() => etapasDaFicha(modelo), [modelo]);
+    const trechos = useMemo(() => trechosDaFicha(modelo), [modelo]);
     const form = useForm<ValoresFicha>({
         resolver: zodResolver(schema),
         defaultValues,
     });
-    const [atual, setAtual] = useState(0);
-    // Quem chega a uma etapa pela revisão volta direto para ela, sem
-    // atravessar as etapas seguintes.
-    const [vindoDaRevisao, setVindoDaRevisao] = useState(false);
-    const direcao = useSharedValue<DirecaoEtapa>(1);
-    const entrada = useMemo(() => entradaDaEtapa(direcao), [direcao]);
-    const saida = useMemo(() => saidaDaEtapa(direcao), [direcao]);
+    // A ficha mostra as respostas: precisa renderizar a cada mudança.
+    const valores = useWatch({ control: form.control }) as ValoresFicha;
+    // O trecho fica guardado com a folha fechada: ela segue mostrando o último
+    // enquanto desliza para baixo.
+    const [aberto, setAberto] = useState(0);
+    const [visivel, setVisivel] = useState(false);
+    // Sem aba de campos gerais, a ficha cai na primeira que houver.
+    const [aba, setAba] = useState("gerais");
+    // As respostas do trecho como estavam ao abrir o modal, para o
+    // "Cancelar" desfazer o que foi mexido nele.
+    const [antes, setAntes] = useState<{
+        valores: ValoresFicha;
+        comErro: boolean;
+    }>({ valores: {}, comErro: false });
 
-    // A revisão é a etapa depois da última do modelo.
-    const total = etapas.length + 1;
-    const naRevisao = atual === etapas.length;
-    const etapa = etapas[atual];
+    // Quantos campos já têm resposta, para o rodapé dizer onde o avaliador
+    // está sem precisar rolar a ficha nem trocar de aba.
+    const campos = trechos.flatMap((trecho) => trecho.campos);
+    const preenchidos = campos.filter(
+        ({ chave, campo }) =>
+            resumoDoValor(campo, valores[chave] ?? null) !== null,
+    ).length;
+
     const erros = form.formState.errors;
-    const etapaComErro = (alvo: EtapaFicha) =>
-        alvo.campos.some(({ chave }) => erros[chave]);
+    const comErro = (indice: number) =>
+        trechos[indice]?.campos.some(({ chave }) => erros[chave]) ?? false;
 
-    /**
-     * Toda troca de etapa passa por aqui: a direção vai para o shared value
-     * antes do `setAtual`, para a etapa que sai e a que entra deslizarem para
-     * o mesmo lado. O teclado fecha antes, ou ficaria aberto sobre a etapa
-     * nova quando o campo focado desmontasse.
-     */
-    function irPara(destino: number) {
-        // `.set`, não `.value =`: o React Compiler não aceita mutar o retorno
-        // de um hook.
-        direcao.set(destino > atual ? 1 : -1);
+    function validarTrecho(indice: number) {
+        const trecho = trechos[indice];
+        return trecho
+            ? form.trigger(trecho.campos.map(({ chave }) => chave))
+            : Promise.resolve(true);
+    }
+
+    function abrir(indice: number) {
+        const chaves = trechos[indice]?.campos.map(({ chave }) => chave) ?? [];
+        setAntes({
+            valores: Object.fromEntries(
+                chaves.map((chave) => [chave, form.getValues(chave)]),
+            ),
+            comErro: comErro(indice),
+        });
+        setAberto(indice);
+        setVisivel(true);
+    }
+
+    function cancelar() {
+        const chaves = Object.keys(antes.valores);
+        Object.entries(antes.valores).forEach(([chave, valor]) =>
+            form.setValue(chave, valor),
+        );
+        // O erro volta a ser o de antes: some o que o avaliador provocou no
+        // modal, e o que a ficha já marcava continua marcado.
+        form.clearErrors(chaves);
+        if (antes.comErro) void form.trigger(chaves);
         Keyboard.dismiss();
-        setAtual(destino);
+        setVisivel(false);
     }
 
-    function irPelaRevisao(destino: number) {
-        setVindoDaRevisao(true);
-        irPara(destino);
+    function fechar() {
+        void validarTrecho(aberto);
+        Keyboard.dismiss();
+        setVisivel(false);
     }
 
-    /** Valida a etapa atual e, se passar, vai para `destino`. */
-    async function avancar(destino: number) {
-        if (!etapa) return;
-        const ok = await form.trigger(etapa.campos.map(({ chave }) => chave));
-        if (!ok) return;
-        if (destino === etapas.length) setVindoDaRevisao(false);
-        irPara(destino);
+    async function aplicar() {
+        if (await validarTrecho(aberto)) {
+            Keyboard.dismiss();
+            setVisivel(false);
+        }
     }
 
     const salvar = form.handleSubmit(
@@ -181,161 +122,82 @@ export function FormularioFichaMock({
                 "Avaliação pronta",
                 "No app de verdade, ela iria para a fila de envio.",
             ),
-        () => {
-            const primeira = etapas.findIndex(etapaComErro);
-            if (primeira >= 0) irPelaRevisao(primeira);
+        (falhas) => {
+            // Vai à aba do primeiro erro. Os campos gerais mostram o erro na
+            // própria ficha; só a ocorrência precisa da folha para isso.
+            const primeiro = trechos.findIndex((trecho) =>
+                trecho.campos.some(({ chave }) => falhas[chave]),
+            );
+            const trecho = trechos[primeiro];
+            if (!trecho) return;
+            setAba(abaDoTrecho(trecho));
+            if (trecho.ocorrencia) abrir(primeiro);
         },
     );
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-            className="flex-1"
-        >
-            <Progresso
-                total={total}
-                atual={atual}
-                titulo={etapa?.titulo ?? "Revisão"}
-            />
+        <View className="flex-1">
+            <ScrollView contentContainerClassName="p-4">
+                <FolhaFicha
+                    modelo={modelo}
+                    trechos={trechos}
+                    valores={valores}
+                    comErro={comErro}
+                    aoTocar={abrir}
+                    aba={aba}
+                    aoTrocarAba={setAba}
+                    control={form.control}
+                    revalidar={form.trigger}
+                />
+            </ScrollView>
 
-            {/*
-             * Cada etapa é um `Animated.View` com a própria chave: na troca, a
-             * velha sai e a nova entra ao mesmo tempo, e a nova começa do
-             * topo. O `skipEntering` deixa a primeira etapa aparecer sem
-             * deslizar ao abrir a tela; o `overflow-hidden` corta as duas
-             * enquanto passam.
-             */}
-            <LayoutAnimationConfig skipEntering>
-                <View className="flex-1 overflow-hidden">
-                    <Animated.View
-                        key={atual}
-                        entering={entrada}
-                        exiting={saida}
-                        style={{ flex: 1 }}
+            <View className="bg-background border-border border-t p-4">
+                {/* A nota final mora no rodapé fixo, ao lado do "Salvar":
+                    vale para a ficha inteira, não para uma aba, e fica à
+                    vista enquanto o avaliador preenche. O cálculo ainda está
+                    em aberto (TE-95), então o mock só reserva o lugar. */}
+                <View className="w-full max-w-[720px] flex-row items-center gap-4 self-center">
+                    <View className="flex-1 gap-0.5">
+                        <View className="flex-row items-baseline gap-2">
+                            <Text className="text-muted-foreground text-sm">
+                                Nota final
+                            </Text>
+                            <Text aria-label="a calcular, de 10">
+                                <Text className="text-foreground text-2xl font-bold">
+                                    —
+                                </Text>
+                                <Text className="text-muted-foreground text-base">
+                                    {" / 10"}
+                                </Text>
+                            </Text>
+                        </View>
+                        <Text className="text-muted-foreground text-sm">
+                            {preenchidos} de {campos.length} preenchidos
+                        </Text>
+                    </View>
+                    <Button
+                        icone={
+                            <IconeSalvar
+                                size={20}
+                                colorClassName="accent-primary-foreground"
+                            />
+                        }
+                        onPress={() => void salvar()}
                     >
-                        <ScrollView
-                            keyboardShouldPersistTaps="handled"
-                            contentContainerClassName="gap-5 p-4 pb-8"
-                        >
-                            {etapa ? (
-                                <>
-                                    <Cabecalho
-                                        titulo={etapa.titulo}
-                                        subtitulo={etapa.subtitulo}
-                                    />
-                                    <FieldGroup>
-                                        {etapa.campos.map(
-                                            ({ chave, campo }) => (
-                                                <CampoFichaControlado
-                                                    key={chave}
-                                                    chave={chave}
-                                                    campo={campo}
-                                                    control={form.control}
-                                                    revalidar={form.trigger}
-                                                />
-                                            ),
-                                        )}
-                                    </FieldGroup>
-                                </>
-                            ) : (
-                                <>
-                                    <FolhaRevisao
-                                        modelo={modelo}
-                                        etapas={etapas}
-                                        valores={form.getValues()}
-                                        comErro={(i) => {
-                                            const alvo = etapas[i];
-                                            return !!alvo && etapaComErro(alvo);
-                                        }}
-                                        aoTocar={irPelaRevisao}
-                                    />
-                                </>
-                            )}
-                        </ScrollView>
-                    </Animated.View>
+                        Salvar
+                    </Button>
                 </View>
-            </LayoutAnimationConfig>
+            </View>
 
-            <Rodape>
-                {vindoDaRevisao && !naRevisao ? (
-                    // Sem "Voltar" aqui: ao lado de "Voltar à revisão", seriam
-                    // dois "voltar" com destinos diferentes. "Ficar aqui"
-                    // devolve a navegação entre etapas.
-                    <>
-                        <Button
-                            variant="outline"
-                            className="flex-1"
-                            icone={
-                                <IconeFicar
-                                    size={20}
-                                    colorClassName="accent-foreground"
-                                />
-                            }
-                            onPress={() => setVindoDaRevisao(false)}
-                        >
-                            Ficar aqui
-                        </Button>
-                        <Button
-                            className="flex-1"
-                            iconeDepois={
-                                <IconeVoltarRevisao
-                                    size={20}
-                                    colorClassName="accent-primary-foreground"
-                                />
-                            }
-                            onPress={() => void avancar(etapas.length)}
-                        >
-                            Voltar à revisão
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        {atual > 0 && (
-                            <Button
-                                variant="outline"
-                                className="flex-1"
-                                icone={
-                                    <IconeVoltar
-                                        size={20}
-                                        colorClassName="accent-foreground"
-                                    />
-                                }
-                                onPress={() => irPara(atual - 1)}
-                            >
-                                Anterior
-                            </Button>
-                        )}
-                        {naRevisao ? (
-                            <Button
-                                className="flex-1"
-                                icone={
-                                    <IconeSalvar
-                                        size={20}
-                                        colorClassName="accent-primary-foreground"
-                                    />
-                                }
-                                onPress={() => void salvar()}
-                            >
-                                Salvar
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="default"
-                                className="flex-1"
-                                iconeDepois={
-                                    <IconeProxima
-                                        size={20}
-                                        colorClassName="accent-primary-foreground"
-                                    />
-                                }
-                                onPress={() => void avancar(atual + 1)}
-                            >
-                                Próximo
-                            </Button>
-                        )}
-                    </>
-                )}
-            </Rodape>
-        </KeyboardAvoidingView>
+            <EdicaoTrecho
+                trecho={trechos[aberto]}
+                visivel={visivel}
+                control={form.control}
+                revalidar={form.trigger}
+                aoAplicar={() => void aplicar()}
+                aoFechar={fechar}
+                aoCancelar={cancelar}
+            />
+        </View>
     );
 }

@@ -94,6 +94,19 @@ export const formatarDecimal = (valor: number) =>
 
 const DECIMAL = /^\d+([.,]\d{1,4})?$/;
 
+/**
+ * A nota digitada, com o ponto trocado pela vírgula decimal e presa ao teto:
+ * quem passa do máximo fica no máximo ("12" vira "10" num campo até 10). O
+ * resto — casas demais, texto que não é número — fica para a validação.
+ */
+export function notaDigitada(campo: CampoFicha, digitado: string) {
+    const texto = digitado.replaceAll(".", ",");
+    const teto = tetoDoCampo(campo);
+    if (teto !== null && Number(texto.replace(",", ".")) > teto)
+        return formatarDecimal(teto);
+    return texto;
+}
+
 function schemaDoCampo(campo: CampoFicha) {
     switch (campo.tipo) {
         case "NUMERICO": {
@@ -164,53 +177,49 @@ function camposComChave(modelo: ModeloFichaDetalhe) {
     );
 }
 
-/** Uma etapa do formulário e os campos dela, já com a chave no formulário. */
-export interface EtapaFicha {
+/**
+ * O que abre na folha de edição ao tocar na ficha: um campo geral sozinho, ou
+ * uma ocorrência de agrupamento com todos os campos dela. Campos gerais não
+ * se agrupam: o modelo não diz quais andam juntos, então cada um abre só.
+ */
+export interface TrechoFicha {
     chave: string;
     titulo: string;
     subtitulo?: string;
     campos: { chave: string; campo: CampoFicha }[];
-    /** Só nas etapas de ocorrência: de qual agrupamento, e qual repetição. */
+    /** Só nos trechos de ocorrência: de qual agrupamento, e qual repetição. */
     ocorrencia?: { agrupamento: AgrupamentoFicha; ordem: number };
 }
 
-/**
- * As etapas da spec: campos gerais consecutivos formam uma etapa, e cada
- * ocorrência de agrupamento é uma etapa própria.
- */
-export function etapasDaFicha(modelo: ModeloFichaDetalhe): EtapaFicha[] {
-    const etapas: EtapaFicha[] = [];
-    let anteriorEraGeral = false;
-
-    for (const item of itensDoTopo(modelo)) {
-        if (item.tipo === "geral") {
-            const campo = { chave: item.chave, campo: item.posicao.campo };
-            const anterior = etapas.at(-1);
-            if (anteriorEraGeral && anterior) anterior.campos.push(campo);
-            else
-                etapas.push({
-                    chave: item.chave,
-                    titulo: "Gerais",
-                    campos: [campo],
-                });
-            anteriorEraGeral = true;
-            continue;
-        }
-
-        anteriorEraGeral = false;
-        etapas.push({
-            chave: item.chave,
-            titulo: `${item.agrupamento.nome} ${item.ordem}`,
-            subtitulo: `Ocorrência ${item.ordem} de ${item.agrupamento.quantidade}`,
-            ocorrencia: { agrupamento: item.agrupamento, ordem: item.ordem },
-            campos: camposDoAgrupamento(item.agrupamento).map((posicao) => ({
-                chave: chaveDaOcorrencia(item.agrupamento, item.ordem, posicao),
-                campo: posicao.campo,
-            })),
-        });
-    }
-
-    return etapas;
+/** Os trechos na ordem do topo da ficha, a ordem de "Anterior"/"Próximo". */
+export function trechosDaFicha(modelo: ModeloFichaDetalhe): TrechoFicha[] {
+    return itensDoTopo(modelo).map((item) =>
+        item.tipo === "geral"
+            ? {
+                  chave: item.chave,
+                  titulo: "Campos gerais",
+                  campos: [{ chave: item.chave, campo: item.posicao.campo }],
+              }
+            : {
+                  chave: item.chave,
+                  titulo: `${item.agrupamento.nome} ${item.ordem}`,
+                  subtitulo: `Ocorrência ${item.ordem} de ${item.agrupamento.quantidade}`,
+                  ocorrencia: {
+                      agrupamento: item.agrupamento,
+                      ordem: item.ordem,
+                  },
+                  campos: camposDoAgrupamento(item.agrupamento).map(
+                      (posicao) => ({
+                          chave: chaveDaOcorrencia(
+                              item.agrupamento,
+                              item.ordem,
+                              posicao,
+                          ),
+                          campo: posicao.campo,
+                      }),
+                  ),
+              },
+    );
 }
 
 /** A resposta como texto curto, para a revisão. */
@@ -253,48 +262,90 @@ export function montarFormularioFicha(modelo: ModeloFichaDetalhe) {
     };
 }
 
-/** Um trecho da folha de revisão, com o índice da etapa de cada parte. */
-export type TrechoDaFolha =
-    | { tipo: "campos"; etapa: number; campos: EtapaFicha["campos"] }
+/** A aba de um trecho: a dos campos gerais ou a do agrupamento dele. */
+export function abaDoTrecho(trecho: TrechoFicha) {
+    return trecho.ocorrencia
+        ? `agrupamento-${trecho.ocorrencia.agrupamento.id}`
+        : "gerais";
+}
+
+/** Uma aba da ficha, com o índice do trecho que cada linha abre. */
+export type AbaDaFicha =
     | {
+          chave: string;
+          tipo: "campos";
+          titulo: string;
+          /** Uma linha por campo geral, cada um o seu trecho. */
+          linhas: { trecho: number; chave: string; campo: CampoFicha }[];
+      }
+    | {
+          chave: string;
           tipo: "agrupamento";
+          titulo: string;
           agrupamento: AgrupamentoFicha;
-          /** Uma linha por ocorrência, cada uma a sua etapa. */
+          /** Uma linha por ocorrência, cada uma o seu trecho. */
           linhas: {
-              etapa: number;
+              trecho: number;
               ordem: number;
-              campos: EtapaFicha["campos"];
+              campos: TrechoFicha["campos"];
           }[];
       };
 
 /**
- * As etapas como a folha do web as desenha: os campos gerais em lista, e as
- * ocorrências seguidas de um agrupamento juntas numa grade só.
+ * As abas da ficha: uma com todos os campos gerais, primeiro, e uma por
+ * agrupamento, na ordem em que aparecem no modelo. Os campos gerais vêm
+ * misturados aos agrupamentos na ordem do topo; numa aba só, ficam juntos.
  */
-export function folhaDaRevisao(etapas: EtapaFicha[]): TrechoDaFolha[] {
-    const trechos: TrechoDaFolha[] = [];
+export function abasDaFicha(trechos: TrechoFicha[]): AbaDaFicha[] {
+    const gerais: Extract<AbaDaFicha, { tipo: "campos" }> = {
+        chave: "gerais",
+        tipo: "campos",
+        titulo: "Campos gerais",
+        linhas: [],
+    };
+    const agrupamentos = new Map<
+        number,
+        Extract<AbaDaFicha, { tipo: "agrupamento" }>
+    >();
 
-    etapas.forEach((etapa, indice) => {
-        if (!etapa.ocorrencia) {
-            trechos.push({
-                tipo: "campos",
-                etapa: indice,
-                campos: etapa.campos,
-            });
+    trechos.forEach((trecho, indice) => {
+        if (!trecho.ocorrencia) {
+            gerais.linhas.push(
+                ...trecho.campos.map(({ chave, campo }) => ({
+                    trecho: indice,
+                    chave,
+                    campo,
+                })),
+            );
             return;
         }
 
-        const { agrupamento, ordem } = etapa.ocorrencia;
-        const linha = { etapa: indice, ordem, campos: etapa.campos };
-        const anterior = trechos.at(-1);
-        if (
-            anterior?.tipo === "agrupamento" &&
-            anterior.agrupamento.id === agrupamento.id
-        )
-            anterior.linhas.push(linha);
-        else
-            trechos.push({ tipo: "agrupamento", agrupamento, linhas: [linha] });
+        const { agrupamento, ordem } = trecho.ocorrencia;
+        const aba = agrupamentos.get(agrupamento.id) ?? {
+            chave: abaDoTrecho(trecho),
+            tipo: "agrupamento" as const,
+            titulo: agrupamento.nome,
+            agrupamento,
+            linhas: [],
+        };
+        aba.linhas.push({ trecho: indice, ordem, campos: trecho.campos });
+        agrupamentos.set(agrupamento.id, aba);
     });
 
-    return trechos;
+    // Dois agrupamentos com o mesmo nome dariam duas abas iguais: levam o
+    // número da vez, entre parênteses para não confundir com a ocorrência.
+    const doAgrupamento = [...agrupamentos.values()];
+    const repeticoes = new Map<string, number>();
+    doAgrupamento.forEach(({ titulo }) =>
+        repeticoes.set(titulo, (repeticoes.get(titulo) ?? 0) + 1),
+    );
+    const vistos = new Map<string, number>();
+    doAgrupamento.forEach((aba) => {
+        if ((repeticoes.get(aba.titulo) ?? 0) < 2) return;
+        const vez = (vistos.get(aba.titulo) ?? 0) + 1;
+        vistos.set(aba.titulo, vez);
+        aba.titulo = `${aba.titulo} (${vez})`;
+    });
+
+    return [...(gerais.linhas.length ? [gerais] : []), ...doAgrupamento];
 }

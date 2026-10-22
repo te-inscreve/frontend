@@ -12,8 +12,8 @@ const ROTULO_MODIFICADOR: Record<ModificadorNota, string> = {
 
 /**
  * O que a nota do campo numérico faz com o total, no selo do `SeloModificador`
- * do web: verde quando soma, vermelho quando subtrai. O mesmo na etapa e na
- * revisão.
+ * do web: verde quando soma, vermelho quando subtrai. O mesmo na edição e na
+ * ficha.
  */
 export function SeloModificador({
     modificador,

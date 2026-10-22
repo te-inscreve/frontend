@@ -77,7 +77,7 @@ export function TabBarButton({
             role="tab"
             aria-selected={isFocused}
             aria-label={rotulo}
-            className={cn("active:bg-accent flex-1", className)}
+            className={cn("flex-1", className)}
         >
             {/*
              * O `TabTrigger asChild` injeta `flexDirection: "row"` no `style`

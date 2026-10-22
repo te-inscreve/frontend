@@ -10,7 +10,11 @@ import type { ValorCampo, ValoresFicha } from "../lib/formulario-ficha-mock";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/utils/cn";
-import { formatarDecimal, tetoDoCampo } from "../lib/formulario-ficha-mock";
+import {
+    formatarDecimal,
+    notaDigitada,
+    tetoDoCampo,
+} from "../lib/formulario-ficha-mock";
 import { SeloModificador } from "./selo-modificador";
 
 const Marca = withUniwind(CheckIcon);
@@ -41,7 +45,7 @@ function OpcaoAlternativa({
             aria-checked={marcada}
             onPress={aoTocar}
             className={cn(
-                "border-input bg-background active:bg-accent min-h-12 flex-row items-center gap-3 rounded-md border px-3 py-2",
+                "border-input bg-card min-h-12 flex-row items-center gap-3 rounded-md border px-3 py-2",
                 marcada && "border-primary bg-primary/5",
                 invalido && !marcada && "border-destructive",
             )}
@@ -100,11 +104,9 @@ function ControleDoCampo({
                 <View className="justify-center">
                     <Input
                         value={typeof valor === "string" ? valor : ""}
-                        onChangeText={(digitado) => {
-                            // Vírgula decimal, como em pt-BR: o ponto do
-                            // teclado numérico vira vírgula ao entrar.
-                            aoMudar(digitado.replaceAll(".", ","));
-                        }}
+                        onChangeText={(digitado) =>
+                            aoMudar(notaDigitada(campo, digitado))
+                        }
                         onBlur={aoSair}
                         aria-labelledby={rotuloId}
                         accessibilityHint={
@@ -203,16 +205,22 @@ export function CampoFichaControlado({
     campo,
     control,
     revalidar,
+    naFicha = false,
 }: {
     chave: string;
     campo: CampoFicha;
     control: Control<ValoresFicha>;
     /**
-     * O `form.trigger`. As etapas validam com `trigger`, não com submit, então
+     * O `form.trigger`. Os trechos validam com `trigger`, não com submit, então
      * o RHF não revalida sozinho ao digitar: sem isto, o erro de quem tentou
      * avançar ficaria na tela mesmo depois de corrigido.
      */
     revalidar: (chave: string) => Promise<boolean>;
+    /**
+     * Na ficha, fora da folha: o campo valida ao sair, porque não há
+     * "Aplicar" que cobre.
+     */
+    naFicha?: boolean;
 }) {
     const rotuloId = `rotulo-${chave}`;
 
@@ -224,31 +232,32 @@ export function CampoFichaControlado({
                 const erro = fieldState.error?.message;
                 const invalido = fieldState.invalid;
                 const cabecalho = (
-                    <>
-                        <View className="flex-row flex-wrap items-center gap-2">
-                            <FieldLabel
-                                nativeID={rotuloId}
-                                invalido={invalido}
-                                className="text-base"
-                            >
-                                {campo.nome}
-                                {campo.obrigatorio && (
-                                    <Text className="text-destructive"> *</Text>
-                                )}
-                            </FieldLabel>
-                            {campo.modificadorNota && (
-                                <SeloModificador
-                                    modificador={campo.modificadorNota}
-                                />
+                    <View className="flex-row flex-wrap items-center gap-2">
+                        {/* O erro aparece na borda do controle e na
+                            mensagem; o rótulo fica como está. A maior parte
+                            dos campos é obrigatória, então só a exceção leva
+                            marca. */}
+                        <FieldLabel nativeID={rotuloId} className="text-base">
+                            {campo.nome}
+                            {!campo.obrigatorio && (
+                                <Text className="text-muted-foreground font-normal">
+                                    {" (opcional)"}
+                                </Text>
                             )}
-                        </View>
-                        {campo.descricao ? (
-                            <Text className="text-muted-foreground text-sm">
-                                {campo.descricao}
-                            </Text>
-                        ) : null}
-                    </>
+                        </FieldLabel>
+                        {campo.modificadorNota && (
+                            <SeloModificador
+                                modificador={campo.modificadorNota}
+                            />
+                        )}
+                    </View>
                 );
+                // A ajuda vem depois do controle, junto do erro.
+                const ajuda = campo.descricao ? (
+                    <Text className="text-muted-foreground text-sm">
+                        {campo.descricao}
+                    </Text>
+                ) : null;
                 const controle = (
                     <ControleDoCampo
                         campo={campo}
@@ -265,7 +274,10 @@ export function CampoFichaControlado({
                             if (fieldState.invalid || notaEscrita)
                                 void revalidar(chave);
                         }}
-                        aoSair={field.onBlur}
+                        aoSair={() => {
+                            field.onBlur();
+                            if (naFicha) void revalidar(chave);
+                        }}
                         invalido={invalido}
                         erro={erro}
                     />
@@ -273,21 +285,9 @@ export function CampoFichaControlado({
 
                 return (
                     <Field>
-                        {campo.tipo === "NUMERICO" ? (
-                            // A nota é curta: o campo cabe ao lado do rótulo,
-                            // e a etapa fica mais curta de rolar.
-                            <View className="flex-row items-center gap-4">
-                                <View className="flex-1 gap-1">
-                                    {cabecalho}
-                                </View>
-                                <View className="w-44">{controle}</View>
-                            </View>
-                        ) : (
-                            <>
-                                <View className="gap-1">{cabecalho}</View>
-                                {controle}
-                            </>
-                        )}
+                        {cabecalho}
+                        {controle}
+                        {ajuda}
                         <FieldError>{erro}</FieldError>
                     </Field>
                 );

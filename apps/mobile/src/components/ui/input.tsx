@@ -20,7 +20,9 @@ function Input({ className, invalido = false, ...props }: InputProps) {
     return (
         <TextInput
             className={cn(
-                "border-input bg-background text-foreground focus:border-ring h-12 rounded-md border px-3 text-base",
+                // Sem o `py-0`, o padding vertical padrão do Android empurra
+                // o texto para fora do meio da caixa de altura fixa.
+                "border-input bg-card text-foreground focus:border-ring h-12 rounded-md border px-3 py-0 text-base",
                 invalido && "border-destructive focus:border-destructive",
                 props.editable === false && "opacity-50",
                 className,
@@ -28,6 +30,7 @@ function Input({ className, invalido = false, ...props }: InputProps) {
             placeholderTextColorClassName="accent-muted-foreground"
             cursorColorClassName="accent-primary"
             selectionColorClassName="accent-primary"
+            textAlignVertical="center"
             {...props}
         />
     );
