@@ -65,10 +65,13 @@ export function CategoriaCard({ categoria }: { categoria: CategoriaPronta }) {
     );
 }
 
-/** A faixa à esquerda com a faixa etária, como o canhoto de um ingresso. */
+/**
+ * A faixa à esquerda com a faixa etária, como o canhoto de um ingresso. A
+ * largura é fixa para os cartões alinharem, e cabe "12-17", a mais larga.
+ */
 function CanhotoIdade({ categoria }: { categoria: CategoriaPronta }) {
     return (
-        <View className="bg-muted items-center justify-center rounded-l-xl px-3">
+        <View className="bg-muted w-20 items-center justify-center rounded-l-xl">
             <Text className="text-muted-foreground text-base font-bold tracking-wider">
                 {categoria.idadeMinima}-{categoria.idadeMaxima}
             </Text>
@@ -95,8 +98,8 @@ function Dado({ termo, valor }: { termo: string; valor: string | null }) {
 export function CategoriaCardSkeleton() {
     return (
         <View aria-hidden className="bg-border flex-row rounded-xl p-px">
-            {/* A largura do "10-14" sobre "Anos" com o `px-3` do canhoto. */}
-            <View className="bg-muted w-16 rounded-l-xl" />
+            {/* A mesma largura fixa do canhoto. */}
+            <View className="bg-muted w-20 rounded-l-xl" />
 
             <View className="bg-card flex-1 gap-2 rounded-r-xl p-2">
                 <View className="flex-row items-start justify-between gap-2">

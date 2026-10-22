@@ -16,7 +16,7 @@ export type EstadoFila =
 export function descreverEstadoFila(estado: EstadoFila): string {
     switch (estado.tipo) {
         case "sincronizado":
-            return "Tudo sincronizado";
+            return "Sincronizado";
         case "sincronizando":
             return `Enviando ${estado.enviadas} de ${estado.total}`;
         case "pausado":
