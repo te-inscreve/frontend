@@ -1,66 +1,46 @@
-import type { IconProps } from "phosphor-react-native";
-import type { ComponentType } from "react";
-import { Text, View } from "react-native";
-import Animated from "react-native-reanimated";
-import { CheckCircleIcon } from "phosphor-react-native/src/icons/CheckCircle";
-import { CircleNotchIcon } from "phosphor-react-native/src/icons/CircleNotch";
-import { CloudSlashIcon } from "phosphor-react-native/src/icons/CloudSlash";
-import { WarningIcon } from "phosphor-react-native/src/icons/Warning";
-import { withUniwind } from "uniwind";
+import { Pressable, Text } from "react-native";
 
 import type { EstadoFila } from "../lib/estado-fila";
 import { descreverEstadoFila } from "../lib/estado-fila";
-
-type Icone = ComponentType<IconProps & { colorClassName?: string }>;
-
-const icones: Record<EstadoFila["tipo"], Icone> = {
-    sincronizado: withUniwind(CheckCircleIcon),
-    sincronizando: withUniwind(CircleNotchIcon),
-    pausado: withUniwind(CloudSlashIcon),
-    com_erro: withUniwind(WarningIcon),
-};
+import { IconeEstadoFila } from "./icone-estado-fila";
 
 /**
- * O estado da fila em ícone e texto, sobre a cor primária do cabeçalho.
+ * O estado da fila em ícone e texto, sobre a cor primária do cabeçalho. Tocar
+ * abre o detalhe da fila.
  *
- * Lê como um bloco só para o leitor de tela; o ícone é decorativo.
+ * Lê como um botão só para o leitor de tela; o ícone é decorativo.
  */
-export function IndicadorFila({ estado }: { estado: EstadoFila }) {
-    const Icone = icones[estado.tipo];
+export function IndicadorFila({
+    estado,
+    onPress,
+}: {
+    estado: EstadoFila;
+    onPress: () => void;
+}) {
     const texto = descreverEstadoFila(estado);
 
     return (
-        <View
-            accessible
+        <Pressable
+            role="button"
             aria-label={`Estado da fila: ${texto}`}
-            className="shrink flex-row items-center gap-1.5"
+            accessibilityHint="Abre o detalhe da fila"
+            onPress={onPress}
+            // O texto tem só a altura da linha; o `hitSlop` leva o alvo de
+            // toque aos 44pt sem crescer o cabeçalho.
+            hitSlop={12}
+            className="shrink flex-row items-center gap-1.5 active:opacity-70"
         >
-            {/*
-             * Gira só enquanto envia. A animação CSS do Reanimated roda na
-             * thread de UI, sem `useSharedValue` nem efeito.
-             */}
-            <Animated.View
-                style={estado.tipo === "sincronizando" ? girando : undefined}
-            >
-                <Icone
-                    size={18}
-                    weight="bold"
-                    colorClassName="accent-primary-foreground"
-                />
-            </Animated.View>
+            <IconeEstadoFila
+                estado={estado}
+                size={18}
+                colorClassName="accent-primary-foreground"
+            />
             <Text
                 numberOfLines={1}
                 className="text-primary-foreground shrink text-sm font-medium"
             >
                 {texto}
             </Text>
-        </View>
+        </Pressable>
     );
 }
-
-const girando = {
-    animationName: { to: { transform: [{ rotate: "360deg" }] } },
-    animationDuration: "1s",
-    animationIterationCount: "infinite",
-    animationTimingFunction: "linear",
-} as const;

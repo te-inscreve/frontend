@@ -50,6 +50,20 @@ export default function RootLayout() {
                     <Stack.Protected guard={!!session}>
                         <Stack.Screen name="index" />
                         <Stack.Screen name="(app)" />
+                        {/*
+                         * A folha nativa cuida do fundo escurecido, de
+                         * arrastar e de tocar fora para fechar. Aqui, e não
+                         * dentro de `(app)`, para cobrir as abas também.
+                         */}
+                        <Stack.Screen
+                            name="fila"
+                            options={{
+                                presentation: "formSheet",
+                                sheetAllowedDetents: "fitToContents",
+                                sheetCornerRadius: 24,
+                                sheetGrabberVisible: true,
+                            }}
+                        />
                     </Stack.Protected>
                     <Stack.Protected guard={!session}>
                         <Stack.Screen name="login" />

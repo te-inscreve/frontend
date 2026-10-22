@@ -1,6 +1,6 @@
 /**
  * Como está a fila de envio das avaliações, com as contagens que cada caso
- * mostra. O cabeçalho só conhece este tipo; quem o produz é `useEstadoFila`.
+ * mostra. O cabeçalho só conhece este tipo; quem o produz é `useFila`.
  */
 export type EstadoFila =
     /** A fila está vazia: toda avaliação salva já foi aceita pelo backend. */
@@ -25,5 +25,22 @@ export function descreverEstadoFila(estado: EstadoFila): string {
             return estado.comErro === 1
                 ? "1 avaliação com erro"
                 : `${estado.comErro} avaliações com erro`;
+    }
+}
+
+/**
+ * O que o avaliador pode esperar do estado, para o detalhe da fila: o texto
+ * curto diz o que acontece; este, o que vem depois.
+ */
+export function explicarEstadoFila(estado: EstadoFila): string {
+    switch (estado.tipo) {
+        case "sincronizado":
+            return "Todas as avaliações salvas já foram aceitas.";
+        case "sincronizando":
+            return "As avaliações seguem para o servidor uma a uma.";
+        case "pausado":
+            return "O envio continua sozinho quando a conexão voltar.";
+        case "com_erro":
+            return "O servidor recusou estas avaliações; as outras seguem na fila.";
     }
 }
