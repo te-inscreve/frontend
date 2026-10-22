@@ -1,6 +1,6 @@
-# Interface do app mobile: Uniwind com componentes próprios e só quatro controles nativos
+# Interface do app mobile: Uniwind com componentes próprios e só três controles nativos
 
-O app mobile (`apps/mobile`) tem identidade visual própria, igual no iOS e no Android e alinhada ao web. A estilização é Uniwind sobre o mesmo `theme.css` do web, e os ícones são Phosphor (`phosphor-react-native`) em todo lugar. Botões, campos de texto, cartões, badges e a barra inferior são componentes nossos, no padrão `cn` + `cva` do web. Do Expo UI (`@expo/ui`) entram só `Picker`, `DateTimePicker`, `Switch` e `BottomSheet`, os pontos em que o controle nativo de cada plataforma faz melhor do que um nosso e que não levam ícone. A barra inferior usa as abas customizadas do expo-router (`expo-router/ui`) com um `TabBar` nosso, para ter controle total e o mesmo visual nas duas plataformas.
+O app mobile (`apps/mobile`) tem identidade visual própria, igual no iOS e no Android e alinhada ao web. A estilização é Uniwind sobre o mesmo `theme.css` do web, e os ícones são Phosphor (`phosphor-react-native`) em todo lugar. Botões, campos de texto, cartões, badges e a barra inferior são componentes nossos, no padrão `cn` + `cva` do web. Do Expo UI (`@expo/ui`) entram só `Picker`, `DateTimePicker` e `Switch`, os pontos em que o controle nativo de cada plataforma faz melhor do que um nosso e que não levam ícone. A barra inferior usa as abas customizadas do expo-router (`expo-router/ui`) com um `TabBar` nosso, para ter controle total e o mesmo visual nas duas plataformas.
 
 Decidido em [Adotar Uniwind ou esperar o NativeWind 5 estável](https://linear.app/te-inscreve/issue/TE-77), a partir da pesquisa [Estilo e biblioteca de componentes do app mobile](https://linear.app/te-inscreve/issue/TE-75) e do teste em aparelho [Testar o Uniwind com o tema compartilhado em dispositivo](https://linear.app/te-inscreve/issue/TE-76). Relatório da pesquisa: [`docs/pesquisas/estilo-componentes-mobile.md`](../pesquisas/estilo-componentes-mobile.md).
 
@@ -13,8 +13,9 @@ Decidido em [Adotar Uniwind ou esperar o NativeWind 5 estável](https://linear.a
 
 ## Consequências
 
-- Só o que não é Uniwind (os quatro controles do Expo UI e o cabeçalho da navegação) recebe cores por props, de um único hook que lê os tokens com `useCSSVariable`. O verde da marca é o destaque, as cores dinâmicas do Android (Material You) ficam desligadas e o escuro segue o sistema.
+- Só o que não é Uniwind (os três controles do Expo UI e o cabeçalho da navegação) recebe cores por props, de um único hook que lê os tokens com `useCSSVariable`. O verde da marca é o destaque, as cores dinâmicas do Android (Material You) ficam desligadas e o escuro segue o sistema.
 - No Uniwind gratuito, `group-*` não tem efeito. O `Button` passa o estado pressionado do `Pressable` para o texto explicitamente.
 - O build do Uniwind avisa "Theme light is missing variable" para cada token, porque o `theme.css` declara o claro em `:root` e não em `@variant light`. É falso positivo: o runtime monta cada tema a partir de `:root` mais as sobrescritas.
 - O v1 não tem toast. Estado de salvamento e de sync aparece no próprio lugar (badge e banner), com `Alert.alert` para confirmações e erros. Revisão em [Reavaliar toast no app mobile](https://linear.app/te-inscreve/issue/TE-78).
+- Folha que sobe da base da tela é uma rota do expo-router com `presentation: "formSheet"`, não o `BottomSheet` do Expo UI, que saiu da lista em [Detalhe da fila em bottom sheet ao tocar no indicador do cabeçalho do mobile](https://linear.app/te-inscreve/issue/TE-91). Sendo rota, o voltar do sistema fecha a folha e nada mais, que é o que o usuário quer ao apertá-lo. O `BottomSheet` abre por estado, então o voltar dependeria de cada tela tratá-lo. Custo: no Expo Go do Android a `formSheet` precisa do `useDestravarFormSheet` enquanto a react-native-screens#4010 não fecha.
 - Usar qualquer outro componente do Expo UI exige decisão nova.

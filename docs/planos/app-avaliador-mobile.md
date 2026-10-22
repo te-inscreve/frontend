@@ -25,9 +25,10 @@ App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem
   - **Visual:** identidade própria, igual no iOS e no Android e alinhada ao web.
   - **Ícones:** Phosphor (`phosphor-react-native`) em todo lugar.
   - **Componentes:** sem react-native-reusables. Componentes próprios em Uniwind no padrão `cn` + `cva` do web: `Button` (variantes do web, espaço para ícone Phosphor, estado pressionado passado ao texto sem `group-*`), `Input` sobre o `TextInput` do RN (composto com RHF `Controller` como no web), cartão, badge, skeleton.
-  - **Expo UI:** só `Picker`, `DateTimePicker`, `Switch` e `BottomSheet`. Qualquer outro componente dele exige decisão nova.
+  - **Expo UI:** só `Picker`, `DateTimePicker` e `Switch`. Qualquer outro componente dele exige decisão nova.
+  - **Folhas:** rotas do expo-router com `presentation: "formSheet"`, para que o voltar do sistema feche a folha ([Detalhe da fila em bottom sheet ao tocar no indicador do cabeçalho do mobile](https://linear.app/te-inscreve/issue/TE-91)).
   - **Barra inferior:** abas customizadas do expo-router (`expo-router/ui`) com um `TabBar` nosso, igual nas duas plataformas, cuidando de área segura e de `role="tab"`/`aria-selected`.
-  - **Cores fora do Uniwind** (os quatro controles do Expo UI e o cabeçalho): saem de um hook único que lê os tokens. O verde da marca é o destaque, e as cores dinâmicas do Android ficam desligadas.
+  - **Cores fora do Uniwind** (os três controles do Expo UI e o cabeçalho): saem de um hook único que lê os tokens. O verde da marca é o destaque, e as cores dinâmicas do Android ficam desligadas.
   - **Sem toast no v1:** estado de salvamento e de sync aparece no lugar (badge "na fila", "sincronizada", "com erro" e banner), com `Alert.alert` para confirmações e erros ([Reavaliar toast no app mobile](https://linear.app/te-inscreve/issue/TE-78)).
 - **Backend fora do escopo.** A API (Django REST) é do usuário; o que faltar de contrato vira dependência documentada, e os fatos da API são pedidos a ele.
 - **Categorias:** por ora lista todas em `PRONTA_AVALIACAO`, sem filtrar por avaliador; o filtro por avaliador vem quando a API tiver o vínculo.
