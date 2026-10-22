@@ -32,12 +32,20 @@ App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem
 - **Backend fora do escopo.** A API (Django REST) é do usuário; o que faltar de contrato vira dependência documentada, e os fatos da API são pedidos a ele.
 - **Categorias:** por ora lista todas em `PRONTA_AVALIACAO`, sem filtrar por avaliador; o filtro por avaliador vem quando a API tiver o vínculo.
 - **Vocabulário** (já em `docs/contextos/avaliacoes/GLOSSARY.md`): Avaliador (jurado é sinônimo a evitar); Avaliação = resultado de um avaliador para uma inscrição; Modelo de ficha = ficha avaliativa (o molde); inscrição é o que se avalia, "apresentação" é só o ato; Rascunho, Avaliação na fila, Avaliação sincronizada, Avaliação com erro.
-- **Ordem das inscrições:** atributo `ordem`, que a API já devolve também na modalidade individual.
-- **Na fila é editável** até o envio começar; a edição troca o payload e mantém o lugar na fila. Sincronizada é imutável (uma por inscrição, sem PUT).
+- **Ordem das inscrições:** atributo `ordem`, que a API já devolve também na modalidade individual. É só de exibição: o avaliador pode avaliar e enviar qualquer inscrição, tenham ou não sido avaliadas as de `ordem` menor.
+- **Na fila não se edita.** Para editar, a avaliação sai da fila e volta a ser rascunho. O app faz isso sozinho ao tocar em "editar", mas deixa claro antes que ela sai da fila de envio e só volta ao ser salva de novo, no fim da fila.
+- **O que chegou ao servidor não muda mais.** O avaliador só altera o que está no aparelho (rascunho, fila, com erro). Uma avaliação sincronizada é imutável: uma por inscrição, sem PUT, sem edição nem exclusão pelo app. É uma simplificação deliberada do modo de sync.
+  - **Recusa "já existe"** (409 que não é o reenvio do próprio item, ver [Envio idempotente quando a resposta se perde](https://linear.app/te-inscreve/issue/TE-68)): a avaliação vai para com erro, mas corrigir e salvar de novo não adianta. A mensagem diz que já existe uma avaliação desta inscrição no servidor e que o avaliador precisa chamar um operador para alterá-la. A única ação no app é descartar a cópia local.
 - **Política de sync (FIFO):**
   - Temporária (sem rede, timeout, 5xx): o item da cabeça fica, a fila pausa e tenta de novo com backoff e quando a conexão volta — detectada com `@react-native-community/netinfo`.
   - 401: pausa a fila inteira e pede novo login; nada se perde.
   - Recusa definitiva (400, 403, 404, 409, categoria encerrada, versão do modelo): o item vai para **com erro**, não trava a fila, exige ação do avaliador (corrigir e salvar de novo → fim da fila, ou descartar). O modelo só é a causa quando o `modeloFichaAvaliativaId` enviado não é compatível com o modelo atual da categoria no banco.
+  - **Ordem:** a ordem que importa é a da fila (FIFO). Um item só é pulado quando vai para com erro ou quando o avaliador o tira da fila. No Android a FIFO é estrita. No iOS ela é de melhor esforço, porque o upload em segundo plano do sistema não garante a ordem entre envios ([Envio da fila em segundo plano no Expo 57](https://linear.app/te-inscreve/issue/TE-92)).
+- **Sync em segundo plano** (decidido pelo dev; o como está nos tickets do mapa):
+  - Um processo em segundo plano tenta enviar a fila à API quando há conexão, mesmo com o app fechado. É um módulo nativo próprio (Kotlin no Android, Swift no iOS), não o `expo-background-task` ([Envio da fila em segundo plano no Expo 57](https://linear.app/te-inscreve/issue/TE-92)). Exige dev client.
+  - O processo é **leve**: não acessa o SQLite. O app entrega a ele o que enviar, já pronto, e ele só envia se houver conexão.
+  - **Abrir o app dispara o sync.** O SO pode matar o processo em segundo plano a qualquer momento, então a fila precisa andar de um jeito ou de outro.
+  - **Ao abrir, o app confere a fila com a API**, para que o que o segundo plano enviou apareça como sincronizado na interface.
 - **Download offline:** automático ao abrir a categoria, mais pull-to-refresh e badge "disponível offline"; ícone simples durante e ao fim do download. Cada refresh **reescreve inteiro** o download anterior, sem restos. Sem download, "avaliar" fica desabilitado.
 - **Modelo mudou na API:**
   - avaliação já concluída offline (na fila) → vira com erro pela política acima;

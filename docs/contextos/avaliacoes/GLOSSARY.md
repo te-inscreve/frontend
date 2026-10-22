@@ -57,7 +57,7 @@ Avaliação começada pelo avaliador e ainda não salva: pode ser deixada e reto
 _Avoid_: Avaliação em andamento, pendente
 
 **Avaliação na fila**:
-Avaliação salva pelo avaliador que aguarda envio; ainda pode ser editada até o envio começar.
+Avaliação salva pelo avaliador que aguarda envio. Não é editada na fila: para editá-la, ela sai da fila e volta a ser rascunho.
 _Avoid_: Avaliação pendente, não sincronizada
 
 **Avaliação sincronizada**:
