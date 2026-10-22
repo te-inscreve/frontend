@@ -18,6 +18,9 @@ const buttonVariants = cva(
                 default: "bg-primary active:bg-primary/90",
                 destructive: "bg-destructive active:bg-destructive/90",
                 outline: "border-border bg-card active:bg-accent border",
+                // A borda e o texto verdes do `Badge` `primary-outline`.
+                "primary-outline":
+                    "border-primary/40 bg-card active:bg-primary/10 border",
                 secondary: "bg-secondary active:bg-secondary/80",
                 ghost: "active:bg-accent",
                 link: "",
@@ -47,6 +50,7 @@ const buttonTextVariants = cva("text-base font-semibold", {
             default: "text-primary-foreground",
             destructive: "text-white",
             outline: "text-foreground",
+            "primary-outline": "text-primary",
             secondary: "text-secondary-foreground",
             ghost: "text-foreground",
             link: "text-primary",
@@ -72,6 +76,8 @@ type ButtonProps = Omit<PressableProps, "children"> &
         className?: string;
         /** Ícone Phosphor (ou spinner) à esquerda do texto. */
         icone?: ReactNode;
+        /** Ícone à direita do texto, para quem aponta adiante ("Próxima"). */
+        iconeDepois?: ReactNode;
         /** Texto do botão; omita em botões só de ícone e passe `aria-label`. */
         children?: string;
     };
@@ -81,6 +87,7 @@ function Button({
     variant = "default",
     size = "default",
     icone,
+    iconeDepois,
     children,
     ...props
 }: ButtonProps) {
@@ -100,6 +107,7 @@ function Button({
                             {children}
                         </Text>
                     )}
+                    {iconeDepois && <View aria-hidden>{iconeDepois}</View>}
                 </>
             )}
         </Pressable>

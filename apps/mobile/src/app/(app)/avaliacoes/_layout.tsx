@@ -7,6 +7,10 @@ export default function AvaliacoesLayout() {
         // O título fica na tela de entrada; as que empilharem aqui dão o seu.
         <Stack screenOptions={opcoesPilha}>
             <Stack.Screen name="index" options={{ title: "Avaliações" }} />
+            <Stack.Screen
+                name="ficha-teste"
+                options={{ title: "Ficha de teste" }}
+            />
         </Stack>
     );
 }
