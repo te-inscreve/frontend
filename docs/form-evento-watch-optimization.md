@@ -122,5 +122,6 @@ silenciosamente o custo de renderização.
 
 ## Status
 
-Esta é uma proposta de otimização documentada. Ela ainda não foi aplicada no
-código.
+Aplicada no `ChecklistEvento`, que hoje assina apenas os cinco campos listados
+acima. O `PreviewEvento` continua com `useWatch({ control })` sem `name` — a
+proposta para ele segue pendente.

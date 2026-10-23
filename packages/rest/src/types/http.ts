@@ -114,6 +114,15 @@ export function isValidationError(body: unknown): body is ValidationError {
 }
 
 /**
+ * DRF's answer to a `ValidationError` raised outside a serializer field — in a
+ * view or a service: a bare list of messages, with no field to hang them on.
+ */
+const isMessageList = (body: unknown): body is string[] =>
+    Array.isArray(body) &&
+    body.length > 0 &&
+    body.every((entry) => typeof entry === "string");
+
+/**
  * Groups errors by field name, ready to bind to a form. Non-field errors land
  * under the `""` key. Handles both DRF error shapes.
  */
@@ -147,6 +156,10 @@ export function toFieldErrors(body: unknown): Record<string, string[]> {
         return fields;
     }
 
+    if (isMessageList(body)) {
+        for (const message of body) push("", message);
+    }
+
     return fields;
 }
 
@@ -165,6 +178,8 @@ export function extractErrorMessage(body: unknown, fallback: string): string {
         const first = Object.values(toFieldErrors(body))[0];
         return first?.[0] ?? fallback;
     }
+
+    if (isMessageList(body)) return body[0] ?? fallback;
 
     if (isPlainObject(body)) {
         for (const key of ["detail", "message", "error"] as const) {

@@ -11,9 +11,9 @@
     },
     "license": "MIT",
     "scripts": {
-        "build": "tsc",
+        "build": "tsc -p tsconfig.build.json",
         "clean": "git clean -xdf .cache .turbo dist node_modules",
-        "dev": "tsc",
+        "dev": "tsc -p tsconfig.build.json",
         "format": "prettier --check . --ignore-path ../../.gitignore",
         "lint": "eslint",
         "typecheck": "tsc --noEmit --emitDeclarationOnly false"
@@ -32,7 +32,7 @@
         "@te-inscreve/tsconfig": "workspace:*",
         "eslint": "^9.38.0",
         "prettier": "^3.6.2",
-        "typescript": "~5.9.3"
+        "typescript": "~6.0.3"
     },
     "prettier": "@te-inscreve/prettier-config"
 }

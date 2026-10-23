@@ -6,7 +6,7 @@
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.2 0.012 85);
     --primary: oklch(0.5751 0.1317 139.6817);
-    --primary-foreground: oklch(0.99 0.008 140);
+    --primary-foreground: #f3f4ec;
     --secondary: oklch(0.955 0.008 80);
     --secondary-foreground: oklch(0.2 0.012 85);
     --muted: oklch(0.955 0.008 80);
@@ -14,12 +14,12 @@
     --accent: oklch(0.95 0.035 140);
     --accent-foreground: oklch(0.3 0.07 140);
     --destructive: oklch(0.55 0.2 25);
-    --destructive-foreground: oklch(0.985 0.01 25);
+    --destructive-foreground: #fef2f2;
     /* Âmbar de atenção: avisos que pedem revisão, mas não bloqueiam a ação.
      * Vem dos detalhes dourados descritos em `docs/DESIGN.md`, e fica entre o
      * verde de confirmação e o vermelho de erro. */
     --warning: oklch(0.76 0.145 80);
-    --warning-foreground: oklch(0.28 0.05 80);
+    --warning-foreground: oklch(98.7% 0.026 102.212);
     --border: oklch(0.91 0.008 80);
     --input: oklch(0.91 0.008 80);
     --ring: oklch(0.5751 0.1317 139.6817);
@@ -177,13 +177,53 @@
     --tracking-widest: calc(var(--tracking-normal) + 0.1em);
 }
 
-.dark {
-    --sidebar: hsl(240 5.9% 10%);
-    --sidebar-foreground: hsl(240 4.8% 95.9%);
-    --sidebar-primary: hsl(224.3 76.3% 48%);
-    --sidebar-primary-foreground: hsl(0 0% 100%);
-    --sidebar-accent: hsl(240 3.7% 15.9%);
-    --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-    --sidebar-border: hsl(240 3.7% 15.9%);
-    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+/* No Tailwind v4 os keyframes só chegam ao CSS final quando algum utilitário
+ * `--animate-*` os referencia, por isso os dois moram no mesmo bloco. A altura
+ * do collapsible vem da variável que o Radix mede e injeta no elemento. */
+@theme {
+    --animate-collapsible-down: collapsible-down 200ms ease-out;
+    --animate-collapsible-up: collapsible-up 150ms ease-out;
+    --animate-shake: shake 500ms ease-in-out;
+
+    @keyframes collapsible-down {
+        from {
+            height: 0;
+            opacity: 0;
+        }
+        to {
+            height: var(--radix-collapsible-content-height);
+            opacity: 1;
+        }
+    }
+
+    @keyframes collapsible-up {
+        from {
+            height: var(--radix-collapsible-content-height);
+            opacity: 1;
+        }
+        to {
+            height: 0;
+            opacity: 0;
+        }
+    }
+
+    @keyframes shake {
+        10%,
+        90% {
+            transform: translateX(-1px);
+        }
+        20%,
+        80% {
+            transform: translateX(2px);
+        }
+        30%,
+        50%,
+        70% {
+            transform: translateX(-4px);
+        }
+        40%,
+        60% {
+            transform: translateX(4px);
+        }
+    }
 }

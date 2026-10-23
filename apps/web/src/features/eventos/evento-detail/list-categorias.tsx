@@ -1,0 +1,71 @@
+import { useMemo } from "react";
+
+import type { CategoriaAninhada } from "@te-inscreve/schemas";
+
+import type { PeriodoEvento } from "~/features/categorias/form-categoria/campos-categoria";
+import {
+    HorizontalScroll,
+    HorizontalScrollNext,
+    HorizontalScrollPrevious,
+    HorizontalScrollViewport,
+} from "~/shared/ui/horizontal-scroll";
+import { BotaoCriarCategoria } from "./botao-criar-categoria";
+import { CardCategoria } from "./card-categoria";
+
+interface Props {
+    eventoId: number;
+    modalidadeId: number;
+    /** Nome da modalidade, usado só para rotular a lista. */
+    modalidadeNome: string;
+    categorias: CategoriaAninhada[];
+    periodoEvento: PeriodoEvento;
+}
+
+/**
+ * Fila de categorias da modalidade aberta, com o atalho de criar como último
+ * item — assim ele acompanha os cartões em vez de flutuar acima deles, e
+ * continua à vista quando ainda não há categoria nenhuma.
+ *
+ * As categorias chegam prontas de `modalidade.getById`: aqui não se busca nada.
+ */
+export function ListCategorias({
+    eventoId,
+    modalidadeId,
+    modalidadeNome,
+    categorias,
+    periodoEvento,
+}: Props) {
+    const sortedCategorias = useMemo(
+        () =>
+            categorias.slice().sort((a, b) => {
+                // A ordenação é por idade mínima, e depois por idade máxima.
+                const minDiff = a.idadeMinima - b.idadeMinima;
+                if (minDiff !== 0) return minDiff;
+                return a.idadeMaxima - b.idadeMaxima;
+            }),
+        [categorias],
+    );
+
+    return (
+        <HorizontalScroll>
+            <HorizontalScrollPrevious lateral />
+            <HorizontalScrollNext lateral />
+            <HorizontalScrollViewport label={`Categorias de ${modalidadeNome}`}>
+                <BotaoCriarCategoria
+                    eventoId={eventoId}
+                    modalidadeId={modalidadeId}
+                    periodoEvento={periodoEvento}
+                    sozinho={categorias.length === 0}
+                />
+                {sortedCategorias.map((categoria) => (
+                    <CardCategoria
+                        key={categoria.id}
+                        categoria={categoria}
+                        eventoId={eventoId}
+                        modalidadeId={modalidadeId}
+                    />
+                ))}
+            </HorizontalScrollViewport>
+        </HorizontalScroll>
+    );
+}

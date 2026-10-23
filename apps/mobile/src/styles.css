@@ -1,11 +1,29 @@
-/*
- * NativeWind needs Tailwind's layers imported individually — the bundled
- * `@import "tailwindcss"` shortcut does not survive the native CSS pipeline.
- */
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
-@import "tailwindcss/utilities.css";
-
-@import "nativewind/theme";
+@import "tailwindcss";
+@import "uniwind";
 
 @import "@te-inscreve/tailwind-config/theme";
+
+/*
+ * O tema declara o escuro com `@custom-variant dark (&:is(.dark *))`, a classe
+ * `.dark` do web. O Uniwind só reconhece tokens escuros sob o próprio variant
+ * (`:where(.dark, .dark *)` + `prefers-color-scheme`), então ele é redeclarado
+ * aqui, depois do import; sem isso os tokens escuros somem em silêncio.
+ */
+@custom-variant dark {
+    &:where(.dark, .dark *) {
+        @slot;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        &:not(:where(.light, .light *, .dark, .dark *)) {
+            @slot;
+        }
+    }
+}
+
+/*
+ * O build avisa "Theme light is missing variable --…" para cada token: o
+ * validador do Uniwind espera o claro em `@variant light`, mas o tema o declara
+ * em `:root`. É falso positivo; o runtime monta cada tema a partir de `:root`
+ * mais as sobrescritas, então o claro sai certo (TE-76).
+ */

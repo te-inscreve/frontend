@@ -23,3 +23,21 @@ export const getBaseUrl = () => {
     }
     return `http://${localhost}:3000`;
 };
+
+/**
+ * Makes a URL from the API reachable from the device.
+ *
+ * In development the REST API builds media URLs from the host the BFF called
+ * it on — `localhost` — which, on a physical device, is the device itself.
+ * Swaps that host for the machine's LAN IP, the same one `getBaseUrl` uses.
+ * Production URLs pass through untouched.
+ */
+export const urlDoAparelho = (url: string) => {
+    const host = Constants.expoConfig?.hostUri?.split(":")[0];
+    if (!__DEV__ || !host) return url;
+
+    return url.replace(
+        /^(https?:\/\/)(localhost|127\.0\.0\.1)(?=[:/]|$)/,
+        `$1${host}`,
+    );
+};

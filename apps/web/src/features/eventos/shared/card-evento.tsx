@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { CalendarDotsIcon, MapPinIcon } from "@phosphor-icons/react";
 
-import type { Evento } from "@te-inscreve/schemas";
+import type { EventoPreview } from "@te-inscreve/schemas";
 import {
     Card,
     CardContent,
@@ -14,7 +14,7 @@ import {
 import { FallbackImage } from "~/shared/ui/fallback-image";
 import { timeAgo, useDateRangeFormatter } from "~/shared/utils/format-date";
 
-export function CardEvento({ evento }: { evento: Evento }) {
+export function CardEvento({ evento }: { evento: EventoPreview }) {
     const { formatDateRange } = useDateRangeFormatter();
 
     const timeAgoString = useMemo(() => {

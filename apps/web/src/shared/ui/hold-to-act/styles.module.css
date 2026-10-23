@@ -1,0 +1,88 @@
+/* O aninhamento SCSS foi achatado de propósito: o projeto não tem `sass`
+ * instalado e o PostCSS só carrega o plugin do Tailwind, então nem `.scss` nem
+ * CSS aninhado são compilados aqui. */
+
+.holdToDelete {
+    position: relative;
+    transition: transform 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.holdToDelete:hover {
+    cursor: pointer;
+}
+
+.holdToDelete:active {
+    transform: scale(0.97);
+}
+
+.holdToDelete:disabled {
+    cursor: not-allowed;
+}
+
+.idle {
+    width: 100%;
+}
+
+/* A camada de preenchimento cobre a camada `idle` e é revelada da esquerda
+ * para a direita pelo `clip-path`: é ela que mostra o progresso do toque. */
+.holding {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 0.2s ease-in;
+}
+
+.completedText,
+.pendingText,
+.holdingText {
+    grid-area: 1 / 1;
+    transition:
+        transform 0.2s cubic-bezier(0.785, 0.135, 0.15, 0.86),
+        opacity 0.2s ease-in;
+}
+
+.completedText,
+.pendingText {
+    opacity: 0;
+    transform: translateY(-120%);
+}
+
+.holdToDelete[data-stage="holding"] .holding {
+    clip-path: inset(0 0 0 0);
+    /* O atraso casa com o `transform` do `:active`, para o preenchimento só
+     * começar depois que o botão termina de afundar. */
+    transition: clip-path var(--hold-duration)
+        cubic-bezier(0.215, 0.61, 0.355, 1) 0.16s;
+}
+
+/* A partir de `pending` o gesto acabou: o preenchimento fica cheio sem
+ * animação e o botão volta ao tamanho normal, mesmo que ainda esteja pressionado. */
+.holdToDelete[data-stage="pending"],
+.holdToDelete[data-stage="completed"] {
+    transform: scale(1);
+}
+
+.holdToDelete[data-stage="pending"] .holding,
+.holdToDelete[data-stage="completed"] .holding {
+    clip-path: inset(0 0 0 0);
+    transition: none;
+}
+
+.holdToDelete[data-stage="pending"] .pendingText {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.holdToDelete[data-stage="completed"] .completedText {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.holdToDelete[data-stage="pending"] .holdingText,
+.holdToDelete[data-stage="completed"] .holdingText,
+.holdToDelete[data-stage="completed"] .pendingText {
+    opacity: 0;
+    transform: translateY(120%);
+}

@@ -31,7 +31,7 @@
         "eslint": "^9.38.0",
         "prettier": "^3.6.2",
         "turbo": "^2.10.7",
-        "typescript": "~5.9.3"
+        "typescript": "~6.0.3"
     },
     "prettier": "@te-inscreve/prettier-config"
 }

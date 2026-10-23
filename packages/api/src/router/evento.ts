@@ -1,9 +1,25 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
-import type { Evento } from "@te-inscreve/schemas";
+import type { Evento, EventoPreview } from "@te-inscreve/schemas";
 
+import { tagsEvento, tagsEventos } from "../cache-tags";
 import { authenticatedProcedure, publicProcedure } from "../trpc";
+
+/**
+ * O `FormData` que a mutação lê no servidor. O tipo global depende de quem
+ * compila o router: no app mobile ele é o do React Native, sem `get` nem
+ * `delete`, e o typecheck quebraria por um método que só roda no servidor.
+ */
+type FormDataNoServidor = FormData & {
+    get(name: string): unknown;
+    delete(name: string): void;
+};
+
+const formDataNoServidor = z.custom<FormDataNoServidor>(
+    (valor) => valor instanceof FormData,
+);
 
 /**
  * Reference router — the pattern every domain router should follow.
@@ -21,14 +37,17 @@ export const eventoRouter = {
                 .optional(),
         )
         .query(async ({ ctx }) => {
-            const result = await ctx.restClient.get<Evento[]>(`/eventos`, {
-                next: { revalidate: 30, tags: ["eventos"] },
-            });
+            const result = await ctx.restClient.get<EventoPreview[]>(
+                `/eventos`,
+                {
+                    next: { revalidate: 30, tags: tagsEventos() },
+                },
+            );
             if (!result.ok) throw result.error;
             return result.data;
         }),
 
-    byId: publicProcedure
+    getById: publicProcedure
         .input(z.object({ id: z.number().int().positive() }))
         .query(async ({ ctx, input }) => {
             const result = await ctx.restClient.get<Evento>(
@@ -36,7 +55,7 @@ export const eventoRouter = {
                 {
                     next: {
                         revalidate: 30,
-                        tags: ["eventos", `evento-${input.id}`],
+                        tags: tagsEvento(input.id),
                     },
                 },
             );
@@ -56,5 +75,45 @@ export const eventoRouter = {
             const result = await ctx.restClient.post<Evento>(`/eventos`, input);
             if (!result.ok) throw result.error;
             return result.data;
+        }),
+
+    /**
+     * Edição do evento. Só os campos presentes no `FormData` são enviados, o
+     * que deixa o organizador salvar sem reenviar logo, cartaz e regulamento
+     * que não trocou — daí o PATCH em vez de PUT.
+     *
+     * O id viaja dentro do próprio `FormData`, e não ao lado dele: o link que
+     * transporta multipart não serializa o input, então a mutação inteira
+     * precisa caber em um `FormData`.
+     */
+    update: authenticatedProcedure
+        .input(formDataNoServidor)
+        .mutation(async ({ ctx, input }) => {
+            const id = Number(input.get("id"));
+
+            if (!Number.isInteger(id) || id <= 0) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message:
+                        "O id do evento a editar está ausente ou inválido.",
+                });
+            }
+
+            input.delete("id");
+
+            const result = await ctx.restClient.patch<Evento>(
+                `/eventos/${id}`,
+                input,
+            );
+            if (!result.ok) throw result.error;
+            return result.data;
+        }),
+
+    delete: authenticatedProcedure
+        .input(z.object({ id: z.number().int().positive() }))
+        .mutation(async ({ ctx, input }) => {
+            const result = await ctx.restClient.delete(`/eventos/${input.id}`);
+            if (!result.ok) throw result.error;
+            return { id: input.id };
         }),
 } satisfies TRPCRouterRecord;

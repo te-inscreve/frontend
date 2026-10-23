@@ -1,10 +1,23 @@
 import type { BetterAuthPlugin } from "better-auth";
-import { APIError, createAuthEndpoint } from "better-auth/api";
-import { setSessionCookie } from "better-auth/cookies";
+import {
+    APIError,
+    createAuthEndpoint,
+    createAuthMiddleware,
+    getSessionFromCtx,
+} from "better-auth/api";
+import {
+    deleteSessionCookie,
+    expireCookie,
+    setSessionCookie,
+} from "better-auth/cookies";
+import { symmetricDecrypt, symmetricEncrypt } from "better-auth/crypto";
 import { z } from "zod/v4";
 
-import type { HttpClient } from "@te-inscreve/rest";
-import { matchHttpError } from "@te-inscreve/rest";
+import type { HttpClient, HttpError } from "@te-inscreve/rest";
+import { isHttpError, matchHttpError } from "@te-inscreve/rest";
+
+const REFRESH_COOKIE_NAME = "rest_refresh";
+const REFRESH_WINDOW_MS = 60 * 1000;
 
 /**
  * Shape this monorepo expects back from the backend's login/register endpoints.
@@ -14,6 +27,7 @@ import { matchHttpError } from "@te-inscreve/rest";
  */
 export const restAuthResponseSchema = z.object({
     token: z.string().min(1),
+    refreshToken: z.string().min(1).optional(),
     user: z.object({
         id: z.union([z.string(), z.number()]).transform(String),
         email: z.string(),
@@ -39,8 +53,10 @@ export interface RestCredentialsOptions {
     paths?: {
         /** @default "/auth/login" */
         signIn?: string;
-        /** @default "/auth/register" */
+        /** @default "/auth/registration" */
         signUp?: string;
+        /** @default "/auth/token/refresh" */
+        refresh?: string;
     };
     /**
      * Turns the raw backend payload into `{ token, user }`.
@@ -80,6 +96,66 @@ function readJwtExpiry(token: string): Date | null {
 }
 
 /**
+ * Quantos segundos faltam até a sessão trocar o access token.
+ *
+ * `getSession` renova quando o token entra na janela de {@link
+ * REFRESH_WINDOW_MS} antes do `exp`, então este é o tempo de vida útil do token
+ * que está em mãos agora. Serve para dimensionar cache de respostas que foram
+ * buscadas com ele: passado esse prazo o token é outro, e a resposta guardada
+ * já não corresponde à sessão.
+ *
+ * Devolve `0` quando o `exp` não dá para ler — o chamador deve tratar isso como
+ * "não guarde nada", que é o lado seguro do erro.
+ */
+export function secondsUntilRefresh(accessToken: string): number {
+    const expiresAt = readJwtExpiry(accessToken)?.getTime();
+    if (expiresAt == null) return 0;
+
+    const restante = expiresAt - REFRESH_WINDOW_MS - Date.now();
+    return Math.max(0, Math.floor(restante / 1000));
+}
+
+const storedUserSchema = z.object({
+    id: z.string(),
+    email: z.string(),
+    name: z.string(),
+    image: z.string().nullable(),
+    emailVerified: z.boolean(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+});
+
+const storedRefreshSchema = z.object({
+    refreshToken: z.string().min(1),
+    expiresAt: z.number(),
+    user: storedUserSchema,
+});
+
+const refreshedTokenSchema = z.object({
+    access: z.string().min(1),
+    refresh: z.string().min(1).optional(),
+});
+
+/**
+ * Body for a rejection the user can fix, carrying the backend's per-field
+ * detail so a form can bind each message to its own input.
+ *
+ * `fieldErrors` is keyed by the *backend's* field names (`email`, `cpf`, …)
+ * with non-field errors under `""`. Translating those keys to whatever the
+ * form calls its inputs is the UI's job — this layer doesn't know them.
+ *
+ * The key is omitted when the body carried no field detail, so the client can
+ * branch on its presence instead of on an empty object.
+ */
+function validationBody(error: HttpError) {
+    const fieldErrors = error.fieldErrors;
+
+    return Object.keys(fieldErrors).length > 0
+        ? { message: error.message, fieldErrors }
+        : { message: error.message };
+}
+
+/**
  * Maps a failed auth call onto a status the client can act on, without echoing
  * internal details for errors the user can't do anything about.
  *
@@ -103,12 +179,11 @@ function toApiError(error: unknown, fallbackMessage: string): APIError {
         unauthorized,
         forbidden: unauthorized,
         notFound: unauthorized,
-        // Validation problems are safe to relay verbatim.
-        badRequest: (e) => new APIError("BAD_REQUEST", { message: e.message }),
-        unprocessable: (e) =>
-            new APIError("BAD_REQUEST", { message: e.message }),
+        // Validation problems are safe to relay verbatim, field detail included.
+        badRequest: (e) => new APIError("BAD_REQUEST", validationBody(e)),
+        unprocessable: (e) => new APIError("BAD_REQUEST", validationBody(e)),
         // Sign-up against an existing account.
-        conflict: (e) => new APIError("CONFLICT", { message: e.message }),
+        conflict: (e) => new APIError("CONFLICT", validationBody(e)),
         tooManyRequests: (e) =>
             new APIError("TOO_MANY_REQUESTS", { message: e.message }),
         server: internal,
@@ -129,11 +204,92 @@ function toApiError(error: unknown, fallbackMessage: string): APIError {
  */
 export const restCredentials = (options: RestCredentialsOptions) => {
     const signInPath = options.paths?.signIn ?? "/auth/login";
-    const signUpPath = options.paths?.signUp ?? "/auth/register";
+    const signUpPath = options.paths?.signUp ?? "/auth/registration";
+    const refreshPath = options.paths?.refresh ?? "/auth/token/refresh";
     const sessionMaxAge = options.sessionMaxAge ?? 60 * 60 * 24 * 7;
     const parseAuthResponse =
         options.parseAuthResponse ??
         ((raw: unknown) => restAuthResponseSchema.parse(raw));
+
+    const getRefreshCookie = (ctx: AuthEndpointContext, maxAge?: number) =>
+        ctx.context.createAuthCookie(REFRESH_COOKIE_NAME, { maxAge });
+
+    const clearSession = (ctx: AuthEndpointContext) => {
+        deleteSessionCookie(ctx);
+        expireCookie(ctx, getRefreshCookie(ctx));
+    };
+
+    const setRefreshCookie = async (
+        ctx: AuthEndpointContext,
+        refreshToken: string,
+        user: z.infer<typeof storedUserSchema>,
+    ) => {
+        const now = Date.now();
+        const expiresAt =
+            readJwtExpiry(refreshToken)?.getTime() ??
+            now + sessionMaxAge * 1000;
+        const maxAge = Math.max(0, Math.floor((expiresAt - now) / 1000));
+        const cookie = getRefreshCookie(ctx, maxAge);
+        const value = await symmetricEncrypt({
+            key: ctx.context.secretConfig,
+            data: JSON.stringify({ refreshToken, expiresAt, user }),
+        });
+
+        ctx.setCookie(cookie.name, value, cookie.attributes);
+    };
+
+    const readRefreshCookie = async (ctx: AuthEndpointContext) => {
+        const cookie = getRefreshCookie(ctx);
+        const value = ctx.getCookie(cookie.name);
+        if (!value) return null;
+
+        try {
+            const decrypted = await symmetricDecrypt({
+                key: ctx.context.secretConfig,
+                data: value,
+            });
+            const stored = storedRefreshSchema.parse(JSON.parse(decrypted));
+            if (stored.expiresAt <= Date.now()) {
+                expireCookie(ctx, cookie);
+                return null;
+            }
+            return stored;
+        } catch (cause) {
+            ctx.context.logger.warn(
+                "Ignoring an invalid REST refresh cookie",
+                cause,
+            );
+            expireCookie(ctx, cookie);
+            return null;
+        }
+    };
+
+    const writeSession = async (
+        ctx: AuthEndpointContext,
+        token: string,
+        refreshToken: string | undefined,
+        user: z.infer<typeof storedUserSchema>,
+    ) => {
+        const now = new Date();
+        const expiresAt =
+            readJwtExpiry(token) ??
+            new Date(now.getTime() + sessionMaxAge * 1000);
+        const session = {
+            id: user.id,
+            token,
+            userId: user.id,
+            expiresAt,
+            createdAt: now,
+            updatedAt: now,
+            ipAddress: ctx.headers?.get("x-forwarded-for") ?? "",
+            userAgent: ctx.headers?.get("user-agent") ?? "",
+        };
+
+        await setSessionCookie(ctx, { session, user });
+        if (refreshToken) await setRefreshCookie(ctx, refreshToken, user);
+
+        return { session, user };
+    };
 
     /** Builds the better-auth session/user pair and writes the session cookie. */
     const establishSession = async (ctx: AuthEndpointContext, raw: unknown) => {
@@ -149,10 +305,6 @@ export const restCredentials = (options: RestCredentialsOptions) => {
         }
 
         const now = new Date();
-        const expiresAt =
-            readJwtExpiry(parsed.token) ??
-            new Date(now.getTime() + sessionMaxAge * 1000);
-
         const user = {
             id: parsed.user.id,
             email: parsed.user.email,
@@ -163,23 +315,41 @@ export const restCredentials = (options: RestCredentialsOptions) => {
             updatedAt: now,
         };
 
-        const session = {
-            // Stateless: there is no session row, so the session is identified by
-            // the user it belongs to.
-            id: parsed.user.id,
-            // The backend JWT. `packages/api` pulls it back out of here.
-            token: parsed.token,
-            userId: parsed.user.id,
-            expiresAt,
-            createdAt: now,
-            updatedAt: now,
-            ipAddress: ctx.headers?.get("x-forwarded-for") ?? "",
-            userAgent: ctx.headers?.get("user-agent") ?? "",
-        };
-
-        await setSessionCookie(ctx, { session, user });
+        await writeSession(ctx, parsed.token, parsed.refreshToken, user);
 
         return { user, token: parsed.token };
+    };
+
+    const refreshSession = async (ctx: AuthEndpointContext) => {
+        const stored = await readRefreshCookie(ctx);
+        if (!stored) return null;
+
+        const result = await options.restClient
+            .withToken(null)
+            .post<unknown>(refreshPath, {
+                refresh: stored.refreshToken,
+            });
+
+        if (!result.ok) {
+            if (isHttpError(result.error) && result.error.status === 401) {
+                clearSession(ctx);
+                return null;
+            }
+            throw toApiError(result.error, "Could not refresh the session.");
+        }
+
+        let refreshed: z.infer<typeof refreshedTokenSchema>;
+        try {
+            refreshed = refreshedTokenSchema.parse(result.data);
+        } catch (cause) {
+            console.error("[auth] unexpected token refresh payload", cause);
+            throw new APIError("INTERNAL_SERVER_ERROR", {
+                message: "The API returned an invalid token refresh payload.",
+            });
+        }
+
+        const refreshToken = refreshed.refresh ?? stored.refreshToken;
+        return writeSession(ctx, refreshed.access, refreshToken, stored.user);
     };
 
     /**
@@ -206,7 +376,63 @@ export const restCredentials = (options: RestCredentialsOptions) => {
 
     return {
         id: "rest-credentials",
+        hooks: {
+            after: [
+                {
+                    matcher: (ctx) => ctx.path === "/sign-out",
+                    handler: createAuthMiddleware((ctx) => {
+                        expireCookie(ctx, getRefreshCookie(ctx));
+                        return Promise.resolve();
+                    }),
+                },
+            ],
+        },
         endpoints: {
+            getSession: createAuthEndpoint(
+                "/get-session",
+                {
+                    method: "GET",
+                    query: z
+                        .object({
+                            disableCookieCache: z.coerce.boolean().optional(),
+                            disableRefresh: z.coerce.boolean().optional(),
+                        })
+                        .optional(),
+                    requireHeaders: true,
+                },
+                async (ctx) => {
+                    const accessToken = await ctx.getSignedCookie(
+                        ctx.context.authCookies.sessionToken.name,
+                        ctx.context.secret,
+                    );
+                    const expiresAt = accessToken
+                        ? readJwtExpiry(accessToken)?.getTime()
+                        : null;
+                    const shouldRefresh =
+                        !ctx.query?.disableRefresh &&
+                        (expiresAt == null ||
+                            expiresAt - Date.now() <= REFRESH_WINDOW_MS);
+
+                    if (shouldRefresh) {
+                        try {
+                            const refreshed = await refreshSession(ctx);
+                            if (refreshed) return ctx.json(refreshed);
+                        } catch (cause) {
+                            if (expiresAt == null || expiresAt <= Date.now()) {
+                                throw cause;
+                            }
+                            ctx.context.logger.warn(
+                                "Token refresh failed; using the access token until it expires",
+                                cause,
+                            );
+                        }
+                    }
+
+                    const session = await getSessionFromCtx(ctx);
+                    return ctx.json(session);
+                },
+            ),
+
             /** `POST /api/auth/sign-in/rest` → `authClient.signIn.rest(...)` */
             signInRest: createAuthEndpoint(
                 "/sign-in/rest",
@@ -230,24 +456,36 @@ export const restCredentials = (options: RestCredentialsOptions) => {
                 },
             ),
 
-            /** `POST /api/auth/sign-up/rest` → `authClient.signUp.rest(...)` */
+            /**
+             * `POST /api/auth/sign-up/rest` → `authClient.signUp.rest(...)`
+             *
+             * The body mirrors the backend's registration serializer field for
+             * field — including `passwordVerification`, which the API checks
+             * itself. Validation is *not* re-done here: the fields are relayed
+             * as-is so a rule change on the backend surfaces as its own 400
+             * instead of being rejected by a stale copy of the rule.
+             */
             signUpRest: createAuthEndpoint(
                 "/sign-up/rest",
                 {
                     method: "POST",
                     body: z.object({
-                        name: z.string(),
                         email: z.string(),
+                        fullName: z.string(),
+                        cpf: z.string(),
                         password: z.string(),
+                        passwordVerification: z.string(),
                     }),
                 },
                 async (ctx) => {
                     const data = await requestAuth(
                         signUpPath,
                         {
-                            name: ctx.body.name,
                             email: ctx.body.email,
+                            fullName: ctx.body.fullName,
+                            cpf: ctx.body.cpf,
                             password: ctx.body.password,
+                            passwordVerification: ctx.body.passwordVerification,
                         },
                         "Could not create the account.",
                     );

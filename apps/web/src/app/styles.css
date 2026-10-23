@@ -5,9 +5,8 @@
 @source "../../../../packages/components/src/**/*.{ts,tsx}";
 
 /* Tema escuro é opt-in por uma classe `dark` na raiz, em vez de seguir o
- * `prefers-color-scheme` do sistema. Como nada aplica essa classe ainda, o app
- * fica sempre claro. Quando o switch de tema existir, ele passa a alternar a
- * classe — e a opção "sistema" volta lendo a media query no cliente. */
+ * `prefers-color-scheme` do sistema. Quem aplica a classe é o `ThemeProvider`
+ * (`next-themes`), a partir do interruptor em `/configuracoes`. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
@@ -16,6 +15,10 @@
     }
     :root {
         color-scheme: light;
+    }
+    /* Barras de rolagem e controles nativos acompanham o tema. */
+    :root.dark {
+        color-scheme: dark;
     }
     body {
         background-color: var(--color-background);

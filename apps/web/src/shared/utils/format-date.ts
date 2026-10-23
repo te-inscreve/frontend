@@ -1,40 +1,45 @@
-import { useCallback } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export function timeAgo(date: Date): string {
-    return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+function timeAgo(date: Date): string {
+    const result = formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+    return result.replace("cerca de ", "");
 }
 
-export function useDateRangeFormatter() {
-    const formatDateRange = useCallback((start: Date, end: Date) => {
-        const sameDay = start.getTime() === end.getTime();
+/**
+ * Formata um intervalo omitindo o que as duas pontas têm em comum. Função pura
+ * para poder ser chamada também de um Server Component, onde hooks não existem.
+ */
+function formatDateRange(start: Date, end: Date): string {
+    const sameDay = start.getTime() === end.getTime();
 
-        const sameMonth =
-            start.getMonth() === end.getMonth() &&
-            start.getFullYear() === end.getFullYear();
+    const sameMonth =
+        start.getMonth() === end.getMonth() &&
+        start.getFullYear() === end.getFullYear();
 
-        const sameYear = start.getFullYear() === end.getFullYear();
+    const sameYear = start.getFullYear() === end.getFullYear();
 
-        // 🟢 Mesmo dia
-        if (sameDay) {
-            return formatSameDay(start);
-        }
+    // 🟢 Mesmo dia
+    if (sameDay) {
+        return formatSameDay(start);
+    }
 
-        // 🟡 Mesmo mês
-        if (sameMonth) {
-            return formatSameMonth(start, end);
-        }
+    // 🟡 Mesmo mês
+    if (sameMonth) {
+        return formatSameMonth(start, end);
+    }
 
-        // 🔵 Mesmo ano
-        if (sameYear) {
-            return formatSameYear(start, end);
-        }
+    // 🔵 Mesmo ano
+    if (sameYear) {
+        return formatSameYear(start, end);
+    }
 
-        // 🔴 Anos diferentes
-        return formatDifferentYears(start, end);
-    }, []);
+    // 🔴 Anos diferentes
+    return formatDifferentYears(start, end);
+}
 
+/** Mantido para os componentes de cliente que já consomem o formatador. */
+function useDateRangeFormatter() {
     return { formatDateRange };
 }
 
@@ -72,4 +77,24 @@ const formatDifferentYears = (start: Date, end: Date) => {
     });
 
     return `${capitalize(startStr)} – ${capitalize(endStr)}`;
+};
+
+const formatDate = (date: Date) => {
+    return `${format(date, "d", { locale: ptBR })} de ${capitalize(format(date, "MMM", { locale: ptBR }))}`;
+};
+
+const formatDateTime = (date: Date) => {
+    const hora = format(date, "HH", { locale: ptBR }) + "h";
+    const minuto = format(date, "m", { locale: ptBR });
+    const fullHour =
+        minuto === "0" ? hora : `${hora}${minuto.padStart(2, "0")}`;
+    return `${format(date, "d", { locale: ptBR })} de ${capitalize(format(date, "MMMM", { locale: ptBR }))} às ${fullHour}`;
+};
+
+export {
+    formatDate,
+    formatDateRange,
+    formatDateTime,
+    timeAgo,
+    useDateRangeFormatter,
 };
