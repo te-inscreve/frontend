@@ -43,6 +43,11 @@ const IconeCancelar = withUniwind(XIcon);
 const DURACAO = 250;
 // A desaceleração padrão do Material: a folha chega rápido e assenta devagar.
 const CURVA = Easing.bezier(0.2, 0, 0, 1);
+// A saída é a aceleração do Material, mais curta: a folha começa devagar e
+// some ganhando velocidade. Com a curva de entrada, quase todo o movimento
+// visível caberia nos primeiros quadros.
+const DURACAO_SAIDA = 200;
+const CURVA_SAIDA = Easing.bezier(0.3, 0, 0.8, 0.15);
 // Soltar a folha depois de descer um terço dela, ou com um puxão, fecha.
 const FRACAO_PARA_FECHAR = 1 / 3;
 const VELOCIDADE_PARA_FECHAR = 1000;
@@ -88,26 +93,40 @@ export function EdicaoTrecho({
     // inteira fora da tela.
     const deslocamento = useSharedValue(alturaJanela);
     const alturaFolha = useSharedValue(alturaJanela);
+    // A descida já começou no gesto: o efeito de fechar não a reinicia.
+    const saindo = useSharedValue(false);
+
+    // Desce a folha só a própria altura, o bastante para sair da tela, para
+    // que a saída inteira fique à vista.
+    function deslizarParaFora() {
+        "worklet";
+        saindo.set(true);
+        deslocamento.set(
+            withTiming(
+                alturaFolha.get(),
+                { duration: DURACAO_SAIDA, easing: CURVA_SAIDA },
+                (terminou) => {
+                    if (terminou) scheduleOnRN(setMontada, false);
+                },
+            ),
+        );
+    }
+
     useEffect(() => {
         if (aberta) {
+            saindo.set(false);
             deslocamento.set(
                 withTiming(0, {
                     duration: DURACAO,
                     easing: CURVA,
                 }),
             );
-        } else {
-            deslocamento.set(
-                withTiming(
-                    alturaJanela,
-                    { duration: DURACAO, easing: CURVA },
-                    (terminou) => {
-                        if (terminou) scheduleOnRN(setMontada, false);
-                    },
-                ),
-            );
+        } else if (!saindo.get()) {
+            deslizarParaFora();
         }
-    }, [aberta, alturaJanela, deslocamento]);
+        // `deslizarParaFora` só lê shared values e o setter do estado.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [aberta, deslocamento, saindo]);
 
     const arrastar = Gesture.Pan()
         .onUpdate(({ translationY }) => {
@@ -118,6 +137,9 @@ export function EdicaoTrecho({
                 translationY > alturaFolha.get() * FRACAO_PARA_FECHAR ||
                 velocityY > VELOCIDADE_PARA_FECHAR
             ) {
+                // A folha desce já ao soltar, sem esperar a ficha renderizar
+                // de novo com a validação do trecho.
+                deslizarParaFora();
                 scheduleOnRN(aoFechar);
             } else {
                 deslocamento.set(
