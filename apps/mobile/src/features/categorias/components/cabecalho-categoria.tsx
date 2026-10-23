@@ -45,9 +45,8 @@ export function CabecalhoCategoria({
                 </View>
             </View>
 
+            <Dado termo="Evento">{eventoNome}</Dado>
             <View className="flex-row gap-6">
-                <Dado termo="Evento">{eventoNome}</Dado>
-
                 <Dado termo="Faixa etária">
                     {`${idadeMinima}-${idadeMaxima} anos`}
                 </Dado>

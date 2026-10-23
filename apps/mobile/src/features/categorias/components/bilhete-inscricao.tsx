@@ -2,6 +2,7 @@ import type { IconProps } from "phosphor-react-native";
 import type { ComponentType } from "react";
 import { Text, View } from "react-native";
 import { BuildingsIcon } from "phosphor-react-native/src/icons/Buildings";
+import { CaretRightIcon } from "phosphor-react-native/src/icons/CaretRight";
 import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { UsersThreeIcon } from "phosphor-react-native/src/icons/UsersThree";
 import { withUniwind } from "uniwind";
@@ -14,13 +15,15 @@ import { PicoteHorizontal, PicoteVertical } from "./partes-do-bilhete";
 const IconeEntidade = withUniwind(BuildingsIcon);
 const IconePessoa = withUniwind(UserIcon);
 const IconeGrupo = withUniwind(UsersThreeIcon);
+const IconeAvancar = withUniwind(CaretRightIcon);
 
 /*
  * Os bilhetes de `ListaInscricoes` do web
  * (`apps/web/src/features/inscricoes/lista-inscricoes.tsx`), na largura da
  * lista. A diferença é o lugar da nota: cada bilhete já reserva o espaço da
- * nota final da avaliação, para que mostrá-la depois não mude o layout. O
- * selo de "há quanto tempo" da inscrição individual sai para dar lugar a ela:
+ * nota final da avaliação, para que mostrá-la depois não mude o layout, e
+ * enquanto ela não vem o espaço convida a avaliar. O selo de "há quanto
+ * tempo" da inscrição individual sai para dar lugar a ele:
  * para quem avalia, a data da inscrição não diz nada.
  *
  * Os bilhetes ficam direto sobre a tela: a mordida dos picotes tem a cor do
@@ -64,7 +67,7 @@ export function BilheteGrupo({ inscricao }: { inscricao: InscricaoGrupo }) {
                             : entidade.cidade}
                     </Linha>
                 </View>
-                <Codigo inscricao={inscricao} />
+                <Codigo number={inscricao.ordem} />
             </View>
 
             <PicoteHorizontal />
@@ -101,7 +104,7 @@ export function BilheteIndividual({
     return (
         <View className="bg-card border-border flex-row overflow-hidden rounded-xl border">
             <View className="w-20 items-center justify-center">
-                <Codigo inscricao={inscricao} />
+                <Codigo number={inscricao.ordem} />
             </View>
 
             <PicoteVertical />
@@ -136,31 +139,39 @@ export function BilheteIndividual({
 
 /**
  * Onde vai a nota final da avaliação desta inscrição. Por enquanto nenhuma
- * avaliação chega ao app, então diz que a inscrição não foi avaliada; o
- * tamanho é fixo, o da nota que virá.
+ * avaliação chega ao app, então o lugar convida a avaliar, com a cara do
+ * `Button` primário; o tamanho é fixo, o da nota que virá.
+ *
+ * Só a aparência do botão: o alvo do toque é o bilhete inteiro, que já se
+ * anuncia como "Avaliar inscrição…". Um botão de verdade aqui dentro seria
+ * uma segunda parada do leitor de tela para a mesma ação.
  */
 function LugarDaNota() {
     return (
         <View
-            accessible
-            aria-label="Nota: não avaliada"
-            className="bg-muted h-14 w-20 items-center justify-center rounded-md px-1"
+            aria-hidden
+            className="bg-primary h-14 w-28 flex-row items-center justify-center gap-1 rounded-md"
         >
-            <Text className="text-muted-foreground text-center text-xs">
-                Não avaliada
+            <Text className="text-primary-foreground text-base font-semibold">
+                Avaliar
             </Text>
+            <IconeAvancar
+                size={16}
+                weight="bold"
+                colorClassName="accent-primary-foreground"
+            />
         </View>
     );
 }
 
 /** O número da inscrição, o carimbo do canhoto no web. */
-function Codigo({ inscricao }: { inscricao: { id: number } }) {
+function Codigo({ number }: { number: number }) {
     return (
         <Text
-            aria-label={`Inscrição número ${inscricao.id}`}
+            aria-label={`Inscrição número ${number}`}
             className="text-card-foreground text-base font-semibold tabular-nums"
         >
-            #{inscricao.id.toString().padStart(4, "0")}
+            {number.toString().padStart(2, "0")}
         </Text>
     );
 }
@@ -207,7 +218,7 @@ export function BilheteGrupoSkeleton() {
             <PicoteHorizontal />
             <View className="flex-row items-end justify-between gap-3 px-4 pt-3 pb-4">
                 <View className="bg-muted h-9 w-32 rounded" />
-                <View className="bg-muted h-14 w-20 rounded-md" />
+                <View className="bg-muted h-14 w-28 rounded-md" />
             </View>
         </View>
     );
@@ -230,7 +241,7 @@ export function BilheteIndividualSkeleton() {
                     <View className="bg-muted h-4 w-1/2 rounded" />
                     <View className="bg-muted h-4 w-3/5 rounded" />
                 </View>
-                <View className="bg-muted h-14 w-20 rounded-md" />
+                <View className="bg-muted h-14 w-28 rounded-md" />
             </View>
         </View>
     );
