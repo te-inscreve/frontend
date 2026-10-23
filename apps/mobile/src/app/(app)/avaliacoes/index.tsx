@@ -9,12 +9,18 @@ export default function Avaliacoes() {
             <Text className="text-muted-foreground">
                 Suas avaliações aparecem aqui.
             </Text>
-            {/* MOCK (TE-82): atalho para a tela de teste da ficha. */}
+            {/* MOCK (TE-82): atalhos para as telas de teste da ficha. */}
             <Button
                 variant="outline"
                 onPress={() => router.push("/avaliacoes/ficha-teste")}
             >
                 Ficha de teste
+            </Button>
+            <Button
+                variant="outline"
+                onPress={() => router.push("/avaliacoes/ficha-simples")}
+            >
+                Ficha rápida
             </Button>
         </View>
     );

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Alert, Keyboard, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FloppyDiskIcon } from "phosphor-react-native/src/icons/FloppyDisk";
 import { useForm, useWatch } from "react-hook-form";
@@ -12,11 +13,14 @@ import { Button } from "~/components/ui/button";
 import {
     abaDoTrecho,
     montarFormularioFicha,
+    notaProvisoria,
     resumoDoValor,
     trechosDaFicha,
 } from "../lib/formulario-ficha-mock";
+import { inscricaoAvaliadaMock } from "../lib/modelo-ficha-mock";
 import { EdicaoTrecho } from "./edicao-trecho";
 import { FolhaFicha } from "./folha-ficha";
+import { SucessoAvaliacao } from "./sucesso-avaliacao";
 
 const IconeSalvar = withUniwind(FloppyDiskIcon);
 
@@ -52,7 +56,9 @@ export function FormularioFichaMock({
     const [visivel, setVisivel] = useState(false);
     // Sem aba de campos gerais, a ficha cai na primeira que houver.
     const [aba, setAba] = useState("gerais");
-    // As respostas do trecho como estavam ao abrir o modal, para o
+    const [salva, setSalva] = useState(false);
+    const router = useRouter();
+    // As respostas do trecho como estavam ao abrir a folha, para o
     // "Cancelar" desfazer o que foi mexido nele.
     const [antes, setAntes] = useState<{
         valores: ValoresFicha;
@@ -95,8 +101,8 @@ export function FormularioFichaMock({
         Object.entries(antes.valores).forEach(([chave, valor]) =>
             form.setValue(chave, valor),
         );
-        // O erro volta a ser o de antes: some o que o avaliador provocou no
-        // modal, e o que a ficha já marcava continua marcado.
+        // O erro volta a ser o de antes: some o que o avaliador provocou na
+        // folha, e o que a ficha já marcava continua marcado.
         form.clearErrors(chaves);
         if (antes.comErro) void form.trigger(chaves);
         Keyboard.dismiss();
@@ -117,11 +123,20 @@ export function FormularioFichaMock({
     }
 
     const salvar = form.handleSubmit(
-        () =>
+        // Válida, a avaliação ainda pede confirmação: na fila ela não se
+        // edita mais (ADR 0001 usa o `Alert` para confirmar). No app de
+        // verdade, o "Salvar" do alerta a poria na fila de envio.
+        () => {
+            Keyboard.dismiss();
             Alert.alert(
-                "Avaliação pronta",
-                "No app de verdade, ela iria para a fila de envio.",
-            ),
+                "Salvar avaliação?",
+                "Ela vai para a fila de envio e não poderá mais ser editada lá.",
+                [
+                    { text: "Cancelar", style: "cancel" },
+                    { text: "Salvar", onPress: () => setSalva(true) },
+                ],
+            );
+        },
         (falhas) => {
             // Vai à aba do primeiro erro. Os campos gerais mostram o erro na
             // própria ficha; só a ocorrência precisa da folha para isso.
@@ -137,7 +152,7 @@ export function FormularioFichaMock({
 
     return (
         <View className="flex-1">
-            <ScrollView contentContainerClassName="p-4">
+            <ScrollView contentContainerClassName="grow">
                 <FolhaFicha
                     modelo={modelo}
                     trechos={trechos}
@@ -151,7 +166,7 @@ export function FormularioFichaMock({
                 />
             </ScrollView>
 
-            <View className="bg-background border-border border-t p-4">
+            <View className="bg-card border-border border-t p-4">
                 {/* A nota final mora no rodapé fixo, ao lado do "Salvar":
                     vale para a ficha inteira, não para uma aba, e fica à
                     vista enquanto o avaliador preenche. O cálculo ainda está
@@ -175,17 +190,7 @@ export function FormularioFichaMock({
                             {preenchidos} de {campos.length} preenchidos
                         </Text>
                     </View>
-                    <Button
-                        icone={
-                            <IconeSalvar
-                                size={20}
-                                colorClassName="accent-primary-foreground"
-                            />
-                        }
-                        onPress={() => void salvar()}
-                    >
-                        Salvar
-                    </Button>
+                    <Button onPress={() => void salvar()}>Salvar</Button>
                 </View>
             </View>
 
@@ -197,6 +202,16 @@ export function FormularioFichaMock({
                 aoAplicar={() => void aplicar()}
                 aoFechar={fechar}
                 aoCancelar={cancelar}
+            />
+
+            <SucessoAvaliacao
+                visivel={salva}
+                nota={notaProvisoria(trechos, valores)}
+                inscricao={inscricaoAvaliadaMock}
+                aoConcluir={() => {
+                    setSalva(false);
+                    router.back();
+                }}
             />
         </View>
     );

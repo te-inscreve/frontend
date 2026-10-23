@@ -170,3 +170,64 @@ export const modeloFichaMock: ModeloFichaDetalhe =
         ],
         versoes: [{ id: 11006, versao: 1 }],
     });
+
+/**
+ * MOCK (TE-82): uma ficha curta, para chegar à tela de sucesso sem preencher
+ * a ficha toda — uma nota obrigatória e uma observação opcional. Com só os
+ * campos gerais, a barra de abas não aparece.
+ */
+export const modeloFichaSimplesMock: ModeloFichaDetalhe =
+    modeloFichaDetalheSchema.parse({
+        id: 11007,
+        codigoFamilia: "8a0d6f2e-5b1c-4e7a-9f3d-2c6b1a4e9d70",
+        versao: 1,
+        nome: "Ficha rápida (mock)",
+        original: false,
+        global: false,
+        editavel: false,
+        camposGerais: [
+            {
+                id: 211,
+                ordem: 1,
+                campo: {
+                    id: 721,
+                    global: false,
+                    nome: "Nota da apresentação",
+                    descricao: "Nota geral da apresentação",
+                    tipo: "NUMERICO",
+                    obrigatorio: true,
+                    valorMaximo: "10.0000",
+                    modificadorNota: "SOMA",
+                },
+            },
+            {
+                id: 212,
+                ordem: 2,
+                campo: {
+                    id: 722,
+                    global: false,
+                    nome: "Observação",
+                    descricao: "Comentários sobre a apresentação",
+                    tipo: "OBSERVACAO",
+                    obrigatorio: false,
+                },
+            },
+        ],
+        agrupamentos: [],
+        versoes: [{ id: 11007, versao: 1 }],
+    });
+
+/**
+ * MOCK (TE-82): a inscrição avaliada, para a tela de sucesso. A tela de teste
+ * não vem de uma inscrição de verdade; quando vier, isto sai da inscrição.
+ */
+export const inscricaoAvaliadaMock = {
+    grupo: "Invernada Juvenil",
+    entidade: "CTG Querência Amada",
+    categoria: "Juvenil",
+    modalidade: "Danças tradicionalistas",
+    evento: "Rodeio de Flores",
+    ordemApresentacao: 7,
+};
+
+export type InscricaoAvaliada = typeof inscricaoAvaliadaMock;

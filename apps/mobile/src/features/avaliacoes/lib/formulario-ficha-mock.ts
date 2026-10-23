@@ -349,3 +349,24 @@ export function abasDaFicha(trechos: TrechoFicha[]): AbaDaFicha[] {
 
     return [...(gerais.linhas.length ? [gerais] : []), ...doAgrupamento];
 }
+
+/**
+ * MOCK (TE-95): uma nota para a tela de sucesso mostrar enquanto a fórmula
+ * está em aberto. Soma as notas dos campos que somam, tira as dos que
+ * descontam e prende entre 0 e 10. Não é a regra: só dá um número à tela.
+ */
+export function notaProvisoria(trechos: TrechoFicha[], valores: ValoresFicha) {
+    const total = trechos
+        .flatMap((trecho) => trecho.campos)
+        .reduce((soma, { chave, campo }) => {
+            const valor = valores[chave];
+            if (campo.tipo !== "NUMERICO" || typeof valor !== "string")
+                return soma;
+            const nota = Number(valor.replace(",", "."));
+            if (!Number.isFinite(nota)) return soma;
+            return campo.modificadorNota === "DESCONTA"
+                ? soma - nota
+                : soma + nota;
+        }, 0);
+    return Math.min(10, Math.max(0, total));
+}
