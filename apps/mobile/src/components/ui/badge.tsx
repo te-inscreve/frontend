@@ -116,5 +116,5 @@ function Badge({
     );
 }
 
-export { Badge, badgeVariants, badgeTextVariants, badgeIconVariants };
+export { Badge, badgeIconVariants, badgeTextVariants, badgeVariants };
 export type { BadgeProps };

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SplashScreen, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -27,29 +28,53 @@ export default function RootLayout() {
     }, [isPending]);
 
     return (
-        <QueryClientProvider client={queryClient}>
-            {/*
-             * O tema leva os tokens a todos os navegadores: o cabeçalho de
-             * cada aba e o fundo das telas seguem o tema em vigor, o do sistema
-             * ou o escolhido em Configurações.
-             */}
-            <ThemeProvider value={tema}>
-                <Stack screenOptions={{ headerShown: false }}>
-                    {/*
-                     * O guard decide a rota pela sessão: entrar ou sair muda o
-                     * `useSession`, e o expo-router leva para a primeira tela
-                     * liberada. Por isso o login e o logout não navegam.
-                     */}
-                    <Stack.Protected guard={!!session}>
-                        <Stack.Screen name="index" />
-                        <Stack.Screen name="(app)" />
-                    </Stack.Protected>
-                    <Stack.Protected guard={!session}>
-                        <Stack.Screen name="login" />
-                    </Stack.Protected>
-                </Stack>
-            </ThemeProvider>
-            <StatusBar />
-        </QueryClientProvider>
+        // Os gestos do Gesture Handler, como o deslize entre as abas da ficha,
+        // só reconhecem toques abaixo desta raiz.
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <QueryClientProvider client={queryClient}>
+                {/*
+                 * Antes do navegador de propósito: o RN aplica o último
+                 * `StatusBar` montado, e o React monta os irmãos em ordem. Assim a
+                 * do app logado, que acompanha o cabeçalho verde, sempre vence
+                 * esta, que só vale para o login e a splash.
+                 */}
+                <StatusBar />
+                {/*
+                 * O tema leva os tokens a todos os navegadores: o cabeçalho de
+                 * cada aba e o fundo das telas seguem o tema em vigor, o do sistema
+                 * ou o escolhido em Configurações.
+                 */}
+                <ThemeProvider value={tema}>
+                    <Stack screenOptions={{ headerShown: false }}>
+                        {/*
+                         * O guard decide a rota pela sessão: entrar ou sair muda o
+                         * `useSession`, e o expo-router leva para a primeira tela
+                         * liberada. Por isso o login e o logout não navegam.
+                         */}
+                        <Stack.Protected guard={!!session}>
+                            <Stack.Screen name="index" />
+                            <Stack.Screen name="(app)" />
+                            {/*
+                             * A folha nativa cuida do fundo escurecido, de
+                             * arrastar e de tocar fora para fechar. Aqui, e não
+                             * dentro de `(app)`, para cobrir as abas também.
+                             */}
+                            <Stack.Screen
+                                name="fila"
+                                options={{
+                                    presentation: "formSheet",
+                                    sheetAllowedDetents: "fitToContents",
+                                    sheetCornerRadius: 24,
+                                    sheetGrabberVisible: true,
+                                }}
+                            />
+                        </Stack.Protected>
+                        <Stack.Protected guard={!session}>
+                            <Stack.Screen name="login" />
+                        </Stack.Protected>
+                    </Stack>
+                </ThemeProvider>
+            </QueryClientProvider>
+        </GestureHandlerRootView>
     );
 }

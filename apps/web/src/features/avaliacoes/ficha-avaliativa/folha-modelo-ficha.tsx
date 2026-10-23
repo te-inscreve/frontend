@@ -304,13 +304,37 @@ function CabecalhoCampo({ campo }: { campo: CampoExibido }) {
  */
 function CelulaEmBranco({ campo }: { campo: CampoExibido }) {
     if (campo.tipo === "NUMERICO") {
-        return <span className="font-bold tabular-nums">0</span>;
+        return <NotaComTeto teto={campo.teto} />;
     }
 
     return (
         <span className="text-muted-foreground">
             <span aria-hidden="true">—</span>
             <span className="sr-only">em branco</span>
+        </span>
+    );
+}
+
+/**
+ * A nota do campo numérico com o teto ao lado, como "0 / 10": o mesmo que o
+ * avaliador vê no campo do app. Sem teto, só a nota.
+ */
+function NotaComTeto({
+    teto,
+    className,
+}: {
+    teto: string | null;
+    className?: string;
+}) {
+    return (
+        <span className={cn("whitespace-nowrap tabular-nums", className)}>
+            <span className="font-bold">0</span>
+            {teto && (
+                <span className="text-muted-foreground font-normal">
+                    {" "}
+                    / {teto}
+                </span>
+            )}
         </span>
     );
 }
@@ -393,7 +417,7 @@ function BadgeTipoNumerico({ campo }: { campo: CampoExibido }) {
                         <SeloModificador modificador={campo.modificadorNota} />
                     )}
                 </p>
-                <span className="text-sm font-bold">0</span>
+                <NotaComTeto teto={campo.teto} className="text-sm" />
             </>
         );
     }

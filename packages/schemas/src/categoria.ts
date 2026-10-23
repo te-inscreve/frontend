@@ -111,3 +111,29 @@ export type Categoria = z.infer<typeof categoriaSchema>;
 export type CategoriaAninhada = z.infer<typeof categoriaAninhadaSchema>;
 export type CategoriaDetalhe = z.infer<typeof categoriaDetalheSchema>;
 export type FormCategoria = z.infer<typeof formCategoriaSchema>;
+
+/**
+ * As categorias que o avaliador pode julgar, como
+ * `GET /avaliacoes/categorias-disponiveis/` as devolve: a árvore evento →
+ * modalidade → categoria, sem paginação e só com categorias
+ * `pronta_avaliacao`. Evento e modalidade trazem só o que identifica cada um,
+ * e `isGrupo` decide o bilhete das inscrições. A ordem é a do backend.
+ *
+ * A lista vazia é "nenhuma categoria liberada", não erro.
+ */
+export const categoriasDisponiveisSchema = z.array(
+    z.object({
+        id: z.number().int(),
+        nome: z.string(),
+        modalidades: z.array(
+            z.object({
+                id: z.number().int(),
+                nome: z.string(),
+                isGrupo: z.boolean(),
+                categorias: z.array(categoriaSchema),
+            }),
+        ),
+    }),
+);
+
+export type CategoriasDisponiveis = z.infer<typeof categoriasDisponiveisSchema>;

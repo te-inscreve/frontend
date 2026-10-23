@@ -29,6 +29,13 @@ Aplica-se a toda tela escrita em `frontend/apps/web`.
 - Exceções são pontuais e justificadas por comentário no próprio arquivo: `defaultValues` de formulário, portão que decide se a página existe, leitura de `cookies()`. Elas justificam um `await`, não a página inteira.
 - `app/admin/eventos/[slug]/modalidades/[slugModalidade]/page.tsx` é o exemplo canônico. Leia `docs/fcp.md` antes de criar uma tela nova ou de acrescentar uma espera a uma existente.
 
+# Aparelho físico (mobile)
+
+Aplica-se a rodar ou testar `frontend/apps/mobile` num aparelho Android.
+
+- O app alcança Metro e BFF pelo Wi-Fi: Metro em `--lan` (configuração `mobile` em `.claude/launch.json`). O `adb` serve só para o agente testar. Mantenha o `--lan`: `--localhost` com `adb reverse` foi abandonado porque o redirecionamento cai a cada reconexão do cabo.
+- Leia `docs/dispositivo-mobile.md` antes de mudar essa configuração ou quando o aparelho não alcançar a máquina.
+
 ## Agent skills
 
 ### Issue tracker
