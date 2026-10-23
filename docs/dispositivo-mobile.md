@@ -12,9 +12,10 @@ pela rede, com Fast Refresh; só o código nativo fica no APK.
 
 O Expo Go foi abandonado de propósito. Desde o SDK 58, a `formSheet` não aparece
 nele: a folha monta, mas não recebe as insets da janela e nunca começa a entrar,
-e o `useDestravarFormSheet` não a destrava mais. No build de desenvolvimento a
-activity é do app e a folha funciona. Além disso, o que vem pela frente — tarefa
-em segundo plano, módulo nativo próprio — não roda no Expo Go.
+e esconder e mostrar a status bar, que antes a destravava, não adianta mais. No
+build de desenvolvimento a activity é do app e a folha funciona. Além disso, o
+que vem pela frente — tarefa em segundo plano, módulo nativo próprio — não roda
+no Expo Go.
 
 Refaça o build só quando o lado nativo mudar: dependência com código nativo,
 plugin ou campo de `app.config.ts`. Mudança de JavaScript chega pelo Metro.
@@ -78,12 +79,12 @@ Se o modo LAN parar de funcionar, diagnostique a rede (abaixo) e mantenha o
    possível entrar", não "Sem conexão".
 2. Abra o app no Metro pelo esquema do build de desenvolvimento:
 
-   ```bash
-   adb shell am start -a android.intent.action.VIEW -d 'exp+te-inscreve://expo-development-client/?url=http%3A%2F%2F<IP da máquina>%3A8082' br.com.teinscreve.app
-   ```
+    ```bash
+    adb shell am start -a android.intent.action.VIEW -d 'exp+te-inscreve://expo-development-client/?url=http%3A%2F%2F<IP da máquina>%3A8082' br.com.teinscreve.app
+    ```
 
-   Na primeira abertura, o menu de desenvolvimento mostra um cartão de boas-vindas
-   por cima do app; feche em "Continue".
+    Na primeira abertura, o menu de desenvolvimento mostra um cartão de boas-vindas
+    por cima do app; feche em "Continue".
 
 O IP vem por DHCP e pode mudar; o Metro pega o novo ao reiniciar. Leia-o da saída
 do Metro, não o fixe em código.
