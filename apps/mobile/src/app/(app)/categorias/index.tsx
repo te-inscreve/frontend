@@ -25,7 +25,7 @@ function Titulo() {
             role="heading"
             className="text-foreground text-3xl leading-tight font-bold"
         >
-            Categorias
+            Categorias para Avaliar
         </Text>
     );
 }

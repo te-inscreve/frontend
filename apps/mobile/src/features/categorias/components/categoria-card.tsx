@@ -10,8 +10,8 @@ import { SituacaoCategoriaBadge } from "./situacao-categoria-badge";
  * O `CardCategoria` do web em forma de ingresso: a borda é o fundo da camada
  * externa, e o canhoto com a faixa etária e o miolo ficam dentro dela.
  *
- * Diferente do web, ocupa a largura da lista e mostra evento e modalidade
- * abaixo do nome, porque a lista do mobile mistura eventos. O toque empilha o
+ * Diferente do web, ocupa a largura da lista e mostra a modalidade ao lado do
+ * nome e o evento abaixo, porque a lista do mobile mistura eventos. O toque empilha o
  * detalhe da categoria na aba.
  */
 export function CategoriaCard({ categoria }: { categoria: CategoriaPronta }) {
@@ -27,11 +27,10 @@ export function CategoriaCard({ categoria }: { categoria: CategoriaPronta }) {
                                 role="heading"
                                 className="text-card-foreground text-base leading-tight font-bold"
                             >
-                                {categoria.nome}
+                                {`${categoria.modalidadeNome} ${categoria.nome}`}
                             </Text>
                             <Text className="text-muted-foreground text-sm">
-                                {categoria.eventoNome} ·{" "}
-                                {categoria.modalidadeNome}
+                                {categoria.eventoNome}
                             </Text>
                         </View>
                         <SituacaoCategoriaBadge situacao={categoria.situacao} />

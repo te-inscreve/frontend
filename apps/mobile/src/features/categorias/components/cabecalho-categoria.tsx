@@ -36,19 +36,18 @@ export function CabecalhoCategoria({
                         role="heading"
                         className="text-foreground shrink text-2xl leading-tight font-bold tracking-tight"
                     >
-                        {nome}
+                        {`${modalidadeNome} ${nome}`}
                     </Text>
                     <SituacaoCategoriaBadge
                         situacao={situacao}
                         className="mt-1"
                     />
                 </View>
-                <Text className="text-muted-foreground text-sm">
-                    {eventoNome} · {modalidadeNome}
-                </Text>
             </View>
 
             <View className="flex-row gap-6">
+                <Dado termo="Evento">{eventoNome}</Dado>
+
                 <Dado termo="Faixa etária">
                     {`${idadeMinima}-${idadeMaxima} anos`}
                 </Dado>

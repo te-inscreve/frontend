@@ -13,7 +13,10 @@ export default function CategoriasLayout() {
              */}
             <Stack.Screen
                 name="index"
-                options={{ title: "Categorias", headerShown: false }}
+                options={{
+                    title: "Categorias para Avaliar",
+                    headerShown: false,
+                }}
             />
             <Stack.Screen
                 name="[id]"
