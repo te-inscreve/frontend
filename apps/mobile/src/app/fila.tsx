@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 
 import { DetalheFila } from "~/features/avaliacoes/components/detalhe-fila";
 import { useFila } from "~/features/avaliacoes/lib/use-fila";
-import { useDestravarFormSheet } from "~/utils/use-destravar-form-sheet";
 
 /**
  * O detalhe da fila, aberto pelo estado no cabeçalho. Apresentado como
@@ -12,7 +11,6 @@ import { useDestravarFormSheet } from "~/utils/use-destravar-form-sheet";
 export default function Fila() {
     const fila = useFila();
     const router = useRouter();
-    useDestravarFormSheet();
 
     return <DetalheFila fila={fila} onFechar={() => router.back()} />;
 }

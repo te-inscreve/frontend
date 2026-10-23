@@ -33,8 +33,9 @@ Aplica-se a toda tela escrita em `frontend/apps/web`.
 
 Aplica-se a rodar ou testar `frontend/apps/mobile` num aparelho Android.
 
-- O app alcança Metro e BFF pelo Wi-Fi: Metro em `--lan` (configuração `mobile` em `.claude/launch.json`). O `adb` serve só para o agente testar. Mantenha o `--lan`: `--localhost` com `adb reverse` foi abandonado porque o redirecionamento cai a cada reconexão do cabo.
-- Leia `docs/dispositivo-mobile.md` antes de mudar essa configuração ou quando o aparelho não alcançar a máquina.
+- O app roda como build de desenvolvimento (`expo-dev-client`), não no Expo Go: desde o SDK 58 a `formSheet` não aparece no Expo Go, e tarefa em segundo plano exige o build. `apps/mobile/android` é gerado por `expo prebuild` e não vai para o git; refaça o build só quando o lado nativo mudar.
+- O app alcança Metro e BFF pelo Wi-Fi: Metro em `--lan` (configuração `mobile` em `.claude/launch.json`). O login também depende da API REST na 8002. O `adb` serve só para o agente testar. Mantenha o `--lan`: `--localhost` com `adb reverse` foi abandonado porque o redirecionamento cai a cada reconexão do cabo.
+- Leia `docs/dispositivo-mobile.md` antes de compilar, de mudar essa configuração ou quando o aparelho não alcançar a máquina.
 
 ## Agent skills
 
