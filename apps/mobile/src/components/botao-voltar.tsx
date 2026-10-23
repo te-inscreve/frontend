@@ -30,19 +30,15 @@ function BotaoVoltar({
             onPress={() =>
                 podeVoltar ? router.back() : router.replace(semHistorico)
             }
-            className="h-12 flex-row items-center pr-2"
+            className="h-12 flex-row items-center"
         >
             <IconeVoltar
-                size={20}
+                size={16}
                 weight="bold"
-                colorClassName="accent-foreground"
+                colorClassName="accent-primary"
                 aria-hidden
-                style={{ marginLeft: 10 }}
             />
-            <Text
-                className="text-foreground text-xl"
-                style={{ marginLeft: 35 }}
-            >
+            <Text className="text-primary text-base" style={{ marginLeft: 8 }}>
                 Voltar
             </Text>
         </Pressable>
