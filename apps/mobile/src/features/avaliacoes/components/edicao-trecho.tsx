@@ -23,7 +23,10 @@ import Animated, {
     useSharedValue,
     withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+    SafeAreaProvider,
+    useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 import { CheckIcon } from "phosphor-react-native/src/icons/Check";
 import { XIcon } from "phosphor-react-native/src/icons/X";
@@ -75,7 +78,7 @@ export function EdicaoTrecho({
     aoFechar: () => void;
     aoCancelar: () => void;
 }) {
-    const { top, bottom } = useSafeAreaInsets();
+    const { top } = useSafeAreaInsets();
     const { height: alturaJanela } = useWindowDimensions();
     const aberta = visivel && !!trecho;
     // Fechada, a folha segue montada até terminar de descer.
@@ -85,23 +88,6 @@ export function EdicaoTrecho({
     // inteira fora da tela.
     const deslocamento = useSharedValue(alturaJanela);
     const alturaFolha = useSharedValue(alturaJanela);
-    // O teclado cobre a barra de navegação: com ele aberto, a folha não
-    // reserva a inset de baixo.
-    const [tecladoAberto, setTecladoAberto] = useState(false);
-
-    useEffect(() => {
-        const mostrar = Keyboard.addListener("keyboardDidShow", () =>
-            setTecladoAberto(true),
-        );
-        const esconder = Keyboard.addListener("keyboardDidHide", () =>
-            setTecladoAberto(false),
-        );
-        return () => {
-            mostrar.remove();
-            esconder.remove();
-        };
-    }, []);
-
     useEffect(() => {
         if (aberta) {
             deslocamento.set(
@@ -165,119 +151,160 @@ export function EdicaoTrecho({
             navigationBarTranslucent
             onRequestClose={aoFechar}
         >
-            {/* O `Modal` é outra raiz nativa: o gesto da alça precisa da sua. */}
-            <GestureHandlerRootView style={{ flex: 1 }}>
-                {/* Ponta a ponta, o `Modal` não encolhe com o teclado em
+            {/* O `Modal` é outra raiz nativa: o gesto da alça precisa da sua, e
+                as insets também. A janela principal termina acima da barra de
+                tarefas do Samsung e mede 0 embaixo; a do `Modal` passa por
+                baixo dela. */}
+            <SafeAreaProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                    {/* Ponta a ponta, o `Modal` não encolhe com o teclado em
                     nenhuma plataforma: a folha sobe por conta própria. */}
-                <KeyboardAvoidingView
-                    behavior="padding"
-                    style={{ flex: 1, justifyContent: "flex-end" }}
-                >
-                    <Animated.View
-                        style={[StyleSheet.absoluteFill, estiloFundo]}
-                    >
-                        <Pressable
-                            aria-label="Fechar"
-                            onPress={aoFechar}
-                            className="flex-1 bg-black/50"
-                        />
-                    </Animated.View>
-
-                    {/* A folha para abaixo da status bar, com uma faixa do
-                        fundo à vista para tocar e fechar. */}
-                    <View
-                        pointerEvents="box-none"
-                        style={{ maxHeight: "100%", paddingTop: top + 24 }}
+                    <KeyboardAvoidingView
+                        behavior="padding"
+                        style={{ flex: 1, justifyContent: "flex-end" }}
                     >
                         <Animated.View
-                            onLayout={({ nativeEvent }) => {
-                                alturaFolha.set(nativeEvent.layout.height);
-                            }}
-                            style={[{ flexShrink: 1 }, estiloFolha]}
+                            style={[StyleSheet.absoluteFill, estiloFundo]}
                         >
-                            <View className="bg-background w-full shrink overflow-hidden rounded-t-3xl">
-                                <GestureDetector gesture={arrastar}>
-                                    <View className="bg-muted border-border gap-3 border-b px-5 pt-3 pb-4">
-                                        <View
-                                            aria-hidden
-                                            className="bg-muted-foreground/30 h-1.5 w-10 self-center rounded-full"
-                                        />
-                                        <View className="gap-0.5">
-                                            <Text
-                                                role="heading"
-                                                className="text-foreground text-xl font-bold"
-                                            >
-                                                {trecho?.titulo}
-                                            </Text>
-                                            {trecho?.subtitulo && (
-                                                <Text className="text-muted-foreground text-sm">
-                                                    {trecho.subtitulo}
-                                                </Text>
-                                            )}
-                                        </View>
-                                    </View>
-                                </GestureDetector>
-
-                                <ScrollView
-                                    style={{ flexGrow: 0, flexShrink: 1 }}
-                                    keyboardShouldPersistTaps="handled"
-                                    contentContainerClassName="p-5"
-                                >
-                                    <FieldGroup>
-                                        {trecho?.campos.map(
-                                            ({ chave, campo }) => (
-                                                <CampoFichaControlado
-                                                    key={chave}
-                                                    chave={chave}
-                                                    campo={campo}
-                                                    control={control}
-                                                    revalidar={revalidar}
-                                                />
-                                            ),
-                                        )}
-                                    </FieldGroup>
-                                </ScrollView>
-
-                                <View
-                                    className="bg-muted border-border flex-row gap-3 border-t px-5 pt-4"
-                                    style={{
-                                        paddingBottom:
-                                            (tecladoAberto ? 0 : bottom) + 20,
-                                    }}
-                                >
-                                    <Button
-                                        size="lg"
-                                        variant="outline"
-                                        className="flex-1"
-                                        icone={
-                                            <IconeCancelar
-                                                size={20}
-                                                colorClassName="accent-foreground"
-                                            />
-                                        }
-                                        onPress={aoCancelar}
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        size="lg"
-                                        className="flex-1"
-                                        icone={
-                                            <IconeAplicar
-                                                size={20}
-                                                colorClassName="accent-primary-foreground"
-                                            />
-                                        }
-                                        onPress={aoAplicar}
-                                    >
-                                        Aplicar
-                                    </Button>
-                                </View>
-                            </View>
+                            <Pressable
+                                aria-label="Fechar"
+                                onPress={aoFechar}
+                                className="flex-1 bg-black/50"
+                            />
                         </Animated.View>
-                    </View>
-                </KeyboardAvoidingView>
-            </GestureHandlerRootView>
+
+                        {/* A folha para abaixo da status bar, com uma faixa do
+                        fundo à vista para tocar e fechar. */}
+                        <View
+                            pointerEvents="box-none"
+                            style={{ maxHeight: "100%", paddingTop: top + 24 }}
+                        >
+                            <Animated.View
+                                onLayout={({ nativeEvent }) => {
+                                    alturaFolha.set(nativeEvent.layout.height);
+                                }}
+                                style={[{ flexShrink: 1 }, estiloFolha]}
+                            >
+                                <View className="bg-background w-full shrink overflow-hidden rounded-t-3xl">
+                                    <GestureDetector gesture={arrastar}>
+                                        <View className="bg-muted border-border gap-3 border-b px-5 pt-3 pb-4">
+                                            <View
+                                                aria-hidden
+                                                className="bg-muted-foreground/30 h-1.5 w-10 self-center rounded-full"
+                                            />
+                                            <View className="gap-0.5">
+                                                <Text
+                                                    role="heading"
+                                                    className="text-foreground text-xl font-bold"
+                                                >
+                                                    {trecho?.titulo}
+                                                </Text>
+                                                {trecho?.subtitulo && (
+                                                    <Text className="text-muted-foreground text-sm">
+                                                        {trecho.subtitulo}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        </View>
+                                    </GestureDetector>
+
+                                    <ScrollView
+                                        style={{ flexGrow: 0, flexShrink: 1 }}
+                                        keyboardShouldPersistTaps="handled"
+                                        contentContainerClassName="p-5"
+                                    >
+                                        <FieldGroup>
+                                            {trecho?.campos.map(
+                                                ({ chave, campo }) => (
+                                                    <CampoFichaControlado
+                                                        key={chave}
+                                                        chave={chave}
+                                                        campo={campo}
+                                                        control={control}
+                                                        revalidar={revalidar}
+                                                    />
+                                                ),
+                                            )}
+                                        </FieldGroup>
+                                    </ScrollView>
+
+                                    <RodapeFolha
+                                        aoCancelar={aoCancelar}
+                                        aoAplicar={aoAplicar}
+                                    />
+                                </View>
+                            </Animated.View>
+                        </View>
+                    </KeyboardAvoidingView>
+                </GestureHandlerRootView>
+            </SafeAreaProvider>
         </Modal>
+    );
+}
+
+/**
+ * Os botões da folha. Fica num componente próprio para ler as insets do
+ * `SafeAreaProvider` do `Modal`, não as da janela principal.
+ */
+function RodapeFolha({
+    aoCancelar,
+    aoAplicar,
+}: {
+    aoCancelar: () => void;
+    aoAplicar: () => void;
+}) {
+    const { bottom } = useSafeAreaInsets();
+    // O teclado cobre a barra de navegação: com ele aberto, a folha não
+    // reserva a inset de baixo.
+    const [tecladoAberto, setTecladoAberto] = useState(false);
+
+    useEffect(() => {
+        const mostrar = Keyboard.addListener("keyboardDidShow", () =>
+            setTecladoAberto(true),
+        );
+        const esconder = Keyboard.addListener("keyboardDidHide", () =>
+            setTecladoAberto(false),
+        );
+        return () => {
+            mostrar.remove();
+            esconder.remove();
+        };
+    }, []);
+
+    return (
+        <View
+            className="bg-muted border-border flex-row gap-3 border-t px-5 pt-4"
+            style={{
+                paddingBottom: (tecladoAberto ? 0 : bottom) + 20,
+            }}
+        >
+            <Button
+                size="lg"
+                variant="outline"
+                className="flex-1"
+                icone={
+                    <IconeCancelar
+                        size={20}
+                        colorClassName="accent-foreground"
+                    />
+                }
+                onPress={aoCancelar}
+            >
+                Cancelar
+            </Button>
+            <Button
+                size="lg"
+                className="flex-1"
+                icone={
+                    <IconeAplicar
+                        size={20}
+                        colorClassName="accent-primary-foreground"
+                    />
+                }
+                onPress={aoAplicar}
+            >
+                Aplicar
+            </Button>
+        </View>
     );
 }
