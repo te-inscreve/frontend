@@ -566,3 +566,50 @@ export function FolhaFicha({
         </View>
     );
 }
+
+/**
+ * A ficha enquanto o modelo não chega, com a geometria da {@link FolhaFicha}
+ * e do rodapé do formulário: título e abas na faixa `muted`, campos abaixo,
+ * nota e "Salvar" embaixo.
+ */
+export function FolhaFichaSkeleton() {
+    return (
+        <View aria-hidden className="flex-1">
+            <View className="bg-muted border-border border-b px-4 pt-4">
+                <View className="w-full max-w-[720px] gap-6 self-center">
+                    <View className="mt-2 gap-2">
+                        <View className="bg-background h-7 w-2/3 rounded" />
+                        <View className="bg-background h-4 w-1/2 rounded" />
+                    </View>
+                    <View className="flex-row gap-2 pb-3">
+                        {[0, 1, 2].map((posicao) => (
+                            <View
+                                key={posicao}
+                                className="bg-background h-6 w-24 rounded"
+                            />
+                        ))}
+                    </View>
+                </View>
+            </View>
+            <View className="flex-1 px-4 pt-6">
+                <View className="w-full max-w-[720px] gap-8 self-center">
+                    {[0, 1, 2].map((posicao) => (
+                        <View key={posicao} className="gap-2">
+                            <View className="bg-muted h-5 w-1/3 rounded" />
+                            <View className="bg-muted h-12 rounded-md" />
+                        </View>
+                    ))}
+                </View>
+            </View>
+            <View className="bg-card border-border border-t p-4">
+                <View className="w-full max-w-[720px] flex-row items-center gap-4 self-center">
+                    <View className="flex-1 gap-1.5">
+                        <View className="bg-muted h-7 w-32 rounded" />
+                        <View className="bg-muted h-4 w-28 rounded" />
+                    </View>
+                    <View className="bg-muted h-10 w-24 rounded-md" />
+                </View>
+            </View>
+        </View>
+    );
+}

@@ -1,10 +1,14 @@
-import { FlatList, RefreshControl, Text, View } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 
 import type { InscricaoGrupo, InscricaoIndividual } from "@te-inscreve/schemas";
 
 import type { ParametrosDetalheCategoria } from "~/features/categorias/lib/rota-detalhe-categoria";
 import { Button } from "~/components/ui/button";
+import {
+    nomeDoConcorrente,
+    rotaFichaInscricao,
+} from "~/features/avaliacoes/lib/rota-ficha-inscricao";
 import {
     BilheteGrupo,
     BilheteGrupoSkeleton,
@@ -22,10 +26,11 @@ function Mensagem({ children }: { children: string }) {
 }
 
 export default function DetalheCategoria() {
+    const categoria = lerParametrosDetalheCategoria(
+        useLocalSearchParams<ParametrosDetalheCategoria>(),
+    );
     const { categoriaId, eventoId, modalidadeId, isGrupo, nome, ...cabecalho } =
-        lerParametrosDetalheCategoria(
-            useLocalSearchParams<ParametrosDetalheCategoria>(),
-        );
+        categoria;
     const { data, isPending, isError, isRefetching, refetch } =
         useInscricoesDaCategoria({ eventoId, modalidadeId, categoriaId });
 
@@ -60,15 +65,28 @@ export default function DetalheCategoria() {
                 <FlatList<InscricaoGrupo | InscricaoIndividual>
                     data={data}
                     keyExtractor={(inscricao) => String(inscricao.id)}
-                    renderItem={({ item }) =>
-                        isGrupo ? (
-                            <BilheteGrupo inscricao={item as InscricaoGrupo} />
-                        ) : (
-                            <BilheteIndividual
-                                inscricao={item as InscricaoIndividual}
-                            />
-                        )
-                    }
+                    renderItem={({ item }) => (
+                        // O bilhete inteiro é o alvo: tocar nele abre a ficha
+                        // daquela inscrição.
+                        <Pressable
+                            role="button"
+                            aria-label={`Avaliar inscrição ${item.id}, ${nomeDoConcorrente(item)}`}
+                            onPress={() =>
+                                router.push(rotaFichaInscricao(categoria, item))
+                            }
+                            className="active:opacity-70"
+                        >
+                            {isGrupo ? (
+                                <BilheteGrupo
+                                    inscricao={item as InscricaoGrupo}
+                                />
+                            ) : (
+                                <BilheteIndividual
+                                    inscricao={item as InscricaoIndividual}
+                                />
+                            )}
+                        </Pressable>
+                    )}
                     contentContainerClassName="grow gap-3 p-4"
                     refreshControl={
                         <RefreshControl

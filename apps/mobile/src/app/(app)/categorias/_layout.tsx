@@ -19,6 +19,12 @@ export default function CategoriasLayout() {
                 name="[id]"
                 options={opcoesComVoltar("/categorias")}
             />
+            {/* Na pilha de Categorias, acima do detalhe: o "Voltar" da ficha
+                retorna à categoria de onde ela foi aberta. */}
+            <Stack.Screen
+                name="ficha/[inscricaoId]"
+                options={opcoesComVoltar("/categorias")}
+            />
         </Stack>
     );
 }
