@@ -11,6 +11,7 @@ import {
     BilheteIndividual,
     BilheteIndividualSkeleton,
 } from "~/features/categorias/components/bilhete-inscricao";
+import { CabecalhoCategoria } from "~/features/categorias/components/cabecalho-categoria";
 import { lerParametrosDetalheCategoria } from "~/features/categorias/lib/rota-detalhe-categoria";
 import { useInscricoesDaCategoria } from "~/features/categorias/lib/use-inscricoes-da-categoria";
 
@@ -21,7 +22,7 @@ function Mensagem({ children }: { children: string }) {
 }
 
 export default function DetalheCategoria() {
-    const { categoriaId, eventoId, modalidadeId, isGrupo, nome } =
+    const { categoriaId, eventoId, modalidadeId, isGrupo, nome, ...cabecalho } =
         lerParametrosDetalheCategoria(
             useLocalSearchParams<ParametrosDetalheCategoria>(),
         );
@@ -32,7 +33,10 @@ export default function DetalheCategoria() {
 
     return (
         <>
+            {/* O nome vai para o cabeçalho abaixo; na barra, só o "Voltar". O
+                `title` segue para leitores de tela. */}
             <Stack.Screen options={{ title: nome }} />
+            <CabecalhoCategoria nome={nome} {...cabecalho} />
 
             {isPending ? (
                 <View className="gap-3 p-4">

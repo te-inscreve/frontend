@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 
+import { opcoesComVoltar } from "~/components/botao-voltar";
 import { opcoesPilha } from "~/utils/opcoes-pilha";
 
 export default function CategoriasLayout() {
@@ -14,7 +15,10 @@ export default function CategoriasLayout() {
                 name="index"
                 options={{ title: "Categorias", headerShown: false }}
             />
-            <Stack.Screen name="[id]" />
+            <Stack.Screen
+                name="[id]"
+                options={opcoesComVoltar("/categorias")}
+            />
         </Stack>
     );
 }
