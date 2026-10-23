@@ -3,38 +3,35 @@ import Constants from "expo-constants";
 /**
  * Where the Next.js BFF lives — it hosts both `/api/trpc` and `/api/auth`.
  *
- * In development this resolves to your host machine's LAN IP so a physical
- * device can reach it. Point it at your deployed web app for production.
+ * In development it is the host Metro announces — your machine's LAN IP — on
+ * port 3000, so it follows the machine across networks. A release build has no
+ * Metro to ask and uses `EXPO_PUBLIC_BFF_URL`, inlined into the bundle at
+ * build time.
  */
 export const getBaseUrl = () => {
-    /**
-     * Gets the IP address of your host-machine. If it cannot automatically find
-     * it, you'll have to manually set it. NOTE: Port 3000 should work for most
-     * but confirm you don't have anything else running on it.
-     */
-    const debuggerHost = Constants.expoConfig?.hostUri;
-    const localhost = debuggerHost?.split(":")[0];
+    const localhost = Constants.expoConfig?.hostUri?.split(":")[0];
+    if (localhost) return `http://${localhost}:3000`;
 
-    if (!localhost) {
-        // return "https://app.teinscreve.com";
+    const bffUrl = process.env.EXPO_PUBLIC_BFF_URL;
+    if (!bffUrl) {
         throw new Error(
-            "Failed to get localhost. Please point to your production server.",
+            "No BFF URL: set EXPO_PUBLIC_BFF_URL in apps/mobile/.env before building a release.",
         );
     }
-    return `http://${localhost}:3000`;
+    return bffUrl.replace(/\/$/, "");
 };
 
 /**
  * Makes a URL from the API reachable from the device.
  *
- * In development the REST API builds media URLs from the host the BFF called
+ * Against a local API, media URLs come back built from the host the BFF called
  * it on — `localhost` — which, on a physical device, is the device itself.
- * Swaps that host for the machine's LAN IP, the same one `getBaseUrl` uses.
+ * Swaps that host for the BFF's, the machine the device already reaches.
  * Production URLs pass through untouched.
  */
 export const urlDoAparelho = (url: string) => {
-    const host = Constants.expoConfig?.hostUri?.split(":")[0];
-    if (!__DEV__ || !host) return url;
+    const host = getBaseUrl().split("://")[1]?.split(/[:/]/)[0];
+    if (!host) return url;
 
     return url.replace(
         /^(https?:\/\/)(localhost|127\.0\.0\.1)(?=[:/]|$)/,

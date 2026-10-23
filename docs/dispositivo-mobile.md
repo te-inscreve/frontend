@@ -47,6 +47,19 @@ adb install -r apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
 O build de debug já libera HTTP sem TLS (`usesCleartextTraffic`), que o Metro e
 o BFF locais usam.
 
+### Build release
+
+O release embute o JavaScript e não fala com o Metro, então não tem de onde tirar
+o IP da máquina. Ele lê o endereço do BFF de `EXPO_PUBLIC_BFF_URL` em
+`apps/mobile/.env` (modelo em `.env.example`), embutido no bundle durante o build.
+Sem essa variável, o app fecha ao abrir. Com uma URL `http://`, `app.config.ts`
+também libera HTTP sem TLS no release. Depois de mudar a variável, refaça o
+`expo prebuild` antes de compilar.
+
+```bash
+cd apps/mobile && npx expo run:android --variant release
+```
+
 ## A rede vai pelo Wi-Fi; o cabo é só do agente
 
 O aparelho fala com a máquina **pela rede local**. O Metro sobe em modo LAN

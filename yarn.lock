@@ -4514,6 +4514,7 @@ __metadata:
     class-variance-authority: "npm:^0.7.1"
     eslint: "npm:^9.38.0"
     expo: "npm:~58.0.17"
+    expo-build-properties: "npm:~58.0.11"
     expo-constants: "npm:~58.0.13"
     expo-dev-client: "npm:~58.0.14"
     expo-linking: "npm:~58.0.14"
@@ -7265,6 +7266,19 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/1b154322eb8ef5995e520b3d327aff2dd9e4c35e88947965eb3754a3caed12cc78425bf70fe815dbe1de819d5b946e3983aebef0ce3b1381e4d9f103e7636491
+  languageName: node
+  linkType: hard
+
+"expo-build-properties@npm:~58.0.11":
+  version: 58.0.11
+  resolution: "expo-build-properties@npm:58.0.11"
+  dependencies:
+    "@expo/schema-utils": "npm:^58.0.2"
+    resolve-from: "npm:^5.0.0"
+    semver: "npm:^7.7.4"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/80fc143ed7c0e1faa034ffdcddc7c18d88d253e136c4fb6f7332a2246bcd20600d1461b4211d92531c82a23dfb3fbdadb91d970af3b358ec1afbed882ee9f586
   languageName: node
   linkType: hard
 
