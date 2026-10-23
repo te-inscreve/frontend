@@ -37,7 +37,14 @@
             "interactive": true
         }
     },
-    "globalEnv": ["AUTH_SECRET", "API_URL", "NEXT_PUBLIC_API_URL", "PORT"],
+    "globalEnv": [
+        "AUTH_SECRET",
+        "API_URL",
+        "API_KEY",
+        "ALLOWED_ORIGINS",
+        "IMAGE_PROVIDERS",
+        "PORT"
+    ],
     "globalPassThroughEnv": [
         "NODE_ENV",
         "CI",
