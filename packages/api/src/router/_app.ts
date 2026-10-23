@@ -1,5 +1,6 @@
 import { createTRPCRouter } from "../trpc";
 import { authRouter } from "./auth";
+import { avaliacaoRouter } from "./avaliacao";
 import { categoriaRouter } from "./categoria";
 import { entidadeRouter } from "./entidade";
 import { eventoRouter } from "./evento";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
     grupo: grupoRouter,
     inscricao: inscricaoRouter,
     fichaAvaliativa: fichaAvaliativaRouter,
+    avaliacao: avaliacaoRouter,
 });
 
 export type AppRouter = typeof appRouter;

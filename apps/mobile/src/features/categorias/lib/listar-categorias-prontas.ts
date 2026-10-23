@@ -23,57 +23,36 @@ export interface CategoriaPronta {
 }
 
 /**
- * As categorias liberadas para avaliação, de todos os eventos.
+ * As categorias liberadas para avaliação, de todos os eventos, numa só
+ * requisição a `categorias-disponiveis`.
  *
- * Provisória: faz o fan-out eventos → modalidades → categorias e filtra a
- * situação aqui, sem filtrar por avaliador. É o único ponto a trocar quando a
- * API tiver o vínculo avaliador ↔ categoria e um endpoint próprio; quem chama
- * só conhece `CategoriaPronta`.
+ * A visibilidade é a do endpoint: qualquer usuário autenticado vê todas as
+ * categorias `pronta_avaliacao`, decisão de produto do backend. Aqui só se
+ * achata a árvore evento → modalidade → categoria, mantendo a ordem dela;
+ * quem chama só conhece `CategoriaPronta`.
  */
 export async function listarCategoriasProntas(): Promise<CategoriaPronta[]> {
     const eventos = await queryClient.fetchQuery(
-        trpc.evento.getAll.queryOptions(),
+        trpc.avaliacao.getCategoriasDisponiveis.queryOptions(),
     );
 
-    const porEvento = await Promise.all(
-        eventos.map(async (evento) => {
-            const modalidades = await queryClient.fetchQuery(
-                trpc.modalidade.getAll.queryOptions({ eventoId: evento.id }),
-            );
-
-            return Promise.all(
-                modalidades.map(async (modalidade) => {
-                    const categorias = await queryClient.fetchQuery(
-                        trpc.categoria.getAll.queryOptions({
-                            eventoId: evento.id,
-                            modalidadeId: modalidade.id,
-                        }),
-                    );
-
-                    return categorias
-                        .filter(
-                            (categoria) =>
-                                categoria.situacao.value === "pronta_avaliacao",
-                        )
-                        .map((categoria) => ({
-                            id: categoria.id,
-                            nome: categoria.nome,
-                            eventoId: evento.id,
-                            eventoNome: evento.nome,
-                            modalidadeId: modalidade.id,
-                            modalidadeNome: modalidade.nome,
-                            isGrupo: modalidade.isGrupo,
-                            idadeMinima: categoria.idadeMinima,
-                            idadeMaxima: categoria.idadeMaxima,
-                            countInscricoes: categoria.countInscricoes,
-                            maxInscricoes: categoria.maxInscricoes,
-                            dataApresentacao: categoria.dataApresentacao,
-                            situacao: categoria.situacao,
-                        }));
-                }),
-            );
-        }),
+    return eventos.flatMap((evento) =>
+        evento.modalidades.flatMap((modalidade) =>
+            modalidade.categorias.map((categoria) => ({
+                id: categoria.id,
+                nome: categoria.nome,
+                eventoId: evento.id,
+                eventoNome: evento.nome,
+                modalidadeId: modalidade.id,
+                modalidadeNome: modalidade.nome,
+                isGrupo: modalidade.isGrupo,
+                idadeMinima: categoria.idadeMinima,
+                idadeMaxima: categoria.idadeMaxima,
+                countInscricoes: categoria.countInscricoes,
+                maxInscricoes: categoria.maxInscricoes,
+                dataApresentacao: categoria.dataApresentacao,
+                situacao: categoria.situacao,
+            })),
+        ),
     );
-
-    return porEvento.flat(2);
 }

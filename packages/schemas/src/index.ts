@@ -80,6 +80,7 @@ export {
     categoriaAninhadaSchema,
     categoriaDetalheSchema,
     categoriaSchema,
+    categoriasDisponiveisSchema,
     formCategoriaSchema,
     situacaoCategoriaSchema,
 } from "./categoria";
@@ -88,6 +89,7 @@ export type {
     Categoria,
     CategoriaAninhada,
     CategoriaDetalhe,
+    CategoriasDisponiveis,
     FormCategoria,
     SituacaoCategoria,
 } from "./categoria";
