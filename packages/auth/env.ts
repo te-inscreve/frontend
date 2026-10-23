@@ -13,6 +13,13 @@ export const authEnv = () =>
                 process.env.NODE_ENV === "production"
                     ? z.string().min(32)
                     : z.string().min(1).optional(),
+            /**
+             * Fixes the protocol better-auth assumes, and with it whether the
+             * session cookie is `Secure`. Unset, a production build always uses
+             * `Secure` cookies, which the browser drops over plain HTTP on any
+             * host but `localhost`. `http` lets `yarn start` work on the LAN IP.
+             */
+            AUTH_PROTOCOL: z.enum(["http", "https"]).optional(),
         },
         runtimeEnv: process.env,
         emptyStringAsUndefined: true,

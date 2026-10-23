@@ -39,6 +39,7 @@
     },
     "globalEnv": [
         "AUTH_SECRET",
+        "AUTH_PROTOCOL",
         "API_URL",
         "API_KEY",
         "ALLOWED_ORIGINS",

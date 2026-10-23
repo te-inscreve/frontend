@@ -37,6 +37,7 @@ export const auth = initAuth({
         // `127.0.0.1` é o mesmo loopback do `localhost`, e é por ele que o app
         // mobile chega aqui com `expo start --localhost` + `adb reverse`.
         allowedHosts: ["localhost:*", "127.0.0.1:*", ...env.ALLOWED_ORIGINS],
+        protocol: env.AUTH_PROTOCOL,
     },
     secret: env.AUTH_SECRET,
     restClient: httpClient,
