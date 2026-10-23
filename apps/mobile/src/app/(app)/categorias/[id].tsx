@@ -70,7 +70,7 @@ export default function DetalheCategoria() {
                         // daquela inscrição.
                         <Pressable
                             role="button"
-                            aria-label={`Avaliar inscrição ${item.id}, ${nomeDoConcorrente(item)}`}
+                            aria-label={`Avaliar inscrição ${item.ordem},${nomeDoConcorrente(item)}`}
                             onPress={() =>
                                 router.push(rotaFichaInscricao(categoria, item))
                             }

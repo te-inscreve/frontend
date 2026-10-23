@@ -222,7 +222,7 @@ export const modeloFichaSimplesMock: ModeloFichaDetalhe =
  * não vem de uma inscrição de verdade; quando vier, isto sai da inscrição.
  */
 export const inscricaoAvaliadaMock = {
-    grupo: "Invernada Juvenil",
+    concorrente: "Invernada Juvenil",
     entidade: "CTG Querência Amada",
     categoria: "Juvenil",
     modalidade: "Danças tradicionalistas",

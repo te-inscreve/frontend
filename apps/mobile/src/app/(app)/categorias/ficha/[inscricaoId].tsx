@@ -57,7 +57,11 @@ export default function FichaInscricao() {
             ) : data ? (
                 // A `key` remonta o formulário se o modelo trocar: os
                 // `defaultValues` saem dele e só valem na montagem.
-                <FormularioFichaMock key={data.id} modelo={data} />
+                <FormularioFichaMock
+                    key={data.id}
+                    modelo={data}
+                    inscricao={inscricao}
+                />
             ) : (
                 <View className="flex-1 items-center justify-center p-4">
                     <Mensagem>

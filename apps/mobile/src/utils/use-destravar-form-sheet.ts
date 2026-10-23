@@ -26,6 +26,10 @@ export function useDestravarFormSheet() {
 
         StatusBar.setHidden(true);
         const timeout = setTimeout(() => StatusBar.setHidden(false), 50);
-        return () => clearTimeout(timeout);
+        // Fechada antes do timeout, a folha não pode deixar a status bar oculta.
+        return () => {
+            clearTimeout(timeout);
+            StatusBar.setHidden(false);
+        };
     }, []);
 }

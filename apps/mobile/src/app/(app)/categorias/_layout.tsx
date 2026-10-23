@@ -23,7 +23,9 @@ export default function CategoriasLayout() {
                 options={opcoesComVoltar("/categorias")}
             />
             {/* Na pilha de Categorias, acima do detalhe: o "Voltar" da ficha
-                retorna à categoria de onde ela foi aberta. */}
+                retorna à categoria de onde ela foi aberta. Sem histórico,
+                cai na lista: a rota da ficha não traz o que o detalhe
+                precisa para se montar. */}
             <Stack.Screen
                 name="ficha/[inscricaoId]"
                 options={opcoesComVoltar("/categorias")}

@@ -341,7 +341,7 @@ function Conteudo({
                     <View className="bg-card w-full gap-3 rounded-2xl p-5">
                         <View className="gap-0.5">
                             <Text className="text-foreground text-lg font-semibold">
-                                {inscricao.grupo}
+                                {inscricao.concorrente}
                             </Text>
                             <Text className="text-muted-foreground text-sm">
                                 {inscricao.entidade}

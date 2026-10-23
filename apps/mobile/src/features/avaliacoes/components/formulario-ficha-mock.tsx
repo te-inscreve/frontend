@@ -2,13 +2,12 @@ import { useMemo, useState } from "react";
 import { Alert, Keyboard, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FloppyDiskIcon } from "phosphor-react-native/src/icons/FloppyDisk";
 import { useForm, useWatch } from "react-hook-form";
-import { withUniwind } from "uniwind";
 
 import type { ModeloFichaDetalhe } from "@te-inscreve/schemas";
 
 import type { ValoresFicha } from "../lib/formulario-ficha-mock";
+import type { InscricaoAvaliada } from "../lib/modelo-ficha-mock";
 import { Button } from "~/components/ui/button";
 import {
     abaDoTrecho,
@@ -17,12 +16,9 @@ import {
     resumoDoValor,
     trechosDaFicha,
 } from "../lib/formulario-ficha-mock";
-import { inscricaoAvaliadaMock } from "../lib/modelo-ficha-mock";
 import { EdicaoTrecho } from "./edicao-trecho";
 import { FolhaFicha } from "./folha-ficha";
 import { SucessoAvaliacao } from "./sucesso-avaliacao";
-
-const IconeSalvar = withUniwind(FloppyDiskIcon);
 
 /**
  * MOCK (TE-82): o formulário de avaliação como a ficha inteira, em branco, de
@@ -31,13 +27,17 @@ const IconeSalvar = withUniwind(FloppyDiskIcon);
  * cada ocorrência de um agrupamento abre o seu trecho numa folha inferior.
  * "Aplicar" valida o trecho e só fecha a folha sem erros; arrastar, o fundo e
  * o voltar fecham sempre, validando sem barrar, e a ficha marca o que ficou
- * com erro. "Salvar" valida tudo e vai à aba do primeiro trecho com pendência. Nome editável da ocorrência, nota, rascunho e envio
- * ficam para TE-70/TE-95.
+ * com erro. "Salvar" valida tudo e vai à aba do primeiro trecho com pendência.
+ * Nome editável da ocorrência, nota, rascunho e envio ficam para TE-70/TE-95.
+ *
+ * `inscricao` é quem a tela de sucesso mostra como avaliado.
  */
 export function FormularioFichaMock({
     modelo,
+    inscricao,
 }: {
     modelo: ModeloFichaDetalhe;
+    inscricao: InscricaoAvaliada;
 }) {
     const { schema, defaultValues } = useMemo(
         () => montarFormularioFicha(modelo),
@@ -207,7 +207,7 @@ export function FormularioFichaMock({
             <SucessoAvaliacao
                 visivel={salva}
                 nota={notaProvisoria(trechos, valores)}
-                inscricao={inscricaoAvaliadaMock}
+                inscricao={inscricao}
                 aoConcluir={() => {
                     setSalva(false);
                     router.back();
