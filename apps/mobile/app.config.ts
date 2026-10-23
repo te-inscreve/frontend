@@ -40,5 +40,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "expo-splash-screen",
         "expo-status-bar",
         "expo-web-browser",
+        [
+            "expo-build-properties",
+            {
+                // Debug builds already allow plain HTTP; a release pointed at
+                // the BFF on the LAN (`EXPO_PUBLIC_BFF_URL=http://…`) needs it too.
+                android: {
+                    usesCleartextTraffic:
+                        process.env.EXPO_PUBLIC_BFF_URL?.startsWith(
+                            "http://",
+                        ) ?? false,
+                },
+            },
+        ],
     ],
 });
