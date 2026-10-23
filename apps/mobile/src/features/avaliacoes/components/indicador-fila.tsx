@@ -25,10 +25,11 @@ export function IndicadorFila({
             aria-label={`Estado da fila: ${texto}`}
             accessibilityHint="Abre o detalhe da fila"
             onPress={onPress}
-            // O texto tem só a altura da linha; o `hitSlop` leva o alvo de
-            // toque aos 44pt sem crescer o cabeçalho.
-            hitSlop={12}
-            className="shrink flex-row items-center gap-1.5 active:opacity-70"
+            // A pílula escura sobre o primário diz "tocável" sem precisar de
+            // sublinhado; o `hitSlop` completa o alvo até os 44pt sem crescer
+            // o cabeçalho.
+            hitSlop={8}
+            className="shrink flex-row items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 active:bg-black/30"
         >
             <IconeEstadoFila
                 estado={estado}
