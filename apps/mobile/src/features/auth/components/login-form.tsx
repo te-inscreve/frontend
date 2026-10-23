@@ -1,4 +1,4 @@
-import type { TextInput } from "react-native";
+import type { TextInputInstance } from "react-native";
 import { useRef } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +24,7 @@ const Aviso = withUniwind(WarningCircleIcon);
 
 export function LoginForm() {
     const { entrar, limparErro, erro, enviando } = useLogin();
-    const senhaRef = useRef<TextInput>(null);
+    const senhaRef = useRef<TextInputInstance>(null);
     const form = useForm<SignInFormValues>({
         resolver: zodResolver(signInFormSchema),
         defaultValues: { email: "", senha: "" },

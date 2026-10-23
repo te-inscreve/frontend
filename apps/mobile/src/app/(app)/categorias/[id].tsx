@@ -101,7 +101,7 @@ export default function DetalheCategoria() {
                                     ? "1 inscrição"
                                     : `${data.length} inscrições`}
                             </Text>
-                        ) : null
+                        ) : undefined
                     }
                     ListEmptyComponent={
                         <View className="flex-1 items-center justify-center">

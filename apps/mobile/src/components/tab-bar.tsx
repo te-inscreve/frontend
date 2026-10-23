@@ -51,7 +51,9 @@ const tabBarLabelVariants = cva("text-xs", {
     },
 });
 
-type TabBarButtonProps = TabTriggerSlotProps & {
+// O `ref` do expo-router ainda é tipado como o componente `View`, não a
+// instância que o RN 0.88 espera; em tempo de execução ele segue no `props`.
+type TabBarButtonProps = Omit<TabTriggerSlotProps, "ref"> & {
     className?: string;
     /** Ícone Phosphor já passado por `withUniwind`, para aceitar a cor por classe. */
     icone: ComponentType<IconProps & { colorClassName?: string }>;

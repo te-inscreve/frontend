@@ -13,13 +13,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     updates: {
         fallbackToCacheTimeout: 0,
     },
-    // The new architecture is the only option in SDK 57 — no flag needed.
+    // The new architecture is the only option since SDK 57 — no flag needed.
     assetBundlePatterns: ["**/*"],
     ios: {
         bundleIdentifier: "br.com.teinscreve.app",
         supportsTablet: true,
     },
-    // Edge-to-edge is always on in SDK 57, so there is no flag to set here.
+    // Edge-to-edge is always on since SDK 57, so there is no flag to set here.
     android: {
         package: "br.com.teinscreve.app",
         adaptiveIcon: {
@@ -34,5 +34,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         tsconfigPaths: true,
         typedRoutes: true,
     },
-    plugins: ["expo-router", "expo-secure-store", "expo-web-browser"],
+    plugins: [
+        "expo-router",
+        "expo-secure-store",
+        "expo-splash-screen",
+        "expo-status-bar",
+        "expo-web-browser",
+    ],
 });

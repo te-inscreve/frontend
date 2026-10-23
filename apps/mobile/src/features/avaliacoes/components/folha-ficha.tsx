@@ -1,4 +1,5 @@
 import type { Control } from "react-hook-form";
+import type { ScrollViewInstance } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import {
     Pressable,
@@ -284,7 +285,7 @@ function BarraDeAbas({
     comErro: (aba: AbaDaFicha) => boolean;
     aoTrocar: (chave: string) => void;
 }) {
-    const rolagem = useRef<ScrollView>(null);
+    const rolagem = useRef<ScrollViewInstance>(null);
     const [medidas, setMedidas] = useState<
         Record<string, { x: number; largura: number }>
     >({});

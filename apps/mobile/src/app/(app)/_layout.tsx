@@ -34,16 +34,11 @@ export default function AppLayout() {
              * O `primary-foreground` é claro no tema claro e escuro no escuro;
              * os ícones da status bar o acompanham para ficarem legíveis.
              *
-             * O `StatusBar` do RN, e não o do expo-status-bar, porque só ele
-             * aceita `translucent`: no build o SDK 57 já é edge-to-edge e isso
-             * não muda nada, mas o Expo Go no Android desenha a status bar
-             * opaca, e sem `translucent` o cabeçalho ficaria abaixo dela.
+             * Desde o SDK 58 (RN 0.88) o app e o Expo Go são sempre
+             * edge-to-edge: a status bar é transparente e não há mais
+             * `translucent` nem `backgroundColor` a ajustar.
              */}
-            <StatusBar
-                translucent
-                backgroundColor="transparent"
-                barStyle={escuro ? "dark-content" : "light-content"}
-            />
+            <StatusBar barStyle={escuro ? "dark-content" : "light-content"} />
             <CabecalhoApp />
             {/*
              * O cabeçalho já cobre a status bar. Sem zerar o `top`, a barra

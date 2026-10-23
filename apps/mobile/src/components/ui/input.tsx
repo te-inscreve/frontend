@@ -1,11 +1,11 @@
 import type { Ref } from "react";
-import type { TextInputProps } from "react-native";
+import type { TextInputInstance, TextInputProps } from "react-native";
 import { TextInput } from "react-native";
 
 import { cn } from "~/utils/cn";
 
 type InputProps = TextInputProps & {
-    ref?: Ref<TextInput>;
+    ref?: Ref<TextInputInstance>;
     className?: string;
     /**
      * Marca o campo com o vermelho de erro. O RN não tem `aria-invalid`:
