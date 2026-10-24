@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import { Text, View } from "react-native";
 import { BuildingsIcon } from "phosphor-react-native/src/icons/Buildings";
 import { CaretRightIcon } from "phosphor-react-native/src/icons/CaretRight";
+import { ClipboardTextIcon } from "phosphor-react-native/src/icons/ClipboardText";
 import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { UsersThreeIcon } from "phosphor-react-native/src/icons/UsersThree";
 import { withUniwind } from "uniwind";
@@ -16,6 +17,7 @@ const IconeEntidade = withUniwind(BuildingsIcon);
 const IconePessoa = withUniwind(UserIcon);
 const IconeGrupo = withUniwind(UsersThreeIcon);
 const IconeAvancar = withUniwind(CaretRightIcon);
+const IconeAvaliacaoAtual = withUniwind(ClipboardTextIcon);
 
 /*
  * Os bilhetes de `ListaInscricoes` do web
@@ -37,7 +39,14 @@ const IconeAvancar = withUniwind(CaretRightIcon);
  * O título é o nome do concorrente quando a modalidade o exibe, e a
  * entidade desce para a linha de baixo; sem ele, a entidade é o título.
  */
-export function BilheteGrupo({ inscricao }: { inscricao: InscricaoGrupo }) {
+export function BilheteGrupo({
+    inscricao,
+    avaliacaoAtual = false,
+}: {
+    inscricao: InscricaoGrupo;
+    /** É a inscrição da avaliação atual do avaliador. */
+    avaliacaoAtual?: boolean;
+}) {
     const { entidade, nomeConcorrente, totalIntegrantes } = inscricao;
 
     return (
@@ -81,7 +90,7 @@ export function BilheteGrupo({ inscricao }: { inscricao: InscricaoGrupo }) {
                         {totalIntegrantes === 1 ? "integrante" : "integrantes"}
                     </Text>
                 </View>
-                <LugarDaNota />
+                <LugarDaNota avaliacaoAtual={avaliacaoAtual} />
             </View>
         </View>
     );
@@ -96,8 +105,11 @@ export function BilheteGrupo({ inscricao }: { inscricao: InscricaoGrupo }) {
  */
 export function BilheteIndividual({
     inscricao,
+    avaliacaoAtual = false,
 }: {
     inscricao: InscricaoIndividual;
+    /** É a inscrição da avaliação atual do avaliador. */
+    avaliacaoAtual?: boolean;
 }) {
     const { entidade, concorrente } = inscricao;
 
@@ -131,7 +143,7 @@ export function BilheteIndividual({
                         Concorrente não informado
                     </Text>
                 )}
-                <LugarDaNota />
+                <LugarDaNota avaliacaoAtual={avaliacaoAtual} />
             </View>
         </View>
     );
@@ -142,11 +154,32 @@ export function BilheteIndividual({
  * avaliação chega ao app, então o lugar convida a avaliar, com a cara do
  * `Button` primário; o tamanho é fixo, o da nota que virá.
  *
+ * Na inscrição da avaliação atual, convida a continuar, com o contorno e a
+ * prancheta do badge da dock: de relance, a lista mostra qual ficha está
+ * aberta.
+ *
  * Só a aparência do botão: o alvo do toque é o bilhete inteiro, que já se
  * anuncia como "Avaliar inscrição…". Um botão de verdade aqui dentro seria
  * uma segunda parada do leitor de tela para a mesma ação.
  */
-function LugarDaNota() {
+function LugarDaNota({ avaliacaoAtual }: { avaliacaoAtual: boolean }) {
+    if (avaliacaoAtual)
+        return (
+            <View
+                aria-hidden
+                className="border-primary bg-primary/10 h-14 w-28 flex-row items-center justify-center gap-1.5 rounded-md border-2"
+            >
+                <IconeAvaliacaoAtual
+                    size={18}
+                    weight="bold"
+                    colorClassName="accent-primary"
+                />
+                <Text className="text-primary text-base font-semibold">
+                    Continuar
+                </Text>
+            </View>
+        );
+
     return (
         <View
             aria-hidden

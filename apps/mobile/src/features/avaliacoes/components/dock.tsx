@@ -8,7 +8,7 @@ import Animated, {
 import { ClipboardTextIcon } from "phosphor-react-native/src/icons/ClipboardText";
 import { withUniwind } from "uniwind";
 
-import type { EstadoFila } from "../lib/estado-fila";
+import type { Fila } from "../lib/fila";
 import type { AvaliacaoLocal } from "~/db/schema";
 import { descreverEstadoFila } from "../lib/estado-fila";
 import { IconeEstadoFila } from "./icone-estado-fila";
@@ -25,20 +25,22 @@ const mola = LinearTransition.springify().dampingRatio(0.6);
  * - **Avaliação atual**: só aparece quando existe uma, com o nome de quem está
  *   sendo avaliado. Tocar volta à ficha.
  * - **Fila**: o estado do envio ao servidor. Tocar abre o detalhe da fila.
- *   Sozinha, diz o estado por extenso; ao lado da avaliação atual, que
- *   precisa do espaço, fica só o ícone. Some até o banco responder, para não
+ *   Mostra sempre quantas avaliações ainda não chegaram ao servidor (na fila
+ *   e com erro). Sozinha, o texto continua com o estado por extenso depois
+ *   do número; ao lado da avaliação atual, que precisa do espaço, fica só o
+ *   número. Some até o banco responder, para não
  *   dizer "sincronizado" sem saber.
  *
  * O leitor de tela lê sempre o texto inteiro; os ícones são decorativos.
  */
 export function Dock({
     avaliacaoAtual,
-    estadoFila,
+    fila,
     aoAbrirAvaliacaoAtual,
     aoAbrirFila,
 }: {
     avaliacaoAtual: AvaliacaoLocal | undefined;
-    estadoFila: EstadoFila | undefined;
+    fila: Fila | undefined;
     aoAbrirAvaliacaoAtual: (avaliacao: AvaliacaoLocal) => void;
     aoAbrirFila: () => void;
 }) {
@@ -59,20 +61,18 @@ export function Dock({
                     onPress={() => aoAbrirAvaliacaoAtual(avaliacaoAtual)}
                 />
             )}
-            {estadoFila && (
+            {fila && (
                 <Badge
-                    rotulo={`Estado da fila: ${descreverEstadoFila(estadoFila)}`}
+                    rotulo={`Estado da fila: ${descreverEstadoFila(fila.estado)}`}
                     dica="Abre o detalhe da fila"
                     icone={
                         <IconeEstadoFila
-                            estado={estadoFila}
+                            estado={fila.estado}
                             size={18}
                             colorClassName="accent-primary-foreground"
                         />
                     }
-                    texto={
-                        avaliacaoAtual ? null : descreverEstadoFila(estadoFila)
-                    }
+                    texto={textoDaFila(fila, !avaliacaoAtual)}
                     onPress={aoAbrirFila}
                 />
             )}
@@ -132,6 +132,20 @@ function Badge({
             </Pressable>
         </Animated.View>
     );
+}
+
+/**
+ * O texto do badge da fila. Começa sempre pela contagem, para expandir sem
+ * mudar o começo: "1" → "1 na fila"; quando o estado não começa pelo mesmo
+ * número, ele vem depois de um ponto ("0 · Sincronizado").
+ */
+function textoDaFila(fila: Fila, porExtenso: boolean) {
+    const contagem = String(fila.naFila.length + fila.comErro.length);
+    if (!porExtenso) return contagem;
+    const estado = descreverEstadoFila(fila.estado);
+    return estado.startsWith(`${contagem} `)
+        ? estado
+        : `${contagem} · ${estado}`;
 }
 
 const badge = {

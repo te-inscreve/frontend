@@ -6,6 +6,7 @@ import type { InscricaoGrupo, InscricaoIndividual } from "@te-inscreve/schemas";
 
 import type { ParametrosDetalheCategoria } from "~/features/categorias/lib/rota-detalhe-categoria";
 import { Button } from "~/components/ui/button";
+import { useAvaliacaoAtual } from "~/features/avaliacoes/lib/avaliacoes-locais";
 import {
     nomeDoConcorrente,
     rotaFichaInscricao,
@@ -20,6 +21,7 @@ import { CabecalhoCategoria } from "~/features/categorias/components/cabecalho-c
 import { lerParametrosDetalheCategoria } from "~/features/categorias/lib/rota-detalhe-categoria";
 import { useInscricoesDaCategoria } from "~/features/categorias/lib/use-inscricoes-da-categoria";
 import { trpc } from "~/utils/api";
+import { useSession } from "~/utils/auth";
 
 function Mensagem({ children }: { children: string }) {
     return (
@@ -50,6 +52,10 @@ export default function DetalheCategoria() {
         : modelo.isError && modelo.data === undefined
           ? "Não foi possível carregar"
           : (modelo.data?.nome ?? "Nenhum vinculado");
+
+    // A inscrição da avaliação atual ganha o "Continuar" no bilhete.
+    const { data: sessao } = useSession();
+    const avaliacaoAtual = useAvaliacaoAtual(sessao?.user.id ?? "");
 
     const Skeleton = isGrupo ? BilheteGrupoSkeleton : BilheteIndividualSkeleton;
 
@@ -87,28 +93,35 @@ export default function DetalheCategoria() {
                 <FlatList<InscricaoGrupo | InscricaoIndividual>
                     data={data}
                     keyExtractor={(inscricao) => String(inscricao.id)}
-                    renderItem={({ item }) => (
-                        // O bilhete inteiro é o alvo: tocar nele abre a ficha
-                        // daquela inscrição.
-                        <Pressable
-                            role="button"
-                            aria-label={`Avaliar inscrição ${item.ordem},${nomeDoConcorrente(item)}`}
-                            onPress={() =>
-                                router.push(rotaFichaInscricao(categoria, item))
-                            }
-                            className="active:opacity-70"
-                        >
-                            {isGrupo ? (
-                                <BilheteGrupo
-                                    inscricao={item as InscricaoGrupo}
-                                />
-                            ) : (
-                                <BilheteIndividual
-                                    inscricao={item as InscricaoIndividual}
-                                />
-                            )}
-                        </Pressable>
-                    )}
+                    renderItem={({ item }) => {
+                        const atual = avaliacaoAtual?.inscricaoId === item.id;
+                        return (
+                            // O bilhete inteiro é o alvo: tocar nele abre a ficha
+                            // daquela inscrição.
+                            <Pressable
+                                role="button"
+                                aria-label={`${atual ? "Continuar avaliação da inscrição" : "Avaliar inscrição"} ${item.ordem},${nomeDoConcorrente(item)}`}
+                                onPress={() =>
+                                    router.push(
+                                        rotaFichaInscricao(categoria, item),
+                                    )
+                                }
+                                className="active:opacity-70"
+                            >
+                                {isGrupo ? (
+                                    <BilheteGrupo
+                                        inscricao={item as InscricaoGrupo}
+                                        avaliacaoAtual={atual}
+                                    />
+                                ) : (
+                                    <BilheteIndividual
+                                        inscricao={item as InscricaoIndividual}
+                                        avaliacaoAtual={atual}
+                                    />
+                                )}
+                            </Pressable>
+                        );
+                    }}
                     contentContainerClassName="grow gap-3 p-4"
                     refreshControl={
                         <RefreshControl

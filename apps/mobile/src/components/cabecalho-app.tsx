@@ -33,7 +33,7 @@ export function CabecalhoApp() {
             <View className="max-w-1/2 shrink-0 items-end">
                 <Dock
                     avaliacaoAtual={avaliacaoAtual}
-                    estadoFila={fila?.estado}
+                    fila={fila}
                     // `navigate`, e não `push`: já na ficha dela, não empilha
                     // a mesma tela de novo.
                     aoAbrirAvaliacaoAtual={(avaliacao) =>
