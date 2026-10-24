@@ -289,7 +289,7 @@ describe("montarFormularioFicha", () => {
         ]);
     });
 
-    it("começa vazio, com o valor inicial de cada tipo", () => {
+    it("começa vazio, com o valor inicial de cada tipo e o nome padrão de cada ocorrência", () => {
         expect(defaultValues).toEqual({
             g201: "",
             a301_1_401: "",
@@ -303,6 +303,9 @@ describe("montarFormularioFicha", () => {
             a302_1_405: "",
             g203: null,
             g204: "",
+            n301_1: "Danças 1",
+            n301_2: "Danças 2",
+            n302_1: "Danças 1",
         });
     });
 
