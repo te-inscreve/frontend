@@ -1,16 +1,29 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { CloudArrowUpIcon } from "phosphor-react-native/src/icons/CloudArrowUp";
+import { CloudCheckIcon } from "phosphor-react-native/src/icons/CloudCheck";
+import { WarningIcon } from "phosphor-react-native/src/icons/Warning";
+import { withUniwind } from "uniwind";
 
 import type { MinhaAvaliacao as MinhaAvaliacaoDados } from "@te-inscreve/schemas";
 
 import type { SecaoMinhasAvaliacoes } from "../lib/minhas-avaliacoes";
-import { formatDate } from "~/utils/format-date";
+import type { AvaliacaoLocal } from "~/db/schema";
+import { cn } from "~/utils/cn";
+import { formatDate, formatHora } from "~/utils/format-date";
+import { notaPrevia } from "../lib/fila";
 import { formatarNota, nomeDoAvaliado } from "../lib/minhas-avaliacoes";
+import { rotaDaAvaliacaoLocal } from "../lib/rota-ficha-inscricao";
+
+const IconeNaFila = withUniwind(CloudArrowUpIcon);
+const IconeComErro = withUniwind(WarningIcon);
+const IconeEnviada = withUniwind(CloudCheckIcon);
 
 /** O título da categoria sobre as avaliações dela, com o evento embaixo. */
 export function CabecalhoSecaoMinhasAvaliacoes({
     secao,
 }: {
-    secao: SecaoMinhasAvaliacoes;
+    secao: Pick<SecaoMinhasAvaliacoes, "titulo" | "eventoNome">;
 }) {
     return (
         <View className="bg-background gap-0.5 pt-4 pb-2">
@@ -72,6 +85,130 @@ export function MinhaAvaliacao({
             </View>
         </View>
     );
+}
+
+/**
+ * Uma avaliação que ainda não chegou ao servidor: na fila, sendo enviada ou
+ * recusada. A borda tracejada diz, de relance, que ela só existe no
+ * aparelho; o card não tem fundo, como um lugar reservado para a enviada.
+ * A nota é a prévia do app. Tocar abre a ficha, onde ela se edita ou se
+ * descarta.
+ *
+ * A que acabou de sincronizar, antes de a lista do servidor recarregar, já
+ * aparece como enviada: borda sólida e a nota do servidor.
+ */
+export function AvaliacaoDoAparelho({
+    avaliacao,
+}: {
+    avaliacao: AvaliacaoLocal;
+}) {
+    const router = useRouter();
+    const { inscricao } = avaliacao;
+    const enviada = avaliacao.estado === "sincronizada";
+    const nota = avaliacao.nota
+        ? formatarNota(avaliacao.nota)
+        : notaPrevia(avaliacao);
+    const comErro = avaliacao.estado === "com_erro";
+    const situacao = situacaoNoAparelho(avaliacao);
+
+    return (
+        <Pressable
+            role="button"
+            aria-label={
+                enviada
+                    ? `${inscricao.concorrente}, ${inscricao.entidade}, ${situacao}, nota ${nota} de 10`
+                    : `${inscricao.concorrente}, ${inscricao.entidade}, ainda não enviada: ${situacao}. Nota prévia ${nota} de 10`
+            }
+            aria-hint="Abre a ficha da avaliação"
+            onPress={() => router.push(rotaDaAvaliacaoLocal(avaliacao))}
+            className={cn(
+                "flex-row items-center gap-3 rounded-xl p-3 active:opacity-70",
+                enviada
+                    ? "border-border bg-card border"
+                    : "border-2 border-dashed",
+                !enviada &&
+                    (comErro
+                        ? "border-destructive/60"
+                        : "border-muted-foreground/40"),
+            )}
+        >
+            <View className="flex-1 gap-0.5">
+                <Text
+                    numberOfLines={1}
+                    className="text-foreground text-base font-semibold"
+                >
+                    {inscricao.concorrente}
+                </Text>
+                <Text
+                    numberOfLines={1}
+                    className="text-muted-foreground text-sm"
+                >
+                    {inscricao.entidade}
+                </Text>
+                <View className="flex-row items-center gap-1.5">
+                    {enviada ? (
+                        <IconeEnviada
+                            size={16}
+                            weight="bold"
+                            colorClassName="accent-primary"
+                        />
+                    ) : comErro ? (
+                        <IconeComErro
+                            size={16}
+                            weight="bold"
+                            colorClassName="accent-destructive"
+                        />
+                    ) : (
+                        <IconeNaFila
+                            size={16}
+                            weight="bold"
+                            colorClassName="accent-muted-foreground"
+                        />
+                    )}
+                    <Text
+                        numberOfLines={2}
+                        className={cn(
+                            "shrink text-sm",
+                            comErro
+                                ? "text-destructive"
+                                : "text-muted-foreground",
+                        )}
+                    >
+                        {situacao}
+                    </Text>
+                </View>
+            </View>
+            <View
+                className={cn(
+                    "min-w-16 items-center rounded-lg px-3 py-2",
+                    enviada ? "bg-muted" : "border-border border border-dashed",
+                )}
+            >
+                <Text className="text-foreground text-xl font-bold">
+                    {nota}
+                </Text>
+                <Text className="text-muted-foreground text-xs">
+                    {enviada ? "de 10" : "prévia"}
+                </Text>
+            </View>
+        </Pressable>
+    );
+}
+
+/** O rodapé do card pendente: onde a avaliação está no caminho ao servidor. */
+function situacaoNoAparelho(avaliacao: AvaliacaoLocal) {
+    switch (avaliacao.estado) {
+        case "enviando":
+            return "Enviando ao servidor…";
+        case "com_erro":
+            return `Recusada: ${avaliacao.erro?.mensagem ?? "o servidor não aceitou."}`;
+        case "sincronizada":
+            return `Enviada às ${formatHora(avaliacao.enviadoEm ?? avaliacao.atualizadoEm)}`;
+        default: {
+            const salva = avaliacao.enfileiradoEm ?? avaliacao.atualizadoEm;
+            return `Ainda não enviada · salva às ${formatHora(salva)}`;
+        }
+    }
 }
 
 /** A geometria de {@link MinhaAvaliacao}: três linhas e a caixa da nota. */
