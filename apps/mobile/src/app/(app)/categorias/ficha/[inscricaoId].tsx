@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { ParametrosFichaInscricao } from "~/features/avaliacoes/lib/rota-ficha-inscricao";
 import { Button } from "~/components/ui/button";
 import { FolhaFichaSkeleton } from "~/features/avaliacoes/components/folha-ficha";
-import { FormularioFichaMock } from "~/features/avaliacoes/components/formulario-ficha-mock";
+import { FormularioFicha } from "~/features/avaliacoes/components/formulario-ficha";
 import { lerParametrosFichaInscricao } from "~/features/avaliacoes/lib/rota-ficha-inscricao";
 import { trpc } from "~/utils/api";
 
@@ -57,7 +57,7 @@ export default function FichaInscricao() {
             ) : data ? (
                 // A `key` remonta o formulário se o modelo trocar: os
                 // `defaultValues` saem dele e só valem na montagem.
-                <FormularioFichaMock
+                <FormularioFicha
                     key={data.id}
                     modelo={data}
                     inscricao={inscricao}

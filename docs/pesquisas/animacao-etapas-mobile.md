@@ -1,6 +1,6 @@
 # Animação entre etapas do formulário no mobile
 
-Pesquisa sobre como animar a troca de etapa de `FormularioFichaMock` (`apps/mobile/src/features/avaliacoes/components/formulario-ficha-mock.tsx`): a próxima etapa entra pela direita, a anterior pela esquerda e, mais tarde, um gesto de arrastar volta uma etapa. Versões no `yarn.lock`: `expo@57.0.30`, `react-native@0.86.3`, `react-native-reanimated@4.5.1`, `react-native-worklets@0.10.1`, `react-native-gesture-handler@2.32.0`, `react-native-screens@4.26.2`. Fontes consultadas em 22/10/2026.
+Pesquisa sobre como animar a troca de etapa de `FormularioFicha` (`apps/mobile/src/features/avaliacoes/components/formulario-ficha.tsx`, então `FormularioFichaMock`): a próxima etapa entra pela direita, a anterior pela esquerda e, mais tarde, um gesto de arrastar volta uma etapa. Versões no `yarn.lock`: `expo@57.0.30`, `react-native@0.86.3`, `react-native-reanimated@4.5.1`, `react-native-worklets@0.10.1`, `react-native-gesture-handler@2.32.0`, `react-native-screens@4.26.2`. Fontes consultadas em 22/10/2026.
 
 ## Recomendação
 

@@ -70,6 +70,11 @@ export function rotaFichaInscricao(
     return { pathname: "/categorias/ficha/[inscricaoId]", params };
 }
 
+/** Quem foi avaliado, como a tela de sucesso o mostra. */
+export type InscricaoAvaliada = ReturnType<
+    typeof lerParametrosFichaInscricao
+>["inscricao"];
+
 /** O caminho de volta de {@link rotaFichaInscricao}, na tela da ficha. */
 export function lerParametrosFichaInscricao(params: ParametrosFichaInscricao) {
     return {

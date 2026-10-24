@@ -20,27 +20,32 @@ import { PencilSimpleIcon } from "phosphor-react-native/src/icons/PencilSimple";
 import { WarningCircleIcon } from "phosphor-react-native/src/icons/WarningCircle";
 import { withUniwind } from "uniwind";
 
-import type { CampoFicha, ModeloFichaDetalhe } from "@te-inscreve/schemas";
-
 import type {
-    AbaDaFicha,
-    TrechoFicha,
+    CampoFicha,
+    ModeloFichaDetalhe,
     ValorCampo,
     ValoresFicha,
-} from "../lib/formulario-ficha-mock";
+} from "@te-inscreve/schemas";
+import { formatarDecimal, tetoDoCampo } from "@te-inscreve/schemas";
+
+import type { AbaDaFicha, TrechoFicha } from "../lib/formulario-ficha";
+import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
 import { Badge } from "~/components/ui/badge";
 import { cn } from "~/utils/cn";
 import {
     abasDaFicha,
-    formatarDecimal,
     resumoDoValor,
-    tetoDoCampo,
-} from "../lib/formulario-ficha-mock";
+    subtotalDaOcorrencia,
+} from "../lib/formulario-ficha";
 import { CampoFichaControlado } from "./campo-ficha";
+import {
+    BotaoDadosDaInscricao,
+    DadosDaInscricao,
+} from "./inscricao-em-avaliacao";
 import { SeloModificador } from "./selo-modificador";
 
 /*
- * MOCK (TE-82): a ficha inteira, a partir do modelo de ficha do web
+ * A ficha inteira, a partir do modelo de ficha do web
  * (`apps/web/.../ficha-avaliativa/folha-modelo-ficha.tsx`), preenchida com as
  * respostas e dividida em abas: uma com os campos gerais, que se preenchem ali
  * mesmo, e uma por agrupamento, com um cartão por ocorrência que abre o seu
@@ -117,22 +122,6 @@ function NotaComTeto({
 }
 
 /**
- * O lugar de um número que a ficha ainda não calcula — o total da linha, a
- * nota final. A fórmula está em aberto no mapa do Linear (TE-95), então o mock
- * só reserva o espaço.
- */
-function ACalcular({ className }: { className?: string }) {
-    return (
-        <Text
-            aria-label="a calcular"
-            className={cn("text-muted-foreground font-bold", className)}
-        >
-            —
-        </Text>
-    );
-}
-
-/**
  * Uma resposta da ocorrência, na largura toda do cartão: o nome e o selo em
  * cima, o valor embaixo. Sem a ajuda do campo: o cartão é um resumo.
  */
@@ -172,15 +161,6 @@ function RespostaDoCartao({
     );
 }
 
-function resumoDaFolha(modelo: ModeloFichaDetalhe) {
-    const campos = modelo.camposGerais.length;
-    const agrupamentos = modelo.agrupamentos.length;
-    return [
-        `${campos} ${campos === 1 ? "campo geral" : "campos gerais"}`,
-        `${agrupamentos} ${agrupamentos === 1 ? "agrupamento" : "agrupamentos"}`,
-    ].join(" · ");
-}
-
 /**
  * Uma ocorrência como cartão: o título e o total em faixas `muted`, os campos
  * no meio. Tocar no cartão abre o trecho na folha.
@@ -202,6 +182,7 @@ function CartaoOcorrencia({
     const temTotal = linha.campos.some(
         ({ campo }) => campo.tipo === "NUMERICO",
     );
+    const total = subtotalDaOcorrencia(linha.campos, valores);
     const vazia = linha.campos.every(
         ({ chave, campo }) =>
             resumoDoValor(campo, valores[chave] ?? null) === null,
@@ -259,7 +240,15 @@ function CartaoOcorrencia({
                             <Text className="text-foreground text-sm font-semibold">
                                 Total
                             </Text>
-                            <ACalcular className="ml-auto text-sm" />
+                            {total === null ? (
+                                <Text className="text-muted-foreground ml-auto text-sm font-bold">
+                                    —
+                                </Text>
+                            ) : (
+                                <Text className="text-foreground ml-auto text-sm font-bold">
+                                    {formatarDecimal(total)}
+                                </Text>
+                            )}
                         </View>
                     )}
                 </>
@@ -388,6 +377,7 @@ function BarraDeAbas({
 
 export function FolhaFicha({
     modelo,
+    inscricao,
     trechos,
     valores,
     comErro,
@@ -398,6 +388,7 @@ export function FolhaFicha({
     revalidar,
 }: {
     modelo: ModeloFichaDetalhe;
+    inscricao: InscricaoAvaliada;
     trechos: TrechoFicha[];
     valores: ValoresFicha;
     comErro: (trecho: number) => boolean;
@@ -419,6 +410,7 @@ export function FolhaFicha({
     // A aba na tela fica para trás da escolhida enquanto sai: toque na barra,
     // deslize ou o "Salvar" que leva ao erro, todos trocam por aqui.
     const [exibida, setExibida] = useState(atual);
+    const [dadosAbertos, setDadosAbertos] = useState(false);
     const indiceExibida = chaves.indexOf(exibida);
     const naTela = abas[indiceExibida] ?? aberta;
     // Quanto o conteúdo está fora do lugar, na horizontal.
@@ -495,17 +487,27 @@ export function FolhaFicha({
                     720pt e fica no meio: na largura toda, o olho anda demais
                     de um lado ao outro. */}
                 <View className="w-full max-w-[720px] gap-6 self-center">
-                    <View className="mt-2 gap-1">
-                        <Text
-                            role="heading"
-                            className="text-foreground text-2xl leading-tight font-bold tracking-tight"
-                        >
-                            {modelo.nome}
-                        </Text>
-                        <Text className="text-muted-foreground text-sm">
-                            {resumoDaFolha(modelo)}
-                        </Text>
+                    <View className="mt-2 flex-row items-start gap-3">
+                        <View className="flex-1 gap-1">
+                            <Text
+                                role="heading"
+                                className="text-foreground text-2xl leading-tight font-bold tracking-tight"
+                            >
+                                {`Avaliando ${inscricao.concorrente}`}
+                            </Text>
+                            <Text className="text-muted-foreground text-sm">
+                                {`Modelo de ficha: ${modelo.nome}`}
+                            </Text>
+                        </View>
+                        <BotaoDadosDaInscricao
+                            aberto={dadosAbertos}
+                            aoAlternar={() =>
+                                setDadosAbertos((atual) => !atual)
+                            }
+                        />
                     </View>
+
+                    {dadosAbertos && <DadosDaInscricao inscricao={inscricao} />}
 
                     {abas.length > 1 && aberta && (
                         <BarraDeAbas

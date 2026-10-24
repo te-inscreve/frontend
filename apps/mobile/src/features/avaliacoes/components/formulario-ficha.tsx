@@ -4,35 +4,34 @@ import { useRouter } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 
-import type { ModeloFichaDetalhe } from "@te-inscreve/schemas";
+import type { ModeloFichaDetalhe, ValoresFicha } from "@te-inscreve/schemas";
+import { formatarDecimal, montarFormularioFicha } from "@te-inscreve/schemas";
 
-import type { ValoresFicha } from "../lib/formulario-ficha-mock";
-import type { InscricaoAvaliada } from "../lib/modelo-ficha-mock";
+import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
 import { Button } from "~/components/ui/button";
 import {
     abaDoTrecho,
-    montarFormularioFicha,
-    notaProvisoria,
+    notaDaFicha,
     resumoDoValor,
     trechosDaFicha,
-} from "../lib/formulario-ficha-mock";
+} from "../lib/formulario-ficha";
 import { EdicaoTrecho } from "./edicao-trecho";
 import { FolhaFicha } from "./folha-ficha";
 import { SucessoAvaliacao } from "./sucesso-avaliacao";
 
 /**
- * MOCK (TE-82): o formulário de avaliação como a ficha inteira, em branco, de
+ * O formulário de avaliação como a ficha inteira, em branco, de
  * entrada. O avaliador vê tudo antes e preenche aos poucos, na ordem que
  * quiser, uma aba por vez: os campos gerais se preenchem na própria ficha, e
  * cada ocorrência de um agrupamento abre o seu trecho numa folha inferior.
  * "Aplicar" valida o trecho e só fecha a folha sem erros; arrastar, o fundo e
  * o voltar fecham sempre, validando sem barrar, e a ficha marca o que ficou
  * com erro. "Salvar" valida tudo e vai à aba do primeiro trecho com pendência.
- * Nome editável da ocorrência, nota, rascunho e envio ficam para TE-70/TE-95.
+ * Nome editável da ocorrência e rascunho ficam para TE-70.
  *
  * `inscricao` é quem a tela de sucesso mostra como avaliado.
  */
-export function FormularioFichaMock({
+export function FormularioFicha({
     modelo,
     inscricao,
 }: {
@@ -64,6 +63,10 @@ export function FormularioFichaMock({
         valores: ValoresFicha;
         comErro: boolean;
     }>({ valores: {}, comErro: false });
+
+    // Com duas casas, como a tela de sucesso mostra.
+    const nota = notaDaFicha(trechos, valores);
+    const notaFormatada = formatarDecimal(Number(nota.toFixed(2)));
 
     // Quantos campos já têm resposta, para o rodapé dizer onde o avaliador
     // está sem precisar rolar a ficha nem trocar de aba.
@@ -124,8 +127,9 @@ export function FormularioFichaMock({
 
     const salvar = form.handleSubmit(
         // Válida, a avaliação ainda pede confirmação: na fila ela não se
-        // edita mais (ADR 0001 usa o `Alert` para confirmar). No app de
-        // verdade, o "Salvar" do alerta a poria na fila de envio.
+        // edita mais (ADR 0001 usa o `Alert` para confirmar).
+        // O "Salvar" do alerta ainda só mostra o sucesso: pôr a avaliação na
+        // fila de envio é o próximo passo.
         () => {
             Keyboard.dismiss();
             Alert.alert(
@@ -155,6 +159,7 @@ export function FormularioFichaMock({
             <ScrollView contentContainerClassName="grow">
                 <FolhaFicha
                     modelo={modelo}
+                    inscricao={inscricao}
                     trechos={trechos}
                     valores={valores}
                     comErro={comErro}
@@ -169,17 +174,17 @@ export function FormularioFichaMock({
             <View className="bg-card border-border border-t p-4">
                 {/* A nota final mora no rodapé fixo, ao lado do "Salvar":
                     vale para a ficha inteira, não para uma aba, e fica à
-                    vista enquanto o avaliador preenche. O cálculo ainda está
-                    em aberto (TE-95), então o mock só reserva o lugar. */}
+                    vista enquanto o avaliador preenche. É a prévia do que
+                    já foi preenchido (TE-95). */}
                 <View className="w-full max-w-[720px] flex-row items-center gap-4 self-center">
                     <View className="flex-1 gap-0.5">
                         <View className="flex-row items-baseline gap-2">
                             <Text className="text-muted-foreground text-sm">
                                 Nota final
                             </Text>
-                            <Text aria-label="a calcular, de 10">
+                            <Text aria-label={`${notaFormatada} de 10`}>
                                 <Text className="text-foreground text-2xl font-bold">
-                                    —
+                                    {notaFormatada}
                                 </Text>
                                 <Text className="text-muted-foreground text-base">
                                     {" / 10"}
@@ -206,7 +211,7 @@ export function FormularioFichaMock({
 
             <SucessoAvaliacao
                 visivel={salva}
-                nota={notaProvisoria(trechos, valores)}
+                nota={nota}
                 inscricao={inscricao}
                 aoConcluir={() => {
                     setSalva(false);
