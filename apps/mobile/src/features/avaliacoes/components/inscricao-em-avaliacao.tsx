@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { CaretDownIcon } from "phosphor-react-native/src/icons/CaretDown";
 import { withUniwind } from "uniwind";
@@ -13,36 +13,23 @@ const Seta = withUniwind(CaretDownIcon);
  * {@link DadosDaInscricao}. Fechado de entrada, para não empurrar os campos
  * para baixo.
  */
-export function BotaoDadosDaInscricao({
-    aberto,
-    aoAlternar,
-}: {
-    aberto: boolean;
-    aoAlternar: () => void;
-}) {
+export function BotaoDadosDaInscricao({ aberto }: { aberto: boolean }) {
+    {
+        /* A rotação fica na `View`: no ícone, o Uniwind a passa ao SVG,
+                    que não aceita `transform` nulo e quebra. */
+    }
     return (
-        <Pressable
-            role="button"
-            aria-label="Dados da inscrição avaliada"
-            aria-expanded={aberto}
-            onPress={aoAlternar}
-            hitSlop={8}
-            className="size-10 items-center justify-center rounded-md active:opacity-70"
+        <View
+            style={{
+                transform: [{ rotate: aberto ? "180deg" : "0deg" }],
+            }}
         >
-            {/* A rotação fica na `View`: no ícone, o Uniwind a passa ao SVG,
-                que não aceita `transform` nulo e quebra. */}
-            <View
-                style={{
-                    transform: [{ rotate: aberto ? "180deg" : "0deg" }],
-                }}
-            >
-                <Seta
-                    size={22}
-                    weight="bold"
-                    colorClassName="accent-muted-foreground"
-                />
-            </View>
-        </Pressable>
+            <Seta
+                size={22}
+                weight="bold"
+                colorClassName="accent-muted-foreground"
+            />
+        </View>
     );
 }
 
@@ -63,9 +50,6 @@ export function DadosDaInscricao({
                 <Dado termo="Evento">{inscricao.evento}</Dado>
                 <Dado termo="Modalidade">{inscricao.modalidade}</Dado>
                 <Dado termo="Categoria">{inscricao.categoria}</Dado>
-                <Dado termo="Apresentação">
-                    {`${inscricao.ordemApresentacao}ª`}
-                </Dado>
             </View>
         </Animated.View>
     );

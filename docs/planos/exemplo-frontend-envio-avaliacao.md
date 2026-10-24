@@ -117,7 +117,7 @@ O `id` de cada item em `camposGerais` ou `agrupamentos[].campos` identifica **o 
     { "campoFichaId": 201, "valorNumerico": "1.0000" },
     { "campoFichaId": 202, "valorTexto": "Boa apresentação." }
   ],
-  "unidades": [
+  "agrupamentos": [
     {
       "agrupamentoId": 301,
       "ordem": 1,
@@ -142,4 +142,4 @@ O `id` de cada item em `camposGerais` ou `agrupamentos[].campos` identifica **o 
 }
 ```
 
-Os três campos do agrupamento aparecem nas duas danças. O mesmo `campoFichaId` é reutilizado porque a posição de cada campo na ficha é a mesma; `agrupamentoId` e `ordem` distinguem as ocorrências. O desconto `0.0000` da primeira dança foi enviado explicitamente. As unidades concretas e as respostas só são criadas no envio, junto com a avaliação, em uma transação: uma falha de validação não grava parte do payload. Um envio válido retorna `201 Created`; neste exemplo a nota individual seria `(((8 − 0) + (9 − 1)) / 2) + 1 = "9.0000"`. A representação completa do `201` e do detalhe ainda será fechada. `modeloFichaAvaliativaId` foi incluído para indicar a versão exibida ao avaliador; a decisão sobre torná-lo obrigatório e o erro para uma versão desatualizada segue em aberto.
+Cada resposta leva um conteúdo só, conforme o tipo do campo: `valorNumerico` (decimal em string com até 4 casas), `valorTexto`, `alternativaId` na alternativa única ou `alternativaIds` na múltipla — `{ "campoFichaId": 404, "alternativaId": 801 }` numa única; o backend recusa `alternativaIds` nela. Os três campos do agrupamento aparecem nas duas danças. O mesmo `campoFichaId` é reutilizado porque a posição de cada campo na ficha é a mesma; `agrupamentoId` e `ordem` distinguem as ocorrências. O desconto `0.0000` da primeira dança foi enviado explicitamente. As unidades concretas e as respostas só são criadas no envio, junto com a avaliação, em uma transação: uma falha de validação não grava parte do payload. Um envio válido retorna `201 Created`; neste exemplo a nota individual seria `(((8 − 0) + (9 − 1)) / 2) + 1 = "9.0000"`. A representação completa do `201` e do detalhe ainda será fechada. `modeloFichaAvaliativaId` foi incluído para indicar a versão exibida ao avaliador; a decisão sobre torná-lo obrigatório e o erro para uma versão desatualizada segue em aberto.

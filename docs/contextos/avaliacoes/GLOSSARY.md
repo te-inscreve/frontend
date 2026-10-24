@@ -52,12 +52,12 @@ _Avoid_: Jurado
 O resultado de um avaliador para uma inscrição: as respostas aos campos do modelo de ficha da categoria e a nota que delas sai. Cada avaliador faz uma só por inscrição.
 _Avoid_: Ficha preenchida, julgamento
 
-**Rascunho**:
-Avaliação começada pelo avaliador e ainda não salva: pode ser deixada e retomada em qualquer etapa. O avaliador tem no máximo um.
-_Avoid_: Avaliação em andamento, pendente
+**Avaliação atual**:
+Avaliação começada pelo avaliador e ainda não salva: pode ser deixada e retomada em qualquer etapa. O avaliador tem no máximo uma, e a dock do app a mostra enquanto existir.
+_Avoid_: Rascunho, avaliação em andamento, pendente
 
 **Avaliação na fila**:
-Avaliação salva pelo avaliador que aguarda envio. Não é editada na fila: para editá-la, ela sai da fila e volta a ser rascunho.
+Avaliação salva pelo avaliador que aguarda envio. Não é editada na fila: para editá-la, ela sai da fila e volta a ser a avaliação atual.
 _Avoid_: Avaliação pendente, não sincronizada
 
 **Avaliação sincronizada**:

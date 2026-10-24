@@ -38,6 +38,7 @@ import type { TrechoFicha } from "../lib/formulario-ficha";
 import { Button } from "~/components/ui/button";
 import { FieldGroup } from "~/components/ui/field";
 import { CampoFichaControlado } from "./campo-ficha";
+import { NomeOcorrencia } from "./nome-ocorrencia";
 
 const IconeAplicar = withUniwind(CheckIcon);
 const IconeCancelar = withUniwind(XIcon);
@@ -217,12 +218,27 @@ export function EdicaoTrecho({
                                                 className="bg-muted-foreground/30 h-1.5 w-10 self-center rounded-full"
                                             />
                                             <View className="gap-0.5">
-                                                <Text
-                                                    role="heading"
-                                                    className="text-foreground text-xl font-bold"
-                                                >
-                                                    {trecho?.titulo}
-                                                </Text>
+                                                {trecho?.ocorrencia ? (
+                                                    <NomeOcorrencia
+                                                        // Uma edição aberta
+                                                        // não passa de uma
+                                                        // ocorrência a outra.
+                                                        key={trecho.chave}
+                                                        chave={
+                                                            trecho.ocorrencia
+                                                                .chaveNome
+                                                        }
+                                                        padrao={trecho.titulo}
+                                                        control={control}
+                                                    />
+                                                ) : (
+                                                    <Text
+                                                        role="heading"
+                                                        className="text-foreground text-xl font-bold"
+                                                    >
+                                                        {trecho?.titulo}
+                                                    </Text>
+                                                )}
                                                 {trecho?.subtitulo && (
                                                     <Text className="text-muted-foreground text-sm">
                                                         {trecho.subtitulo}

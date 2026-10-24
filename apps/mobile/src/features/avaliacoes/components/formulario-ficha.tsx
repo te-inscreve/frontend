@@ -1,16 +1,25 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Keyboard, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 
-import type { ModeloFichaDetalhe, ValoresFicha } from "@te-inscreve/schemas";
-import { formatarDecimal, montarFormularioFicha } from "@te-inscreve/schemas";
+import type {
+    EnvioAvaliacao,
+    ModeloFichaDetalhe,
+    ValoresFicha,
+} from "@te-inscreve/schemas";
+import {
+    formatarDecimal,
+    montarFormularioFicha,
+    payloadDoFormulario,
+} from "@te-inscreve/schemas";
 
 import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
 import { Button } from "~/components/ui/button";
 import {
     abaDoTrecho,
+    chavesDoTrecho,
     notaDaFicha,
     resumoDoValor,
     trechosDaFicha,
@@ -27,28 +36,40 @@ import { SucessoAvaliacao } from "./sucesso-avaliacao";
  * "Aplicar" valida o trecho e só fecha a folha sem erros; arrastar, o fundo e
  * o voltar fecham sempre, validando sem barrar, e a ficha marca o que ficou
  * com erro. "Salvar" valida tudo e vai à aba do primeiro trecho com pendência.
- * Nome editável da ocorrência e rascunho ficam para TE-70.
+ * O nome de cada ocorrência se edita no título da folha.
+ *
+ * O formulário é o da avaliação atual (TE-74): abre com `valoresIniciais`, o
+ * payload guardado convertido, e devolve o payload a `aoMudar` a cada
+ * mudança, agrupadas em meio segundo, e ao sair da tela. O "Salvar"
+ * confirmado entrega o payload final a `aoSalvar`, que põe a avaliação na
+ * fila; o "Cancelar" confirmado chama `aoCancelar`, que a descarta.
  *
  * `inscricao` é quem a tela de sucesso mostra como avaliado.
  */
 export function FormularioFicha({
     modelo,
     inscricao,
+    valoresIniciais,
+    aoMudar,
+    aoSalvar,
+    aoCancelar,
 }: {
     modelo: ModeloFichaDetalhe;
     inscricao: InscricaoAvaliada;
+    valoresIniciais: ValoresFicha;
+    aoMudar: (payload: EnvioAvaliacao) => void;
+    aoSalvar: (payload: EnvioAvaliacao) => Promise<void>;
+    aoCancelar: () => Promise<void>;
 }) {
-    const { schema, defaultValues } = useMemo(
-        () => montarFormularioFicha(modelo),
-        [modelo],
-    );
+    const { schema } = useMemo(() => montarFormularioFicha(modelo), [modelo]);
     const trechos = useMemo(() => trechosDaFicha(modelo), [modelo]);
     const form = useForm<ValoresFicha>({
         resolver: zodResolver(schema),
-        defaultValues,
+        defaultValues: valoresIniciais,
     });
     // A ficha mostra as respostas: precisa renderizar a cada mudança.
     const valores = useWatch({ control: form.control }) as ValoresFicha;
+    useGuardarAutomatico(modelo, valores, aoMudar);
     // O trecho fica guardado com a folha fechada: ela segue mostrando o último
     // enquanto desliza para baixo.
     const [aberto, setAberto] = useState(0);
@@ -77,18 +98,21 @@ export function FormularioFicha({
     ).length;
 
     const erros = form.formState.errors;
-    const comErro = (indice: number) =>
-        trechos[indice]?.campos.some(({ chave }) => erros[chave]) ?? false;
+    function comErro(indice: number) {
+        const trecho = trechos[indice];
+        return !!trecho && chavesDoTrecho(trecho).some((chave) => erros[chave]);
+    }
 
     function validarTrecho(indice: number) {
         const trecho = trechos[indice];
         return trecho
-            ? form.trigger(trecho.campos.map(({ chave }) => chave))
+            ? form.trigger(chavesDoTrecho(trecho))
             : Promise.resolve(true);
     }
 
     function abrir(indice: number) {
-        const chaves = trechos[indice]?.campos.map(({ chave }) => chave) ?? [];
+        const trecho = trechos[indice];
+        const chaves = trecho ? chavesDoTrecho(trecho) : [];
         setAntes({
             valores: Object.fromEntries(
                 chaves.map((chave) => [chave, form.getValues(chave)]),
@@ -125,19 +149,51 @@ export function FormularioFicha({
         }
     }
 
+    function cancelarAvaliacao() {
+        Keyboard.dismiss();
+        Alert.alert(
+            "Cancelar a avaliação?",
+            `O que foi preenchido para ${inscricao.concorrente} será apagado do aparelho.`,
+            [
+                { text: "Continuar avaliando", style: "cancel" },
+                {
+                    text: "Cancelar avaliação",
+                    style: "destructive",
+                    onPress: () =>
+                        void aoCancelar().catch(() =>
+                            Alert.alert(
+                                "Não foi possível cancelar",
+                                "A avaliação continua no aparelho. Tente de novo.",
+                            ),
+                        ),
+                },
+            ],
+        );
+    }
+
     const salvar = form.handleSubmit(
         // Válida, a avaliação ainda pede confirmação: na fila ela não se
-        // edita mais (ADR 0001 usa o `Alert` para confirmar).
-        // O "Salvar" do alerta ainda só mostra o sucesso: pôr a avaliação na
-        // fila de envio é o próximo passo.
-        () => {
+        // edita mais (ADR 0001 usa o `Alert` para confirmar). O sucesso só
+        // aparece depois de ela estar na fila.
+        (validos) => {
             Keyboard.dismiss();
             Alert.alert(
                 "Salvar avaliação?",
                 "Ela vai para a fila de envio e não poderá mais ser editada lá.",
                 [
                     { text: "Cancelar", style: "cancel" },
-                    { text: "Salvar", onPress: () => setSalva(true) },
+                    {
+                        text: "Salvar",
+                        onPress: () =>
+                            void aoSalvar(payloadDoFormulario(modelo, validos))
+                                .then(() => setSalva(true))
+                                .catch(() =>
+                                    Alert.alert(
+                                        "Não foi possível salvar",
+                                        "Suas respostas continuam guardadas no aparelho. Tente de novo.",
+                                    ),
+                                ),
+                    },
                 ],
             );
         },
@@ -145,7 +201,7 @@ export function FormularioFicha({
             // Vai à aba do primeiro erro. Os campos gerais mostram o erro na
             // própria ficha; só a ocorrência precisa da folha para isso.
             const primeiro = trechos.findIndex((trecho) =>
-                trecho.campos.some(({ chave }) => falhas[chave]),
+                chavesDoTrecho(trecho).some((chave) => falhas[chave]),
             );
             const trecho = trechos[primeiro];
             if (!trecho) return;
@@ -195,6 +251,9 @@ export function FormularioFicha({
                             {preenchidos} de {campos.length} preenchidos
                         </Text>
                     </View>
+                    <Button variant="outline" onPress={cancelarAvaliacao}>
+                        Cancelar
+                    </Button>
                     <Button onPress={() => void salvar()}>Salvar</Button>
                 </View>
             </View>
@@ -219,5 +278,41 @@ export function FormularioFicha({
                 }}
             />
         </View>
+    );
+}
+
+/**
+ * Guarda a avaliação atual enquanto o avaliador preenche: meio segundo depois da
+ * última mudança e, se algo ficou pendente, ao sair da tela.
+ */
+function useGuardarAutomatico(
+    modelo: ModeloFichaDetalhe,
+    valores: ValoresFicha,
+    aoMudar: (payload: EnvioAvaliacao) => void,
+) {
+    const pendente = useRef<ValoresFicha | null>(null);
+    // A última versão dos dois, para a saída da tela não guardar com a de
+    // quando montou.
+    const ultimo = useRef({ modelo, aoMudar });
+    useEffect(() => {
+        ultimo.current = { modelo, aoMudar };
+    }, [modelo, aoMudar]);
+
+    useEffect(() => {
+        pendente.current = valores;
+        const espera = setTimeout(() => {
+            pendente.current = null;
+            aoMudar(payloadDoFormulario(modelo, valores));
+        }, 500);
+        return () => clearTimeout(espera);
+    }, [modelo, valores, aoMudar]);
+
+    useEffect(
+        () => () => {
+            if (!pendente.current) return;
+            const { modelo: atual, aoMudar: guardar } = ultimo.current;
+            guardar(payloadDoFormulario(atual, pendente.current));
+        },
+        [],
     );
 }

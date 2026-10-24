@@ -11,7 +11,7 @@ App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem
 - Login.
 - Barra inferior com 3 itens: categorias, avaliações, configurações.
 - Categorias com situação `PRONTA_AVALIACAO` → detalhe com as inscrições (ordenadas por `ordem`) → drawer com detalhes e botão "avaliar".
-- Avaliações: o rascunho, inscrições ainda não avaliadas, na fila, com erro, sincronizadas de categoria em andamento e, ocultas, as de categorias encerradas.
+- Avaliações: a avaliação atual, inscrições ainda não avaliadas, na fila, com erro, sincronizadas de categoria em andamento e, ocultas, as de categorias encerradas.
 - Formulário em etapas, montado a partir do modelo de ficha da categoria; pode ser deixado a qualquer momento; "salvar" coloca na fila.
 - Configurações: logout, dados do usuário, limpar dados locais, quantidade não sincronizada, indicador de conexão e última vez online.
 
@@ -32,10 +32,10 @@ App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem
   - **Sem toast no v1:** estado de salvamento e de sync aparece no lugar (badge "na fila", "sincronizada", "com erro" e banner), com `Alert.alert` para confirmações e erros ([Reavaliar toast no app mobile](https://linear.app/te-inscreve/issue/TE-78)).
 - **Backend fora do escopo.** A API (Django REST) é do usuário; o que faltar de contrato vira dependência documentada, e os fatos da API são pedidos a ele.
 - **Categorias:** por ora lista todas em `PRONTA_AVALIACAO`, sem filtrar por avaliador; o filtro por avaliador vem quando a API tiver o vínculo.
-- **Vocabulário** (já em `docs/contextos/avaliacoes/GLOSSARY.md`): Avaliador (jurado é sinônimo a evitar); Avaliação = resultado de um avaliador para uma inscrição; Modelo de ficha = ficha avaliativa (o molde); inscrição é o que se avalia, "apresentação" é só o ato; Rascunho, Avaliação na fila, Avaliação sincronizada, Avaliação com erro.
+- **Vocabulário** (já em `docs/contextos/avaliacoes/GLOSSARY.md`): Avaliador (jurado é sinônimo a evitar); Avaliação = resultado de um avaliador para uma inscrição; Modelo de ficha = ficha avaliativa (o molde); inscrição é o que se avalia, "apresentação" é só o ato; Avaliação atual (antes "rascunho"), Avaliação na fila, Avaliação sincronizada, Avaliação com erro.
 - **Ordem das inscrições:** atributo `ordem`, que a API já devolve também na modalidade individual. É só de exibição: o avaliador pode avaliar e enviar qualquer inscrição, tenham ou não sido avaliadas as de `ordem` menor.
-- **Na fila não se edita.** Para editar, a avaliação sai da fila e volta a ser rascunho. O app faz isso sozinho ao tocar em "editar", mas deixa claro antes que ela sai da fila de envio e só volta ao ser salva de novo, no fim da fila.
-- **O que chegou ao servidor não muda mais.** O avaliador só altera o que está no aparelho (rascunho, fila, com erro). Uma avaliação sincronizada é imutável: uma por inscrição, sem PUT, sem edição nem exclusão pelo app. É uma simplificação deliberada do modo de sync.
+- **Na fila não se edita.** Para editar, a avaliação sai da fila e volta a ser a avaliação atual. O app faz isso sozinho ao tocar em "editar", mas deixa claro antes que ela sai da fila de envio e só volta ao ser salva de novo, no fim da fila.
+- **O que chegou ao servidor não muda mais.** O avaliador só altera o que está no aparelho (avaliação atual, fila, com erro). Uma avaliação sincronizada é imutável: uma por inscrição, sem PUT, sem edição nem exclusão pelo app. É uma simplificação deliberada do modo de sync.
   - **Recusa "já existe"** (409 que não é o reenvio do próprio item, ver [Envio idempotente quando a resposta se perde](https://linear.app/te-inscreve/issue/TE-68)): a avaliação vai para com erro, mas corrigir e salvar de novo não adianta. A mensagem diz que já existe uma avaliação desta inscrição no servidor e que o avaliador precisa chamar um operador para alterá-la. A única ação no app é descartar a cópia local.
 - **Política de sync (FIFO):**
   - Temporária (sem rede, timeout, 5xx): o item da cabeça fica, a fila pausa e tenta de novo com backoff e quando a conexão volta — detectada com `@react-native-community/netinfo`.
@@ -50,17 +50,21 @@ App React Native (Expo, `apps/mobile`) para **avaliadores** entrarem e avaliarem
 - **Download offline:** automático ao abrir a categoria, mais pull-to-refresh e badge "disponível offline"; ícone simples durante e ao fim do download. Cada refresh **reescreve inteiro** o download anterior, sem restos. Sem download, "avaliar" fica desabilitado.
 - **Modelo mudou na API:**
   - avaliação já concluída offline (na fila) → vira com erro pela política acima;
-  - rascunho → **congela na hora** (não exclui), impedindo o avaliador de continuar numa versão velha.
-- **Um rascunho só.** A fila controla o que espera sync; o rascunho existe para o avaliador não perder a avaliação ao sair da tela.
-- **Rascunho congelado:** só leitura, com faixa explicando o motivo; a única ação é "descartar e recomeçar na versão nova". Continua contando como o único rascunho.
-- **"Avaliar" com outro rascunho aberto:** o app pergunta "continuar o rascunho de X" ou "descartar e começar este".
+  - avaliação atual → **congela na hora** (não exclui), impedindo o avaliador de continuar numa versão velha.
+- **Uma avaliação atual só.** A fila controla o que espera sync; a avaliação atual existe para o avaliador não perder o que preencheu ao sair da tela, e a dock do cabeçalho a mostra enquanto existir.
+- **Avaliação atual congelada:** só leitura, com faixa explicando o motivo; a única ação é "descartar e recomeçar na versão nova". Continua contando como a única avaliação atual.
+- **"Avaliar" com outra avaliação atual:** o app pergunta "continuar X" ou "descartar e começar esta".
 - **Cópia do modelo por avaliação:** cada avaliação local guarda a própria cópia da versão do modelo, para o refresh poder reescrever o download inteiro. Com erro por mudança de modelo só pode ser descartada.
-- **Categoria encerrada no refresh:** o rascunho dela congela; as avaliações na fila seguem e o servidor as recusa → com erro.
+- **Categoria encerrada no refresh:** a avaliação atual dela congela; as avaliações na fila seguem e o servidor as recusa → com erro.
 - **Lista provisória de categorias:** fan-out eventos → modalidades → categorias filtrando `PRONTA_AVALIACAO`, atrás de uma função trocável pelo endpoint dedicado.
 - **Etapas:** uma etapa por ocorrência de agrupamento, intercaladas com os campos gerais pela ordem; campos gerais consecutivos formam uma etapa (3 gerais, agrupamento com quantidade 1, 3 gerais = 3 etapas).
 - **Ordem no topo:** campos gerais e agrupamentos dividem uma sequência só de `ordem` (`ordensDoTopoUnicas` em `packages/schemas/src/ficha-avaliativa.ts`, também validada na API). Modelos antigos com ordem repetida (ex.: 11006) ainda podem chegar: no empate, o campo geral vem antes do agrupamento — sem tratar como erro.
 - **Ocorrência:** cada repetição de um agrupamento na avaliação (termo do glossário; "unidade avaliativa" a evitar). Seu nome vem pré-preenchido com "<nome do agrupamento> <ordem>" (ex.: "Danças 2") e o avaliador o altera pelo lápis, como em `apps/web/src/features/inscricoes/campo-nome-concorrente.tsx`. O nome sempre vai no envio — o padrão, se o avaliador não mudou.
 - **Payload de envio:** `respostasGerais[]` e `agrupamentos[]`, cada item com `agrupamentoId`, `ordem`, `nome` e `respostas[]`.
+- **Avaliação atual e fila guardam o payload de envio** ([Forma do estado do formulário de avaliação](https://linear.app/te-inscreve/issue/TE-98)): com ele e o modelo de ficha, a avaliação se remonta na tela. Todas as ocorrências vão sempre, de 1 a `quantidade`, com `nome`; resposta em branco fica de fora; `alternativaId` na única e `alternativaIds` na múltipla, como o backend exige. A avaliação atual guarda como foi digitado o numérico que não normaliza. O formulário segue com as chaves planas por posição, e `formularioDoPayload`/`payloadDoFormulario` (`packages/schemas/src/formulario-ficha.ts`) convertem; o schema estrito é o `envioAvaliacaoSchema`. A nota não se guarda: sai de `calcularNota`.
+- **Banco local** ([Modelo de dados local do app](https://linear.app/te-inscreve/issue/TE-74)): uma tabela `avaliacoes` (`apps/mobile/src/db/schema.ts`), uma linha por avaliador e inscrição, como o backend, com o `estado` numa coluna: `atual` (uma só por avaliador; congelada quando `motivoCongelado` está preenchido; antes `rascunho`, convertida pela migração 0001), `na_fila` (ordem FIFO por `enfileiradoEm`), `enviando` (volta para `na_fila` ao abrir, se o app morreu no meio), `com_erro` e `sincronizada` (fica no aparelho com `servidorId` e a `nota` do servidor). Cada linha guarda o payload, a própria cópia do modelo e os dados da inscrição que a tela mostra, além de `tentativas`, `proximaTentativaEm` e `erro`. Migrações do drizzle-kit (`yarn workspace @te-inscreve/expo db:generate`) aplicadas na abertura, antes das abas; só acrescentam. O download offline da categoria vem numa segunda entrega.
+- **Avaliação atual:** nasce ao abrir uma inscrição sem avaliação local, com o modelo atual; salva meio segundo depois de cada mudança e ao sair da tela; abre de novo pelo payload e pela cópia do modelo, sem rede. O "Salvar" confirmado a põe na fila. Modelo da categoria em outra versão congela a avaliação atual.
+- **409 no envio** ([Envio idempotente quando a resposta se perde](https://linear.app/te-inscreve/issue/TE-68)): sem chave de idempotência. O backend recusa uma segunda avaliação do mesmo avaliador para a inscrição, e o 409 também vem de estado ou versão. No 409, o app consulta as avaliações da inscrição: se há uma do avaliador, a linha vira `sincronizada` com o id e a nota do servidor; senão, `com_erro` com a mensagem.
 - **Etapa de revisão** no fim: resumo e nota calculada antes de salvar; tocar numa etapa volta para ela.
 - **Formulário, como o protótipo de TE-82 o fixou** (hoje aberto a partir de uma inscrição, em Categorias; o resto do comportamento em etapas segue em [Como o formulário de avaliação em etapas se comporta](https://linear.app/te-inscreve/issue/TE-70)):
   - **Navegação:** barra de progresso segmentada ("Etapa N de 7"); "Anterior" volta sem validar e "Próximo" valida só a etapa atual, também na última etapa antes da revisão. A etapa nova desliza pela direita ao avançar e pela esquerda ao voltar, com o Reanimated já instalado (`docs/pesquisas/animacao-etapas-mobile.md`).
@@ -86,7 +90,7 @@ Já existem e são `publicProcedure` no tRPC: `evento.getAll`, `modalidade.getAl
 
 ## Possível já, sem esperar a API
 
-Login (`signIn.rest`), barra inferior, tela de configurações inteira, expo-sqlite + Drizzle e schema local, indicador de conexão, port do tema, lista de categorias provisória, detalhe da categoria, drawer, download/refresh, renderização do formulário, builder Zod e nota, ciclo do rascunho, motor da fila contra o contrato (envio stubado).
+Login (`signIn.rest`), barra inferior, tela de configurações inteira, expo-sqlite + Drizzle e schema local, indicador de conexão, port do tema, lista de categorias provisória, detalhe da categoria, drawer, download/refresh, renderização do formulário, builder Zod e nota, ciclo da avaliação atual, motor da fila contra o contrato (envio stubado).
 
 ## Glossário
 

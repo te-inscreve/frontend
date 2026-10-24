@@ -11,16 +11,17 @@ import {
     calcularSubtotal,
     camposDoAgrupamento,
     chaveDaOcorrencia,
+    chaveNome,
     formatarDecimal,
     itensDoTopo,
+    nomePadrao,
     tetoDoCampo,
 } from "@te-inscreve/schemas";
 
 /*
  * O que a ficha do app monta sobre o builder de `packages/schemas`
  * (`montarFormularioFicha`, `itensDoTopo`): trechos, abas, resumo e prévia da
- * nota. As chaves dos valores seguem a forma do estado ainda em aberto em
- * TE-98.
+ * nota. As chaves dos valores são as do builder (TE-98).
  */
 
 /**
@@ -43,11 +44,49 @@ export function notaDigitada(campo: CampoFicha, digitado: string) {
  */
 export interface TrechoFicha {
     chave: string;
+    /** Na ocorrência, o nome padrão: o que o avaliador escreveu está nos valores. */
     titulo: string;
     subtitulo?: string;
     campos: { chave: string; campo: CampoFicha }[];
-    /** Só nos trechos de ocorrência: de qual agrupamento, e qual repetição. */
-    ocorrencia?: { agrupamento: AgrupamentoFicha; ordem: number };
+    /**
+     * Só nos trechos de ocorrência: de qual agrupamento, qual repetição, e a
+     * chave do nome dela no formulário.
+     */
+    ocorrencia?: {
+        agrupamento: AgrupamentoFicha;
+        ordem: number;
+        chaveNome: string;
+    };
+}
+
+/**
+ * Onde a ocorrência está, para o nome que o avaliador deu não apagar a
+ * referência: "Danças · ocorrência 2 de 4".
+ */
+export const posicaoDaOcorrencia = (
+    agrupamento: AgrupamentoFicha,
+    ordem: number,
+) => `${agrupamento.nome} · ocorrência ${ordem} de ${agrupamento.quantidade}`;
+
+/** O nome da ocorrência como está no formulário, ou o padrão. */
+export function nomeDaOcorrencia(
+    agrupamento: AgrupamentoFicha,
+    ordem: number,
+    valores: ValoresFicha,
+) {
+    const nome = valores[chaveNome(agrupamento, ordem)];
+    return (
+        (typeof nome === "string" && nome.trim()) ||
+        nomePadrao(agrupamento, ordem)
+    );
+}
+
+/** As chaves que o trecho mexe: as dos campos e, na ocorrência, a do nome. */
+export function chavesDoTrecho(trecho: TrechoFicha) {
+    return [
+        ...trecho.campos.map(({ chave }) => chave),
+        ...(trecho.ocorrencia ? [trecho.ocorrencia.chaveNome] : []),
+    ];
 }
 
 /** Os trechos na ordem do topo da ficha, a ordem de "Anterior"/"Próximo". */
@@ -61,11 +100,12 @@ export function trechosDaFicha(modelo: ModeloFichaDetalhe): TrechoFicha[] {
               }
             : {
                   chave: item.chave,
-                  titulo: `${item.agrupamento.nome} ${item.ordem}`,
-                  subtitulo: `Ocorrência ${item.ordem} de ${item.agrupamento.quantidade}`,
+                  titulo: nomePadrao(item.agrupamento, item.ordem),
+                  subtitulo: posicaoDaOcorrencia(item.agrupamento, item.ordem),
                   ocorrencia: {
                       agrupamento: item.agrupamento,
                       ordem: item.ordem,
+                      chaveNome: chaveNome(item.agrupamento, item.ordem),
                   },
                   campos: camposDoAgrupamento(item.agrupamento).map(
                       (posicao) => ({

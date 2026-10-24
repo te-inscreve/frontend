@@ -34,6 +34,8 @@ import { Badge } from "~/components/ui/badge";
 import { cn } from "~/utils/cn";
 import {
     abasDaFicha,
+    nomeDaOcorrencia,
+    posicaoDaOcorrencia,
     resumoDoValor,
     subtotalDaOcorrencia,
 } from "../lib/formulario-ficha";
@@ -183,6 +185,8 @@ function CartaoOcorrencia({
         ({ campo }) => campo.tipo === "NUMERICO",
     );
     const total = subtotalDaOcorrencia(linha.campos, valores);
+    const nome = nomeDaOcorrencia(aba.agrupamento, linha.ordem, valores);
+    const posicao = posicaoDaOcorrencia(aba.agrupamento, linha.ordem);
     const vazia = linha.campos.every(
         ({ chave, campo }) =>
             resumoDoValor(campo, valores[chave] ?? null) === null,
@@ -191,15 +195,20 @@ function CartaoOcorrencia({
     return (
         <Pressable
             role="button"
-            aria-label={`Preencher ${aba.agrupamento.nome} ${linha.ordem}${erro ? ", com erro" : ""}`}
+            aria-label={`Preencher ${nome}, ${posicao}${erro ? ", com erro" : ""}`}
             onPress={aoTocar}
             className="border-border bg-card overflow-hidden rounded-lg border"
         >
             {/* O erro do cartão é só o selo. */}
             <View className="bg-muted flex-row items-center gap-2 px-4 py-2.5">
-                <Text className="text-foreground shrink text-base font-semibold">
-                    {aba.agrupamento.nome} {linha.ordem}
-                </Text>
+                <View className="shrink gap-0.5">
+                    <Text className="text-foreground text-base font-semibold">
+                        {nome}
+                    </Text>
+                    <Text className="text-muted-foreground text-sm">
+                        {posicao}
+                    </Text>
+                </View>
                 {erro && (
                     <Badge
                         variant="destructive"
@@ -487,25 +496,28 @@ export function FolhaFicha({
                     720pt e fica no meio: na largura toda, o olho anda demais
                     de um lado ao outro. */}
                 <View className="w-full max-w-[720px] gap-6 self-center">
-                    <View className="mt-2 flex-row items-start gap-3">
-                        <View className="flex-1 gap-1">
-                            <Text
-                                role="heading"
-                                className="text-foreground text-2xl leading-tight font-bold tracking-tight"
-                            >
-                                {`Avaliando ${inscricao.concorrente}`}
-                            </Text>
-                            <Text className="text-muted-foreground text-sm">
-                                {`Modelo de ficha: ${modelo.nome}`}
-                            </Text>
+                    <Pressable
+                        role="button"
+                        aria-label="Dados da inscrição avaliada"
+                        aria-expanded={dadosAbertos}
+                        onPress={() => setDadosAbertos((atual) => !atual)}
+                        hitSlop={8}
+                    >
+                        <View className="mt-2 flex-row items-center gap-3">
+                            <View className="flex-1 gap-1">
+                                <Text
+                                    role="heading"
+                                    className="text-foreground text-2xl leading-tight font-bold tracking-tight"
+                                >
+                                    {`Avaliando ${inscricao.concorrente}`}
+                                </Text>
+                                <Text className="text-muted-foreground text-sm">
+                                    {`Modelo de ficha: ${modelo.nome}`}
+                                </Text>
+                            </View>
+                            <BotaoDadosDaInscricao aberto={dadosAbertos} />
                         </View>
-                        <BotaoDadosDaInscricao
-                            aberto={dadosAbertos}
-                            aoAlternar={() =>
-                                setDadosAbertos((atual) => !atual)
-                            }
-                        />
-                    </View>
+                    </Pressable>
 
                     {dadosAbertos && <DadosDaInscricao inscricao={inscricao} />}
 
