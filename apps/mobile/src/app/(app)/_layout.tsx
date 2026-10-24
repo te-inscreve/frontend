@@ -11,6 +11,7 @@ import { withUniwind } from "uniwind";
 
 import { CabecalhoApp } from "~/components/cabecalho-app";
 import { TabBar, TabBarButton } from "~/components/tab-bar";
+import { useMotorFila } from "~/features/avaliacoes/lib/use-motor-fila";
 import { useTokens } from "~/utils/use-tokens";
 
 const IconeCategorias = withUniwind(SquaresFourIcon);
@@ -23,8 +24,12 @@ const IconeConfiguracoes = withUniwind(GearSixIcon);
  *
  * O `CabecalhoApp` fica fora das abas, então trocar de aba ou empilhar uma
  * tela não o monta de novo. A barra de cada pilha vem logo abaixo dele.
+ *
+ * Aqui também liga o envio da fila: este layout só existe com sessão, e
+ * montá-lo é abrir o app (ou entrar).
  */
 export default function AppLayout() {
+    useMotorFila();
     const insets = useSafeAreaInsets();
     const { escuro } = useTokens();
 

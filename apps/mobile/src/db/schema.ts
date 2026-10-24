@@ -7,7 +7,11 @@ import {
     uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
-import type { EnvioAvaliacao, ModeloFichaDetalhe } from "@te-inscreve/schemas";
+import type {
+    EnvioAvaliacao,
+    ErroDeEnvioLocalizado,
+    ModeloFichaDetalhe,
+} from "@te-inscreve/schemas";
 
 import type { InscricaoAvaliada } from "~/features/avaliacoes/lib/rota-ficha-inscricao";
 
@@ -44,6 +48,8 @@ export interface ErroDeEnvio {
     /** O status HTTP do backend, quando houve resposta. */
     status?: number;
     mensagem: string;
+    /** Os problemas do 400, com onde cada um está, para marcar o formulário. */
+    erros?: ErroDeEnvioLocalizado[];
 }
 
 /** Milissegundos desde a época, como o `Date.now()`. */

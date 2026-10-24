@@ -15,10 +15,12 @@ import {
     descartar,
     enfileirar,
     guardarAvaliacaoAtual,
+    tirarDaFila,
     useAvaliacaoLocal,
 } from "../lib/avaliacoes-locais";
 import { notaDaFicha, trechosDaFicha } from "../lib/formulario-ficha";
 import { rotaDaAvaliacaoLocal } from "../lib/rota-ficha-inscricao";
+import { avisarQueSalvou } from "../lib/use-motor-fila";
 import { FolhaFichaSkeleton } from "./folha-ficha";
 import { FormularioFicha } from "./formulario-ficha";
 
@@ -104,6 +106,7 @@ export function AvaliacaoDaInscricao({
                         setAcabouDeSalvar(false);
                         throw erro;
                     }
+                    avisarQueSalvou();
                 }}
                 aoCancelar={async () => {
                     setCancelada(true);
@@ -290,7 +293,7 @@ const TEXTO_DO_ESTADO: Record<
 > = {
     na_fila: {
         titulo: "Na fila de envio",
-        texto: "Esta avaliação foi salva e segue para o servidor quando houver conexão. Na fila, ela não se edita.",
+        texto: "Esta avaliação foi salva e segue para o servidor quando houver conexão. Para editá-la, ela sai da fila.",
     },
     enviando: {
         titulo: "Enviando",
@@ -330,10 +333,53 @@ function EstadoDaAvaliacao({ avaliacao }: { avaliacao: AvaliacaoLocal }) {
             <Text className="text-foreground text-center text-lg">
                 {`Nota ${formatarDecimal(Number(nota.toFixed(2)))} / 10`}
             </Text>
+            {(avaliacao.estado === "na_fila" ||
+                avaliacao.estado === "enviando") && (
+                <Button onPress={() => editar(avaliacao)}>Editar</Button>
+            )}
             <Button variant="outline" onPress={() => router.back()}>
                 Voltar
             </Button>
         </Aviso>
+    );
+}
+
+/**
+ * O "Editar" de uma avaliação na fila: ela sai da fila e volta a ser a
+ * avaliação atual, e o app diz isso antes. Em `enviando`, não há o que tirar:
+ * o app avisa e espera o resultado.
+ */
+function editar(avaliacao: AvaliacaoLocal) {
+    if (avaliacao.estado === "enviando") {
+        avisarEnviando();
+        return;
+    }
+    Alert.alert(
+        "Tirar da fila para editar?",
+        "A avaliação sai da fila de envio e só volta ao ser salva de novo, no fim da fila.",
+        [
+            { text: "Cancelar", style: "cancel" },
+            {
+                text: "Editar",
+                onPress: () =>
+                    void tirarDaFila(avaliacao.id).then((resultado) => {
+                        if (resultado.ok) return;
+                        if (resultado.motivo === "enviando") avisarEnviando();
+                        else if (resultado.motivo === "outra_atual")
+                            Alert.alert(
+                                "Você já tem uma avaliação atual",
+                                "Salve ou descarte a avaliação atual antes de editar esta. Só uma avaliação atual fica no aparelho por vez.",
+                            );
+                    }),
+            },
+        ],
+    );
+}
+
+function avisarEnviando() {
+    Alert.alert(
+        "Já está sendo enviada",
+        "Esta avaliação está a caminho do servidor. Espere o resultado do envio.",
     );
 }
 

@@ -9,8 +9,11 @@ export type EstadoFila =
     | { tipo: "aguardando"; naFila: number }
     /** A fila está enviando; `enviadas` conta as já aceitas desta rodada. */
     | { tipo: "sincronizando"; enviadas: number; total: number }
-    /** Há avaliações na fila, e o envio espera a conexão voltar. */
-    | { tipo: "pausado"; naFila: number }
+    /**
+     * Há avaliações na fila, e o envio espera: a conexão voltar, ou o
+     * avaliador entrar de novo (o servidor recusou a sessão).
+     */
+    | { tipo: "pausado"; naFila: number; motivo: "conexao" | "login" }
     /** O backend recusou de vez alguma avaliação. */
     | { tipo: "com_erro"; comErro: number };
 
@@ -24,7 +27,9 @@ export function descreverEstadoFila(estado: EstadoFila): string {
         case "sincronizando":
             return `Enviando ${estado.enviadas} de ${estado.total}`;
         case "pausado":
-            return `${estado.naFila} na fila, sem conexão`;
+            return estado.motivo === "login"
+                ? `${estado.naFila} na fila, entre de novo`
+                : `${estado.naFila} na fila, sem conexão`;
         case "com_erro":
             return estado.comErro === 1
                 ? "1 avaliação com erro"
@@ -45,7 +50,9 @@ export function explicarEstadoFila(estado: EstadoFila): string {
         case "sincronizando":
             return "As avaliações seguem para o servidor uma a uma.";
         case "pausado":
-            return "O envio continua sozinho quando a conexão voltar.";
+            return estado.motivo === "login"
+                ? "O servidor não aceitou mais a sua sessão. Entre de novo e o envio continua."
+                : "O envio continua sozinho quando a conexão voltar.";
         case "com_erro":
             return "O servidor recusou estas avaliações; as outras seguem na fila.";
     }
