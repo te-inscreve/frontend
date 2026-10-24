@@ -4,6 +4,7 @@ import { Link } from "expo-router";
 import type { CategoriaPronta } from "../lib/listar-categorias-prontas";
 import { formatDate } from "~/utils/format-date";
 import { rotaDetalheCategoria } from "../lib/rota-detalhe-categoria";
+import { TipoModalidade } from "./tipo-modalidade";
 
 /**
  * O `CardCategoria` do web em forma de ingresso: a borda é o fundo da camada
@@ -11,8 +12,9 @@ import { rotaDetalheCategoria } from "../lib/rota-detalhe-categoria";
  *
  * Diferente do web, ocupa a largura da lista e mostra a modalidade ao lado do
  * nome e o evento abaixo, porque a lista do mobile mistura eventos. Sem selo
- * de situação: a lista só tem categorias prontas para avaliação. O toque
- * empilha o detalhe da categoria na aba.
+ * de situação: a lista só tem categorias prontas para avaliação. O ícone no
+ * canto diz se a modalidade é individual ou em grupo. O toque empilha o detalhe da categoria
+ * na aba.
  */
 export function CategoriaCard({ categoria }: { categoria: CategoriaPronta }) {
     return (
@@ -21,16 +23,19 @@ export function CategoriaCard({ categoria }: { categoria: CategoriaPronta }) {
                 <CanhotoIdade categoria={categoria} />
 
                 <View className="bg-card flex-1 gap-2 overflow-hidden rounded-r-xl p-2">
-                    <View className="gap-0.5">
-                        <Text
-                            role="heading"
-                            className="text-card-foreground text-base leading-tight font-bold"
-                        >
-                            {`${categoria.modalidadeNome} ${categoria.nome}`}
-                        </Text>
-                        <Text className="text-muted-foreground text-sm">
-                            {categoria.eventoNome}
-                        </Text>
+                    <View className="flex-row items-start gap-2">
+                        <View className="flex-1 gap-0.5">
+                            <Text
+                                role="heading"
+                                className="text-card-foreground text-base leading-tight font-bold"
+                            >
+                                {`${categoria.modalidadeNome} ${categoria.nome}`}
+                            </Text>
+                            <Text className="text-muted-foreground text-sm">
+                                {categoria.eventoNome}
+                            </Text>
+                        </View>
+                        <TipoModalidade isGrupo={categoria.isGrupo} />
                     </View>
 
                     <View className="flex-row gap-2">

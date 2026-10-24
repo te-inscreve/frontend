@@ -2,13 +2,14 @@ import { Text, View } from "react-native";
 
 import type { SituacaoCategoria } from "@te-inscreve/schemas";
 
+import { Dado } from "~/components/dado";
 import { formatDate } from "~/utils/format-date";
 import { SituacaoCategoriaBadge } from "./situacao-categoria-badge";
 
 /**
  * O topo do detalhe da categoria, no lugar do título da barra: o nome com o
- * selo da situação, evento e modalidade embaixo, e a faixa etária e o início
- * por último. Numa faixa `muted` de lado a lado, como o topo da ficha.
+ * selo da situação, o evento embaixo, e a faixa etária, o início, o tipo da
+ * modalidade e o modelo de ficha por último. Numa faixa `muted` de lado a lado, como o topo da ficha.
  */
 export function CabecalhoCategoria({
     nome,
@@ -18,6 +19,8 @@ export function CabecalhoCategoria({
     idadeMaxima,
     dataApresentacao,
     situacao,
+    isGrupo,
+    modeloFicha,
 }: {
     nome: string;
     eventoNome: string;
@@ -27,6 +30,12 @@ export function CabecalhoCategoria({
     /** ISO 8601; nulo quando a categoria ainda não está no cronograma. */
     dataApresentacao: string | null;
     situacao: SituacaoCategoria;
+    isGrupo: boolean;
+    /**
+     * O que mostrar como modelo de ficha: o nome, ou a falta dele. Indefinido
+     * enquanto carrega, e o lugar fica reservado.
+     */
+    modeloFicha?: string;
 }) {
     return (
         <View className="bg-muted border-border gap-4 border-b px-4 pt-6 pb-5">
@@ -55,18 +64,21 @@ export function CabecalhoCategoria({
                         ? "A definir"
                         : formatDate(new Date(dataApresentacao))}
                 </Dado>
+                <Dado termo="Modalidade">
+                    {isGrupo ? "Grupo" : "Individual"}
+                </Dado>
+                {modeloFicha === undefined ? (
+                    <View aria-hidden className="gap-0.5">
+                        <Text className="text-muted-foreground text-sm">
+                            Modelo de ficha
+                        </Text>
+                        {/* A altura da linha do valor (`text-base`). */}
+                        <View className="bg-background my-0.5 h-5 w-48 rounded" />
+                    </View>
+                ) : (
+                    <Dado termo="Modelo de ficha">{modeloFicha}</Dado>
+                )}
             </View>
-        </View>
-    );
-}
-
-function Dado({ termo, children }: { termo: string; children: string }) {
-    return (
-        <View className="gap-0.5">
-            <Text className="text-muted-foreground text-sm">{termo}</Text>
-            <Text className="text-foreground text-base font-semibold">
-                {children}
-            </Text>
         </View>
     );
 }

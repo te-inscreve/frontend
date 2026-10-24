@@ -1,5 +1,6 @@
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 
 import type { InscricaoGrupo, InscricaoIndividual } from "@te-inscreve/schemas";
 
@@ -18,6 +19,7 @@ import {
 import { CabecalhoCategoria } from "~/features/categorias/components/cabecalho-categoria";
 import { lerParametrosDetalheCategoria } from "~/features/categorias/lib/rota-detalhe-categoria";
 import { useInscricoesDaCategoria } from "~/features/categorias/lib/use-inscricoes-da-categoria";
+import { trpc } from "~/utils/api";
 
 function Mensagem({ children }: { children: string }) {
     return (
@@ -34,6 +36,21 @@ export default function DetalheCategoria() {
     const { data, isPending, isError, isRefetching, refetch } =
         useInscricoesDaCategoria({ eventoId, modalidadeId, categoriaId });
 
+    // A mesma consulta da ficha: o nome do modelo vai ao cabeçalho, e a ficha
+    // de qualquer inscrição já abre com o modelo em cache.
+    const modelo = useQuery(
+        trpc.categoria.getFichaAvaliativa.queryOptions({
+            eventoId,
+            modalidadeId,
+            categoriaId,
+        }),
+    );
+    const modeloFicha = modelo.isPending
+        ? undefined
+        : modelo.isError && modelo.data === undefined
+          ? "Não foi possível carregar"
+          : (modelo.data?.nome ?? "Nenhum vinculado");
+
     const Skeleton = isGrupo ? BilheteGrupoSkeleton : BilheteIndividualSkeleton;
 
     return (
@@ -41,7 +58,12 @@ export default function DetalheCategoria() {
             {/* O nome vai para o cabeçalho abaixo; na barra, só o "Voltar". O
                 `title` segue para leitores de tela. */}
             <Stack.Screen options={{ title: nome }} />
-            <CabecalhoCategoria nome={nome} {...cabecalho} />
+            <CabecalhoCategoria
+                nome={nome}
+                {...cabecalho}
+                isGrupo={isGrupo}
+                modeloFicha={modeloFicha}
+            />
 
             {isPending ? (
                 <View className="gap-3 p-4">
