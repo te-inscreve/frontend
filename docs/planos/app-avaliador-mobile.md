@@ -2,7 +2,7 @@
 
 Spec de handoff do app mobile do avaliador. O mapa do `/wayfinder` é [Mapa: spec do app mobile do avaliador](https://linear.app/te-inscreve/issue/TE-64) no Linear: ele indexa as decisões em aberto, e cada ticket resolvido atualiza este arquivo.
 
-Fonte da verdade da API para ficha e envio: `docs/planos/exemplo-frontend-envio-avaliacao.md` — com uma correção: o payload terá `agrupamentos[]`, não `unidades[]`. Exemplo real de GET de modelo: `GET /api/v1/fichas-avaliativas/modelos/11006/` (campos gerais com `ordem` 1–4, agrupamentos com `ordem` 1–2, dois agrupamentos com o mesmo nome, um `valorMaximo: null`). É um modelo anterior à validação de `ordem` única no topo.
+Fonte da verdade do envio: o contrato do POST de avaliação informado pelo dev, num comentário do [TE-92](https://linear.app/te-inscreve/issue/TE-92) — payload com `agrupamentos[]`, a chave de resposta por tipo de campo, os `erros[]` localizados do 400 e os casos do 409. Ele substitui `docs/planos/exemplo-frontend-envio-avaliacao.md`, que usava `unidades[]`. Exemplo real de GET de modelo: `GET /api/v1/fichas-avaliativas/modelos/11006/` (campos gerais com `ordem` 1–4, agrupamentos com `ordem` 1–2, dois agrupamentos com o mesmo nome, um `valorMaximo: null`). É um modelo anterior à validação de `ordem` única no topo.
 
 ## Pedido original
 
