@@ -24,7 +24,7 @@ export type CriarInscricao = z.infer<typeof criarInscricaoSchema>;
  * A entidade como ela vem dentro de uma inscrição (`EntidadeInscricaoSerializer`):
  * só a identidade pública e a cidade.
  */
-const entidadeDaInscricaoSchema = z.object({
+export const entidadeDaInscricaoSchema = z.object({
     id: z.number().int(),
     nome: z.string(),
     cidade: z.string(),

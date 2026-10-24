@@ -6,9 +6,27 @@ máquina de desenvolvimento.
 
 ## Build de desenvolvimento, não Expo Go
 
-O app roda no aparelho como ele mesmo (`br.com.teinscreve.app`), com as
-ferramentas de desenvolvimento embutidas. O JavaScript continua vindo do Metro
-pela rede, com Fast Refresh; só o código nativo fica no APK.
+O app roda no aparelho como app próprio, com as ferramentas de desenvolvimento
+embutidas. O JavaScript continua vindo do Metro pela rede, com Fast Refresh; só o
+código nativo fica no APK.
+
+### Duas variantes no mesmo aparelho
+
+`app.config.ts` gera duas variantes, escolhidas por `APP_VARIANT`:
+
+| | desenvolvimento (padrão) | produção (`APP_VARIANT=production`) |
+| --- | --- | --- |
+| pacote | `br.com.teinscreve.app.dev` | `br.com.teinscreve.app` |
+| nome | te inscreve (dev) | te inscreve |
+| scheme | `te-inscreve-dev` | `te-inscreve` |
+
+Pacotes diferentes deixam as duas instaladas lado a lado: o build de
+desenvolvimento não sobrescreve a release que fala com produção. O scheme também
+muda, para o retorno do login não cair no app errado; o BFF aceita os dois em
+`trustedOrigins` (`apps/web/src/shared/api/auth/server.ts`).
+
+O padrão é desenvolvimento de propósito: esquecer a variável gera, no pior caso,
+uma release com cara de dev, nunca um debug por cima da release.
 
 O Expo Go foi abandonado de propósito. Desde o SDK 58, a `formSheet` não aparece
 nele: a folha monta, mas não recebe as insets da janela e nunca começa a entrar,
@@ -28,8 +46,11 @@ que o React Native fixa em `node_modules/react-native/gradle/libs.versions.toml`
 (SDK, build-tools e NDK). `JAVA_HOME` e `ANDROID_HOME` apontam para eles.
 
 ```bash
-cd apps/mobile && npx expo prebuild --platform android --no-install
+cd apps/mobile && npx expo prebuild --platform android --no-install --clean
 ```
+
+`--clean` apaga e recria `android/`. Ele é obrigatório ao trocar de variante,
+porque o pacote muda e um prebuild por cima deixa restos do anterior.
 
 ```bash
 cd apps/mobile/android && ./gradlew app:assembleDebug -PreactNativeArchitectures=arm64-v8a --max-workers=3
@@ -56,9 +77,19 @@ Sem essa variável, o app fecha ao abrir. Com uma URL `http://`, `app.config.ts`
 também libera HTTP sem TLS no release. Depois de mudar a variável, refaça o
 `expo prebuild` antes de compilar.
 
+A release é a variante de produção, então os dois comandos levam
+`APP_VARIANT=production`:
+
 ```bash
-cd apps/mobile && npx expo run:android --variant release
+cd apps/mobile && APP_VARIANT=production npx expo prebuild --platform android --no-install --clean
 ```
+
+```bash
+cd apps/mobile && APP_VARIANT=production npx expo run:android --variant release
+```
+
+Depois, volte o `android/` para a variante de desenvolvimento com o prebuild de
+[Gerar e compilar](#gerar-e-compilar), sem a variável.
 
 ## A rede vai pelo Wi-Fi; o cabo é só do agente
 
@@ -93,7 +124,7 @@ Se o modo LAN parar de funcionar, diagnostique a rede (abaixo) e mantenha o
 2. Abra o app no Metro pelo esquema do build de desenvolvimento:
 
     ```bash
-    adb shell am start -a android.intent.action.VIEW -d 'exp+te-inscreve://expo-development-client/?url=http%3A%2F%2F<IP da máquina>%3A8082' br.com.teinscreve.app
+    adb shell am start -a android.intent.action.VIEW -d 'exp+te-inscreve://expo-development-client/?url=http%3A%2F%2F<IP da máquina>%3A8082' br.com.teinscreve.app.dev
     ```
 
     Na primeira abertura, o menu de desenvolvimento mostra um cartão de boas-vindas
@@ -103,7 +134,7 @@ O IP vem por DHCP e pode mudar; o Metro pega o novo ao reiniciar. Leia-o da saí
 do Metro, não o fixe em código.
 
 Se o app ficar em "Reloading…" porque o Metro caiu no meio, ele não aceita mais o
-link: pare-o (`adb shell am force-stop br.com.teinscreve.app`) e abra de novo.
+link: pare-o (`adb shell am force-stop br.com.teinscreve.app.dev`) e abra de novo.
 Parar o app desfaz a sessão, então quem estiver logado entra outra vez.
 
 ## Quando o aparelho não alcança a máquina

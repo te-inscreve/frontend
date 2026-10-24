@@ -70,6 +70,34 @@ export function rotaFichaInscricao(
     return { pathname: "/categorias/ficha/[inscricaoId]", params };
 }
 
+/**
+ * A ficha de uma avaliação já guardada no aparelho, para voltar a ela de
+ * outra tela (o "continuar a avaliação de X", a dock do cabeçalho).
+ */
+export function rotaDaAvaliacaoLocal(avaliacao: {
+    eventoId: number;
+    modalidadeId: number;
+    categoriaId: number;
+    inscricaoId: number;
+    inscricao: InscricaoAvaliada;
+}): Href {
+    const params: ParametrosFichaInscricao = {
+        inscricaoId: String(avaliacao.inscricaoId),
+        eventoId: String(avaliacao.eventoId),
+        modalidadeId: String(avaliacao.modalidadeId),
+        categoriaId: String(avaliacao.categoriaId),
+        ...avaliacao.inscricao,
+        ordemApresentacao: String(avaliacao.inscricao.ordemApresentacao),
+    };
+
+    return { pathname: "/categorias/ficha/[inscricaoId]", params };
+}
+
+/** Quem foi avaliado, como a tela de sucesso o mostra. */
+export type InscricaoAvaliada = ReturnType<
+    typeof lerParametrosFichaInscricao
+>["inscricao"];
+
 /** O caminho de volta de {@link rotaFichaInscricao}, na tela da ficha. */
 export function lerParametrosFichaInscricao(params: ParametrosFichaInscricao) {
     return {

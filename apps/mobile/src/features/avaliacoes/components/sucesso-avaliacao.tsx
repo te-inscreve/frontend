@@ -8,14 +8,15 @@ import Animated, {
 import { CheckIcon } from "phosphor-react-native/src/icons/Check";
 import { withUniwind } from "uniwind";
 
-import type { InscricaoAvaliada } from "../lib/modelo-ficha-mock";
+import { formatarDecimal } from "@te-inscreve/schemas";
+
+import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
 import { Button } from "~/components/ui/button";
-import { formatarDecimal } from "../lib/formulario-ficha-mock";
 
 const Marca = withUniwind(CheckIcon);
 
 /*
- * MOCK (TE-82): a comemoração depois do "Salvar" válido. Tudo roda na thread
+ * A comemoração depois do "Salvar" válido. Tudo roda na thread
  * de UI: o confete, os anéis e o selo são animações CSS do Reanimated, e os
  * textos e cartões entram com as animações de entrada dele. Só a contagem da
  * nota é JS, porque muda o texto.

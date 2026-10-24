@@ -34,13 +34,6 @@ const getItensMap = (): ItensMap[] => [
                 href: "/admin/eventos",
                 icone: "calendar",
                 subItensExigemEntidade: true,
-                subItens: [
-                    {
-                        titulo: "Promovidos",
-                        href: "/admin/minha-entidade/eventos-promovidos",
-                        icone: "tv",
-                    },
-                ],
             },
         ],
     },

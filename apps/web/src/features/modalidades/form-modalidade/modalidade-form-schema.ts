@@ -4,7 +4,6 @@ import { z } from "zod/v4";
 import type { CreateModalidade, EditModalidade } from "@te-inscreve/schemas";
 
 import {
-    categoriaFormDefaults,
     categoriaFormInput,
     categoriaFormSchema,
 } from "~/features/categorias/form-categoria/categoria-form-schema";
@@ -91,9 +90,7 @@ function validarLimitesDeGrupo(
 /** Criação: a modalidade e as categorias que nascem com ela. */
 export const modalidadeFormSchema = camposModalidadeSchema
     .extend({
-        categorias: z
-            .array(categoriaFormSchema)
-            .min(1, "Cadastre pelo menos uma categoria."),
+        categorias: z.array(categoriaFormSchema),
     })
     .superRefine(validarLimitesDeGrupo);
 
@@ -129,7 +126,7 @@ export const modalidadeCamposDefaults: ModalidadeCamposValues = {
 
 export const modalidadeFormDefaults: ModalidadeFormValues = {
     ...modalidadeCamposDefaults,
-    categorias: [categoriaFormDefaults],
+    categorias: [],
 };
 
 /**

@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import Animated from "react-native-reanimated";
 import { CheckCircleIcon } from "phosphor-react-native/src/icons/CheckCircle";
 import { CircleNotchIcon } from "phosphor-react-native/src/icons/CircleNotch";
+import { CloudArrowUpIcon } from "phosphor-react-native/src/icons/CloudArrowUp";
 import { CloudSlashIcon } from "phosphor-react-native/src/icons/CloudSlash";
 import { WarningIcon } from "phosphor-react-native/src/icons/Warning";
 import { withUniwind } from "uniwind";
@@ -13,13 +14,14 @@ type Icone = ComponentType<IconProps & { colorClassName?: string }>;
 
 const icones: Record<EstadoFila["tipo"], Icone> = {
     sincronizado: withUniwind(CheckCircleIcon),
+    aguardando: withUniwind(CloudArrowUpIcon),
     sincronizando: withUniwind(CircleNotchIcon),
     pausado: withUniwind(CloudSlashIcon),
     com_erro: withUniwind(WarningIcon),
 };
 
 /**
- * O ícone do estado da fila, o mesmo no cabeçalho e no detalhe da fila.
+ * O ícone do estado da fila, o mesmo na dock e no detalhe da fila.
  * Decorativo: quem o usa dá o texto ao leitor de tela.
  */
 export function IconeEstadoFila({

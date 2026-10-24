@@ -1,10 +1,12 @@
 /**
  * Como está a fila de envio das avaliações, com as contagens que cada caso
- * mostra. O cabeçalho só conhece este tipo; quem o produz é `useFila`.
+ * mostra. A dock só conhece este tipo; quem o produz é `useFila`.
  */
 export type EstadoFila =
     /** A fila está vazia: toda avaliação salva já foi aceita pelo backend. */
     | { tipo: "sincronizado" }
+    /** Há avaliações salvas esperando a vez de ir para o servidor. */
+    | { tipo: "aguardando"; naFila: number }
     /** A fila está enviando; `enviadas` conta as já aceitas desta rodada. */
     | { tipo: "sincronizando"; enviadas: number; total: number }
     /** Há avaliações na fila, e o envio espera a conexão voltar. */
@@ -17,6 +19,8 @@ export function descreverEstadoFila(estado: EstadoFila): string {
     switch (estado.tipo) {
         case "sincronizado":
             return "Sincronizado";
+        case "aguardando":
+            return `${estado.naFila} na fila`;
         case "sincronizando":
             return `Enviando ${estado.enviadas} de ${estado.total}`;
         case "pausado":
@@ -36,6 +40,8 @@ export function explicarEstadoFila(estado: EstadoFila): string {
     switch (estado.tipo) {
         case "sincronizado":
             return "Todas as avaliações salvas já foram aceitas.";
+        case "aguardando":
+            return "Seguem para o servidor na ordem em que foram salvas.";
         case "sincronizando":
             return "As avaliações seguem para o servidor uma a uma.";
         case "pausado":

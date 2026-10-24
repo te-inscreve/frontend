@@ -12,6 +12,9 @@ config.cacheStores = [
     }),
 ];
 
+// As migrações do Drizzle (`drizzle/*.sql`) entram no bundle como código.
+config.resolver.sourceExts.push("sql");
+
 // O Uniwind precisa ser o último wrapper da config.
 /** @type {import('expo/metro-config').MetroConfig} */
 module.exports = withUniwindConfig(config, {

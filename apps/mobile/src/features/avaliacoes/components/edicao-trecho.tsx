@@ -32,10 +32,13 @@ import { CheckIcon } from "phosphor-react-native/src/icons/Check";
 import { XIcon } from "phosphor-react-native/src/icons/X";
 import { withUniwind } from "uniwind";
 
-import type { TrechoFicha, ValoresFicha } from "../lib/formulario-ficha-mock";
+import type { ValoresFicha } from "@te-inscreve/schemas";
+
+import type { TrechoFicha } from "../lib/formulario-ficha";
 import { Button } from "~/components/ui/button";
 import { FieldGroup } from "~/components/ui/field";
 import { CampoFichaControlado } from "./campo-ficha";
+import { NomeOcorrencia } from "./nome-ocorrencia";
 
 const IconeAplicar = withUniwind(CheckIcon);
 const IconeCancelar = withUniwind(XIcon);
@@ -53,7 +56,7 @@ const FRACAO_PARA_FECHAR = 1 / 3;
 const VELOCIDADE_PARA_FECHAR = 1000;
 
 /**
- * MOCK (TE-82): a folha inferior onde se preenche uma ocorrência de
+ * A folha inferior onde se preenche uma ocorrência de
  * agrupamento, com todos os campos dela. "Aplicar" chama `aoAplicar`, que
  * decide se a folha fecha; arrastar a alça para baixo, o fundo e o voltar do
  * sistema chamam `aoFechar`, que fecha sempre e guarda o que foi preenchido.
@@ -215,12 +218,27 @@ export function EdicaoTrecho({
                                                 className="bg-muted-foreground/30 h-1.5 w-10 self-center rounded-full"
                                             />
                                             <View className="gap-0.5">
-                                                <Text
-                                                    role="heading"
-                                                    className="text-foreground text-xl font-bold"
-                                                >
-                                                    {trecho?.titulo}
-                                                </Text>
+                                                {trecho?.ocorrencia ? (
+                                                    <NomeOcorrencia
+                                                        // Uma edição aberta
+                                                        // não passa de uma
+                                                        // ocorrência a outra.
+                                                        key={trecho.chave}
+                                                        chave={
+                                                            trecho.ocorrencia
+                                                                .chaveNome
+                                                        }
+                                                        padrao={trecho.titulo}
+                                                        control={control}
+                                                    />
+                                                ) : (
+                                                    <Text
+                                                        role="heading"
+                                                        className="text-foreground text-xl font-bold"
+                                                    >
+                                                        {trecho?.titulo}
+                                                    </Text>
+                                                )}
                                                 {trecho?.subtitulo && (
                                                     <Text className="text-muted-foreground text-sm">
                                                         {trecho.subtitulo}

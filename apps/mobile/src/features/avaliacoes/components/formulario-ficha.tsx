@@ -1,55 +1,75 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Keyboard, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 
-import type { ModeloFichaDetalhe } from "@te-inscreve/schemas";
+import type {
+    EnvioAvaliacao,
+    ModeloFichaDetalhe,
+    ValoresFicha,
+} from "@te-inscreve/schemas";
+import {
+    formatarDecimal,
+    montarFormularioFicha,
+    payloadDoFormulario,
+} from "@te-inscreve/schemas";
 
-import type { ValoresFicha } from "../lib/formulario-ficha-mock";
-import type { InscricaoAvaliada } from "../lib/modelo-ficha-mock";
+import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
 import { Button } from "~/components/ui/button";
 import {
     abaDoTrecho,
-    montarFormularioFicha,
-    notaProvisoria,
+    chavesDoTrecho,
+    notaDaFicha,
     resumoDoValor,
     trechosDaFicha,
-} from "../lib/formulario-ficha-mock";
+} from "../lib/formulario-ficha";
 import { EdicaoTrecho } from "./edicao-trecho";
 import { FolhaFicha } from "./folha-ficha";
 import { SucessoAvaliacao } from "./sucesso-avaliacao";
 
 /**
- * MOCK (TE-82): o formulário de avaliação como a ficha inteira, em branco, de
+ * O formulário de avaliação como a ficha inteira, em branco, de
  * entrada. O avaliador vê tudo antes e preenche aos poucos, na ordem que
  * quiser, uma aba por vez: os campos gerais se preenchem na própria ficha, e
  * cada ocorrência de um agrupamento abre o seu trecho numa folha inferior.
  * "Aplicar" valida o trecho e só fecha a folha sem erros; arrastar, o fundo e
  * o voltar fecham sempre, validando sem barrar, e a ficha marca o que ficou
  * com erro. "Salvar" valida tudo e vai à aba do primeiro trecho com pendência.
- * Nome editável da ocorrência, nota, rascunho e envio ficam para TE-70/TE-95.
+ * O nome de cada ocorrência se edita no título da folha.
+ *
+ * O formulário é o da avaliação atual (TE-74): abre com `valoresIniciais`, o
+ * payload guardado convertido, e devolve o payload a `aoMudar` a cada
+ * mudança, agrupadas em meio segundo, e ao sair da tela. O "Salvar"
+ * confirmado entrega o payload final a `aoSalvar`, que põe a avaliação na
+ * fila; o "Cancelar" confirmado chama `aoCancelar`, que a descarta.
  *
  * `inscricao` é quem a tela de sucesso mostra como avaliado.
  */
-export function FormularioFichaMock({
+export function FormularioFicha({
     modelo,
     inscricao,
+    valoresIniciais,
+    aoMudar,
+    aoSalvar,
+    aoCancelar,
 }: {
     modelo: ModeloFichaDetalhe;
     inscricao: InscricaoAvaliada;
+    valoresIniciais: ValoresFicha;
+    aoMudar: (payload: EnvioAvaliacao) => void;
+    aoSalvar: (payload: EnvioAvaliacao) => Promise<void>;
+    aoCancelar: () => Promise<void>;
 }) {
-    const { schema, defaultValues } = useMemo(
-        () => montarFormularioFicha(modelo),
-        [modelo],
-    );
+    const { schema } = useMemo(() => montarFormularioFicha(modelo), [modelo]);
     const trechos = useMemo(() => trechosDaFicha(modelo), [modelo]);
     const form = useForm<ValoresFicha>({
         resolver: zodResolver(schema),
-        defaultValues,
+        defaultValues: valoresIniciais,
     });
     // A ficha mostra as respostas: precisa renderizar a cada mudança.
     const valores = useWatch({ control: form.control }) as ValoresFicha;
+    useGuardarAutomatico(modelo, valores, aoMudar);
     // O trecho fica guardado com a folha fechada: ela segue mostrando o último
     // enquanto desliza para baixo.
     const [aberto, setAberto] = useState(0);
@@ -65,6 +85,10 @@ export function FormularioFichaMock({
         comErro: boolean;
     }>({ valores: {}, comErro: false });
 
+    // Com duas casas, como a tela de sucesso mostra.
+    const nota = notaDaFicha(trechos, valores);
+    const notaFormatada = formatarDecimal(Number(nota.toFixed(2)));
+
     // Quantos campos já têm resposta, para o rodapé dizer onde o avaliador
     // está sem precisar rolar a ficha nem trocar de aba.
     const campos = trechos.flatMap((trecho) => trecho.campos);
@@ -74,18 +98,21 @@ export function FormularioFichaMock({
     ).length;
 
     const erros = form.formState.errors;
-    const comErro = (indice: number) =>
-        trechos[indice]?.campos.some(({ chave }) => erros[chave]) ?? false;
+    function comErro(indice: number) {
+        const trecho = trechos[indice];
+        return !!trecho && chavesDoTrecho(trecho).some((chave) => erros[chave]);
+    }
 
     function validarTrecho(indice: number) {
         const trecho = trechos[indice];
         return trecho
-            ? form.trigger(trecho.campos.map(({ chave }) => chave))
+            ? form.trigger(chavesDoTrecho(trecho))
             : Promise.resolve(true);
     }
 
     function abrir(indice: number) {
-        const chaves = trechos[indice]?.campos.map(({ chave }) => chave) ?? [];
+        const trecho = trechos[indice];
+        const chaves = trecho ? chavesDoTrecho(trecho) : [];
         setAntes({
             valores: Object.fromEntries(
                 chaves.map((chave) => [chave, form.getValues(chave)]),
@@ -122,18 +149,51 @@ export function FormularioFichaMock({
         }
     }
 
+    function cancelarAvaliacao() {
+        Keyboard.dismiss();
+        Alert.alert(
+            "Cancelar a avaliação?",
+            `O que foi preenchido para ${inscricao.concorrente} será apagado do aparelho.`,
+            [
+                { text: "Continuar avaliando", style: "cancel" },
+                {
+                    text: "Cancelar avaliação",
+                    style: "destructive",
+                    onPress: () =>
+                        void aoCancelar().catch(() =>
+                            Alert.alert(
+                                "Não foi possível cancelar",
+                                "A avaliação continua no aparelho. Tente de novo.",
+                            ),
+                        ),
+                },
+            ],
+        );
+    }
+
     const salvar = form.handleSubmit(
         // Válida, a avaliação ainda pede confirmação: na fila ela não se
-        // edita mais (ADR 0001 usa o `Alert` para confirmar). No app de
-        // verdade, o "Salvar" do alerta a poria na fila de envio.
-        () => {
+        // edita mais (ADR 0001 usa o `Alert` para confirmar). O sucesso só
+        // aparece depois de ela estar na fila.
+        (validos) => {
             Keyboard.dismiss();
             Alert.alert(
                 "Salvar avaliação?",
                 "Ela vai para a fila de envio e não poderá mais ser editada lá.",
                 [
                     { text: "Cancelar", style: "cancel" },
-                    { text: "Salvar", onPress: () => setSalva(true) },
+                    {
+                        text: "Salvar",
+                        onPress: () =>
+                            void aoSalvar(payloadDoFormulario(modelo, validos))
+                                .then(() => setSalva(true))
+                                .catch(() =>
+                                    Alert.alert(
+                                        "Não foi possível salvar",
+                                        "Suas respostas continuam guardadas no aparelho. Tente de novo.",
+                                    ),
+                                ),
+                    },
                 ],
             );
         },
@@ -141,7 +201,7 @@ export function FormularioFichaMock({
             // Vai à aba do primeiro erro. Os campos gerais mostram o erro na
             // própria ficha; só a ocorrência precisa da folha para isso.
             const primeiro = trechos.findIndex((trecho) =>
-                trecho.campos.some(({ chave }) => falhas[chave]),
+                chavesDoTrecho(trecho).some((chave) => falhas[chave]),
             );
             const trecho = trechos[primeiro];
             if (!trecho) return;
@@ -155,6 +215,7 @@ export function FormularioFichaMock({
             <ScrollView contentContainerClassName="grow">
                 <FolhaFicha
                     modelo={modelo}
+                    inscricao={inscricao}
                     trechos={trechos}
                     valores={valores}
                     comErro={comErro}
@@ -169,17 +230,17 @@ export function FormularioFichaMock({
             <View className="bg-card border-border border-t p-4">
                 {/* A nota final mora no rodapé fixo, ao lado do "Salvar":
                     vale para a ficha inteira, não para uma aba, e fica à
-                    vista enquanto o avaliador preenche. O cálculo ainda está
-                    em aberto (TE-95), então o mock só reserva o lugar. */}
+                    vista enquanto o avaliador preenche. É a prévia do que
+                    já foi preenchido (TE-95). */}
                 <View className="w-full max-w-[720px] flex-row items-center gap-4 self-center">
                     <View className="flex-1 gap-0.5">
                         <View className="flex-row items-baseline gap-2">
                             <Text className="text-muted-foreground text-sm">
                                 Nota final
                             </Text>
-                            <Text aria-label="a calcular, de 10">
+                            <Text aria-label={`${notaFormatada} de 10`}>
                                 <Text className="text-foreground text-2xl font-bold">
-                                    —
+                                    {notaFormatada}
                                 </Text>
                                 <Text className="text-muted-foreground text-base">
                                     {" / 10"}
@@ -190,6 +251,9 @@ export function FormularioFichaMock({
                             {preenchidos} de {campos.length} preenchidos
                         </Text>
                     </View>
+                    <Button variant="outline" onPress={cancelarAvaliacao}>
+                        Cancelar
+                    </Button>
                     <Button onPress={() => void salvar()}>Salvar</Button>
                 </View>
             </View>
@@ -206,7 +270,7 @@ export function FormularioFichaMock({
 
             <SucessoAvaliacao
                 visivel={salva}
-                nota={notaProvisoria(trechos, valores)}
+                nota={nota}
                 inscricao={inscricao}
                 aoConcluir={() => {
                     setSalva(false);
@@ -214,5 +278,41 @@ export function FormularioFichaMock({
                 }}
             />
         </View>
+    );
+}
+
+/**
+ * Guarda a avaliação atual enquanto o avaliador preenche: meio segundo depois da
+ * última mudança e, se algo ficou pendente, ao sair da tela.
+ */
+function useGuardarAutomatico(
+    modelo: ModeloFichaDetalhe,
+    valores: ValoresFicha,
+    aoMudar: (payload: EnvioAvaliacao) => void,
+) {
+    const pendente = useRef<ValoresFicha | null>(null);
+    // A última versão dos dois, para a saída da tela não guardar com a de
+    // quando montou.
+    const ultimo = useRef({ modelo, aoMudar });
+    useEffect(() => {
+        ultimo.current = { modelo, aoMudar };
+    }, [modelo, aoMudar]);
+
+    useEffect(() => {
+        pendente.current = valores;
+        const espera = setTimeout(() => {
+            pendente.current = null;
+            aoMudar(payloadDoFormulario(modelo, valores));
+        }, 500);
+        return () => clearTimeout(espera);
+    }, [modelo, valores, aoMudar]);
+
+    useEffect(
+        () => () => {
+            if (!pendente.current) return;
+            const { modelo: atual, aoMudar: guardar } = ultimo.current;
+            guardar(payloadDoFormulario(atual, pendente.current));
+        },
+        [],
     );
 }
