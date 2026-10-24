@@ -13,7 +13,6 @@ import type { AvaliacaoComErro, AvaliacaoNaFila, Fila } from "../lib/fila";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/utils/cn";
 import { descreverEstadoFila, explicarEstadoFila } from "../lib/estado-fila";
-import { avancarFilaDeExemplo } from "../lib/use-fila";
 import { IconeEstadoFila } from "./icone-estado-fila";
 
 const IconeFechar = withUniwind(XIcon);
@@ -105,14 +104,6 @@ export function DetalheFila({
                     <Secao titulo="Com erro" avaliacoes={comErro} />
                     <Secao titulo="Na fila" avaliacoes={naFila} />
                 </ScrollView>
-            )}
-
-            {/* Só em desenvolvimento, enquanto a fila é de exemplo (TE-90):
-                percorre os estados para ver o cabeçalho reagir. */}
-            {__DEV__ && (
-                <Button variant="outline" onPress={avancarFilaDeExemplo}>
-                    Simular próximo estado
-                </Button>
             )}
         </View>
     );
