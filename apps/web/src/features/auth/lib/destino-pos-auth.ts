@@ -15,7 +15,7 @@
  * a regra precisa ser uma só nos dois lados.
  */
 export function caminhoInternoSeguro(next: string | null): string {
-    if (!next) return "/";
+    if (!next) return "/admin";
 
     const limpo = next.replace(/[\t\n\r]/g, "");
 
