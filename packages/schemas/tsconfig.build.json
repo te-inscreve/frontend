@@ -6,6 +6,8 @@
     // `dist/src/index.d.ts` instead of the `dist/index.d.ts` that `exports` points
     // at. It is still typechecked, by `tsconfig.json`.
     "include": ["src"],
+    // Tests stay out of `dist`.
+    "exclude": ["node_modules", "src/**/*.test.ts"],
     "compilerOptions": {
         "rootDir": "src",
         // Its own buildinfo: this config sees a different file set than

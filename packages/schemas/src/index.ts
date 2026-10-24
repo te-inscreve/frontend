@@ -194,3 +194,6 @@ export type {
     TipoCampoComAlternativas,
     TipoCampoFicha,
 } from "./ficha-avaliativa";
+
+export { calcularNota, calcularSubtotal } from "./nota";
+export type { EntradaNota, RespostaNota } from "./nota";
