@@ -58,16 +58,14 @@ export function DadosDaInscricao({
 }) {
     return (
         <Animated.View entering={FadeIn.duration(150)} className="gap-4">
-            <View className="flex-row flex-wrap gap-x-6 gap-y-4">
-                <Dado termo="Entidade">{inscricao.entidade}</Dado>
-                <Dado termo="Apresentação">
-                    {`${inscricao.ordemApresentacao}ª`}
-                </Dado>
-            </View>
+            <Dado termo="Entidade">{inscricao.entidade}</Dado>
             <View className="flex-row flex-wrap gap-x-6 gap-y-4">
                 <Dado termo="Evento">{inscricao.evento}</Dado>
                 <Dado termo="Modalidade">{inscricao.modalidade}</Dado>
                 <Dado termo="Categoria">{inscricao.categoria}</Dado>
+                <Dado termo="Apresentação">
+                    {`${inscricao.ordemApresentacao}ª`}
+                </Dado>
             </View>
         </Animated.View>
     );

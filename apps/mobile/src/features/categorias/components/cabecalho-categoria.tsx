@@ -41,12 +41,17 @@ export function CabecalhoCategoria({
         <View className="bg-muted border-border gap-4 border-b px-4 pt-6 pb-5">
             <View className="gap-1">
                 <View className="flex-row items-start justify-between gap-3">
-                    <Text
-                        role="heading"
-                        className="text-foreground shrink text-2xl leading-tight font-bold tracking-tight"
-                    >
-                        {`${modalidadeNome} ${nome}`}
-                    </Text>
+                    <View className="flex-1 flex-col gap-1">
+                        <Text
+                            role="heading"
+                            className="text-foreground shrink text-2xl leading-tight font-bold tracking-tight"
+                        >
+                            {`${modalidadeNome} ${nome}`}
+                        </Text>
+                        <Text className="text-muted-foreground text-sm">
+                            {`Evento: ${eventoNome}`}
+                        </Text>
+                    </View>
                     <SituacaoCategoriaBadge
                         situacao={situacao}
                         className="mt-1"
@@ -54,7 +59,6 @@ export function CabecalhoCategoria({
                 </View>
             </View>
 
-            <Dado termo="Evento">{eventoNome}</Dado>
             <View className="flex-row gap-6">
                 <Dado termo="Faixa etária">
                     {`${idadeMinima}-${idadeMaxima} anos`}
