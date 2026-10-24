@@ -197,3 +197,17 @@ export type {
 
 export { calcularNota, calcularSubtotal } from "./nota";
 export type { EntradaNota, RespostaNota } from "./nota";
+
+export {
+    camposComChave,
+    camposDoAgrupamento,
+    chaveDaOcorrencia,
+    chaveGeral,
+    formatarDecimal,
+    itensDoTopo,
+    montarFormularioFicha,
+    schemaDoCampo,
+    tetoDoCampo,
+    valorInicial,
+} from "./formulario-ficha";
+export type { ItemDoTopo, ValorCampo, ValoresFicha } from "./formulario-ficha";
