@@ -234,3 +234,9 @@ export {
     minhasAvaliacoesSchema,
 } from "./minhas-avaliacoes";
 export type { MinhaAvaliacao, MinhasAvaliacoes } from "./minhas-avaliacoes";
+
+export {
+    resultadoCategoriaSchema,
+    resultadosCategoriaSchema,
+} from "./resultado";
+export type { ResultadoCategoria, ResultadosCategoria } from "./resultado";
