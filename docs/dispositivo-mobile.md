@@ -41,7 +41,7 @@ plugin ou campo de `app.config.ts`. Mudança de JavaScript chega pelo Metro.
 ### Gerar e compilar
 
 A pasta `apps/mobile/android` é gerada (`expo prebuild`) e está no `.gitignore`;
-nada nela é editado à mão. O build pede JDK 17 e o Android SDK com as versões
+nada nela é editado à mão. O build pede JDK 17 ou mais novo (o 21 serve) e o Android SDK com as versões
 que o React Native fixa em `node_modules/react-native/gradle/libs.versions.toml`
 (SDK, build-tools e NDK). `JAVA_HOME` e `ANDROID_HOME` apontam para eles.
 
