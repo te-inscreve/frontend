@@ -60,3 +60,55 @@ export type OcorrenciaEnvio = z.infer<typeof ocorrenciaEnvioSchema>;
  * pelo `envioAvaliacaoSchema`.
  */
 export type EnvioAvaliacao = z.infer<typeof envioAvaliacaoSchema>;
+
+/**
+ * O 201 do `POST` de avaliações: a avaliação como o servidor a gravou. Só o
+ * que o app usa é conferido; o resto do detalhe (as respostas devolvidas)
+ * passa sem validar. `nota` é calculada pelo backend, decimal em string com 4
+ * casas (`"8.7500"`).
+ */
+export const avaliacaoEnviadaSchema = z.looseObject({
+    id: z.number().int(),
+    inscricaoId: z.number().int(),
+    avaliadorId: z.number().int(),
+    modeloFichaAvaliativaId: z.number().int(),
+    /** ISO 8601 com fuso. */
+    dataEnvio: z.string(),
+    nota: z.string(),
+});
+
+/**
+ * Um problema do 400 do `POST`, com onde ele está. Para marcar o erro no
+ * formulário: `local` + `agrupamentoId`/`ordem` + `campoFichaId`.
+ */
+export const erroDeEnvioLocalizadoSchema = z.object({
+    local: z.string(),
+    /** Texto legível; pode citar nomes de campo em snake_case. */
+    mensagem: z.string(),
+    campoFichaId: z.number().int().optional(),
+    agrupamentoId: z.number().int().optional(),
+    ordem: z.number().int().optional(),
+    indiceAgrupamento: z.number().int().optional(),
+    indiceResposta: z.number().int().optional(),
+});
+
+/** O corpo do 400: o backend valida tudo e devolve todos os problemas. */
+export const errosDeEnvioSchema = z.object({
+    erros: z.array(erroDeEnvioLocalizadoSchema),
+});
+
+/**
+ * Uma avaliação de `GET .../inscricoes/{id}/avaliacoes/`, a consulta que
+ * separa o 409 de "já avaliou" dos outros (TE-68).
+ */
+export const avaliacaoDaInscricaoSchema = z.object({
+    id: z.number().int(),
+    avaliadorId: z.number().int(),
+    modeloFichaAvaliativaId: z.number().int(),
+    dataEnvio: z.string(),
+    nota: z.string(),
+});
+
+export type AvaliacaoEnviada = z.infer<typeof avaliacaoEnviadaSchema>;
+export type ErroDeEnvioLocalizado = z.infer<typeof erroDeEnvioLocalizadoSchema>;
+export type AvaliacaoDaInscricao = z.infer<typeof avaliacaoDaInscricaoSchema>;

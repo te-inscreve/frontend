@@ -1,11 +1,34 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { z } from "zod/v4";
 
 import {
+    avaliacaoDaInscricaoSchema,
+    avaliacaoEnviadaSchema,
     categoriasDisponiveisSchema,
+    envioAvaliacaoSchema,
     minhasAvaliacoesSchema,
+    paginadoSchema,
 } from "@te-inscreve/schemas";
 
 import { authenticatedProcedure } from "../trpc";
+
+const idSchema = z.number().int().positive();
+
+const caminhoDaInscricao = z.object({
+    eventoId: idSchema,
+    modalidadeId: idSchema,
+    categoriaId: idSchema,
+    inscricaoId: idSchema,
+});
+
+const avaliacoesDaInscricaoSchema = z.union([
+    z.array(avaliacaoDaInscricaoSchema),
+    paginadoSchema(avaliacaoDaInscricaoSchema),
+]);
+
+function urlDaInscricao(caminho: z.infer<typeof caminhoDaInscricao>) {
+    return `/eventos/${caminho.eventoId}/modalidades/${caminho.modalidadeId}/categorias/${caminho.categoriaId}/inscricoes/${caminho.inscricaoId}`;
+}
 
 export const avaliacaoRouter = {
     /**
@@ -37,4 +60,44 @@ export const avaliacaoRouter = {
         if (!result.ok) throw result.error;
         return minhasAvaliacoesSchema.parse(result.data);
     }),
+
+    /**
+     * As avaliações já enviadas para uma inscrição, de todos os avaliadores.
+     * É a consulta do 409 (TE-68): se uma é do avaliador logado, o envio que
+     * deu conflito já tinha chegado.
+     *
+     * Aceita a lista pura ou o envelope paginado: o contrato não diz qual o
+     * backend usa aqui.
+     */
+    getDaInscricao: authenticatedProcedure
+        .input(caminhoDaInscricao)
+        .query(async ({ ctx, input }) => {
+            const result = await ctx.restClient.get<unknown>(
+                `${urlDaInscricao(input)}/avaliacoes/`,
+            );
+            if (!result.ok) throw result.error;
+            const lista = avaliacoesDaInscricaoSchema.parse(result.data);
+            return Array.isArray(lista) ? lista : lista.items;
+        }),
+
+    /**
+     * Envia a avaliação de uma inscrição, feita pelo avaliador logado (que o
+     * backend tira da sessão). Sem cache nem nova tentativa aqui: quem decide
+     * repetir é a fila do app, pelo status.
+     *
+     * Toda recusa chega ao cliente com o status do Django em
+     * `error.data.upstreamStatus` e o corpo em `error.data.upstreamBody`:
+     * `erros[]` no 400, `detail` no 409.
+     */
+    enviar: authenticatedProcedure
+        .input(caminhoDaInscricao.extend({ avaliacao: envioAvaliacaoSchema }))
+        .mutation(async ({ ctx, input }) => {
+            const { avaliacao, ...caminho } = input;
+            const result = await ctx.restClient.post<unknown>(
+                `${urlDaInscricao(caminho)}/avaliacoes/`,
+                avaliacao,
+            );
+            if (!result.ok) throw result.error;
+            return avaliacaoEnviadaSchema.parse(result.data);
+        }),
 } satisfies TRPCRouterRecord;

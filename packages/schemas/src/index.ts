@@ -199,12 +199,19 @@ export { calcularNota, calcularSubtotal } from "./nota";
 export type { EntradaNota, RespostaNota } from "./nota";
 
 export {
+    avaliacaoDaInscricaoSchema,
+    avaliacaoEnviadaSchema,
     envioAvaliacaoSchema,
+    erroDeEnvioLocalizadoSchema,
+    errosDeEnvioSchema,
     ocorrenciaEnvioSchema,
     respostaEnvioSchema,
 } from "./envio-avaliacao";
 export type {
+    AvaliacaoDaInscricao,
+    AvaliacaoEnviada,
     EnvioAvaliacao,
+    ErroDeEnvioLocalizado,
     OcorrenciaEnvio,
     RespostaEnvio,
 } from "./envio-avaliacao";
