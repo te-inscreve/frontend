@@ -194,3 +194,43 @@ export type {
     TipoCampoComAlternativas,
     TipoCampoFicha,
 } from "./ficha-avaliativa";
+
+export { calcularNota, calcularSubtotal } from "./nota";
+export type { EntradaNota, RespostaNota } from "./nota";
+
+export {
+    envioAvaliacaoSchema,
+    ocorrenciaEnvioSchema,
+    respostaEnvioSchema,
+} from "./envio-avaliacao";
+export type {
+    EnvioAvaliacao,
+    OcorrenciaEnvio,
+    RespostaEnvio,
+} from "./envio-avaliacao";
+
+export {
+    camposComChave,
+    camposDoAgrupamento,
+    chaveDaOcorrencia,
+    chaveGeral,
+    chaveNome,
+    formularioDoPayload,
+    MAXIMO_NOME_OCORRENCIA,
+    nomeOcorrenciaSchema,
+    nomePadrao,
+    payloadDoFormulario,
+    formatarDecimal,
+    itensDoTopo,
+    montarFormularioFicha,
+    schemaDoCampo,
+    tetoDoCampo,
+    valorInicial,
+} from "./formulario-ficha";
+export type { ItemDoTopo, ValorCampo, ValoresFicha } from "./formulario-ficha";
+
+export {
+    minhaAvaliacaoSchema,
+    minhasAvaliacoesSchema,
+} from "./minhas-avaliacoes";
+export type { MinhaAvaliacao, MinhasAvaliacoes } from "./minhas-avaliacoes";

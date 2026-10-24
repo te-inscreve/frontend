@@ -63,8 +63,9 @@ export function IsGrupoField() {
                             </Label>
                         </div>
                         <p className="text-muted-foreground mt-1.5 max-w-md text-xs">
-                            Ative quando a inscrição for feita por um conjunto
-                            de participantes, não por uma pessoa.
+                            Ative para permitir que os grupos tenham um nome
+                            personalizado, diferente do nome da entidade que
+                            representam.
                         </p>
                     </div>
                 </div>

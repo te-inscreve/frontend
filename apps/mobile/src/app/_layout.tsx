@@ -1,9 +1,12 @@
 import { useEffect } from "react";
+import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SplashScreen, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { QueryClientProvider } from "@tanstack/react-query";
 
+import { useBancoLocal } from "~/db/cliente";
+import { retomarEnviosInterrompidos } from "~/features/avaliacoes/lib/avaliacoes-locais";
 import { queryClient } from "~/utils/api";
 import { useSession } from "~/utils/auth";
 import { aplicarTemaSalvo } from "~/utils/tema";
@@ -15,17 +18,40 @@ import "../styles.css";
 // Uniwind: a primeira pintura já sai no tema escolhido.
 aplicarTemaSalvo();
 
-// A splash cobre a primeira leitura da sessão: sem ela, quem já entrou veria o
-// login piscar antes de o guard mandá-lo para o app.
+// A splash cobre a primeira leitura da sessão e as migrações do banco local:
+// sem ela, quem já entrou veria o login piscar antes de o guard mandá-lo para
+// o app.
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     const tema = useTemaNavegacao();
     const { data: session, isPending } = useSession();
+    const banco = useBancoLocal();
+    const bancoResolvido = banco.success || !!banco.error;
 
     useEffect(() => {
-        if (!isPending) void SplashScreen.hideAsync();
-    }, [isPending]);
+        if (banco.success) void retomarEnviosInterrompidos();
+    }, [banco.success]);
+
+    useEffect(() => {
+        if (!isPending && bancoResolvido) void SplashScreen.hideAsync();
+    }, [isPending, bancoResolvido]);
+
+    // Sem o banco, nada do que o avaliador fez no aparelho se lê nem se
+    // grava: o app para aqui em vez de seguir pela metade.
+    if (banco.error)
+        return (
+            <View className="bg-background flex-1 items-center justify-center gap-2 p-6">
+                <Text className="text-foreground text-center text-lg font-semibold">
+                    Não foi possível abrir os dados do aparelho
+                </Text>
+                <Text className="text-muted-foreground text-center">
+                    Feche e abra o app de novo. Se continuar, chame a
+                    organização: as avaliações salvas continuam no aparelho.
+                </Text>
+            </View>
+        );
+    if (!banco.success) return null;
 
     return (
         // Os gestos do Gesture Handler, como o deslize entre as abas da ficha,

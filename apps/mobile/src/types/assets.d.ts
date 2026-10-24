@@ -5,3 +5,10 @@ declare module "*.png" {
     const source: ImageSourcePropType;
     export default source;
 }
+
+// As migrações do Drizzle, embutidas como texto pelo `inline-import`
+// (`babel.config.js`).
+declare module "*.sql" {
+    const sql: string;
+    export default sql;
+}

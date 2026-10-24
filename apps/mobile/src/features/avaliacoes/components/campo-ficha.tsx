@@ -1,20 +1,22 @@
 import type { Control } from "react-hook-form";
+import type { TextInputInstance } from "react-native";
+import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CheckIcon } from "phosphor-react-native/src/icons/Check";
 import { Controller } from "react-hook-form";
 import { withUniwind } from "uniwind";
 
-import type { CampoFicha } from "@te-inscreve/schemas";
+import type {
+    CampoFicha,
+    ValorCampo,
+    ValoresFicha,
+} from "@te-inscreve/schemas";
+import { formatarDecimal, tetoDoCampo } from "@te-inscreve/schemas";
 
-import type { ValorCampo, ValoresFicha } from "../lib/formulario-ficha-mock";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/utils/cn";
-import {
-    formatarDecimal,
-    notaDigitada,
-    tetoDoCampo,
-} from "../lib/formulario-ficha-mock";
+import { notaDigitada } from "../lib/formulario-ficha";
 import { SeloModificador } from "./selo-modificador";
 
 const Marca = withUniwind(CheckIcon);
@@ -77,6 +79,74 @@ function OpcaoAlternativa({
     );
 }
 
+/**
+ * A nota e o máximo juntos, no meio da caixa ("8,5 / 10"). O máximo fica
+ * fixo, fora do placeholder, que sumiria assim que o avaliador começasse a
+ * digitar. A caixa é de quem a desenha, e o `TextInput` dentro dela cresce
+ * com o número; tocar em qualquer ponto da caixa foca o campo.
+ */
+function CampoNota({
+    campo,
+    rotuloId,
+    valor,
+    aoMudar,
+    aoSair,
+    invalido,
+    erro,
+}: {
+    campo: CampoFicha;
+    rotuloId: string;
+    valor: string;
+    aoMudar: (valor: ValorCampo) => void;
+    aoSair: () => void;
+    invalido: boolean;
+    erro?: string;
+}) {
+    const ref = useRef<TextInputInstance>(null);
+    const [focado, setFocado] = useState(false);
+    const teto = tetoDoCampo(campo);
+    const maximo = teto === null ? null : formatarDecimal(teto);
+
+    return (
+        <Pressable
+            accessible={false}
+            onPress={() => ref.current?.focus()}
+            className={cn(
+                "border-input bg-card h-12 flex-row items-center justify-center rounded-md border px-3",
+                focado && "border-ring",
+                invalido && "border-destructive",
+            )}
+        >
+            <Input
+                ref={ref}
+                value={valor}
+                onChangeText={(digitado) =>
+                    aoMudar(notaDigitada(campo, digitado))
+                }
+                onFocus={() => setFocado(true)}
+                onBlur={() => {
+                    setFocado(false);
+                    aoSair();
+                }}
+                aria-labelledby={rotuloId}
+                accessibilityHint={
+                    erro ?? (maximo ? `Máximo ${maximo}.` : undefined)
+                }
+                keyboardType="decimal-pad"
+                placeholder="0"
+                textAlign="center"
+                // A borda e o fundo são da caixa: aqui fica só o texto.
+                className="h-full min-w-4 rounded-none border-0 bg-transparent px-0"
+            />
+            {maximo && (
+                <Text aria-hidden className="text-muted-foreground text-base">
+                    {` / ${maximo}`}
+                </Text>
+            )}
+        </Pressable>
+    );
+}
+
 function ControleDoCampo({
     campo,
     rotuloId,
@@ -95,40 +165,18 @@ function ControleDoCampo({
     erro?: string;
 }) {
     switch (campo.tipo) {
-        case "NUMERICO": {
-            const teto = tetoDoCampo(campo);
-            const maximo = teto === null ? null : formatarDecimal(teto);
+        case "NUMERICO":
             return (
-                // O máximo fica fixo dentro do campo, à direita: o placeholder
-                // sumiria assim que o avaliador começasse a digitar.
-                <View className="justify-center">
-                    <Input
-                        value={typeof valor === "string" ? valor : ""}
-                        onChangeText={(digitado) =>
-                            aoMudar(notaDigitada(campo, digitado))
-                        }
-                        onBlur={aoSair}
-                        aria-labelledby={rotuloId}
-                        accessibilityHint={
-                            erro ?? (maximo ? `Máximo ${maximo}.` : undefined)
-                        }
-                        invalido={invalido}
-                        keyboardType="decimal-pad"
-                        placeholder="0"
-                        className={maximo ? "pr-20" : undefined}
-                    />
-                    {maximo && (
-                        <Text
-                            aria-hidden
-                            pointerEvents="none"
-                            className="text-muted-foreground absolute right-3 text-base"
-                        >
-                            / {maximo}
-                        </Text>
-                    )}
-                </View>
+                <CampoNota
+                    campo={campo}
+                    rotuloId={rotuloId}
+                    valor={typeof valor === "string" ? valor : ""}
+                    aoMudar={aoMudar}
+                    aoSair={aoSair}
+                    invalido={invalido}
+                    erro={erro}
+                />
             );
-        }
         case "DESCRITIVO":
         case "OBSERVACAO":
             return (

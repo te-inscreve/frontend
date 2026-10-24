@@ -6,8 +6,11 @@ export const restEnv = () =>
         server: {
             /** Base URL of the "te inscreve" backend REST API. */
             API_URL: z.url(),
-            /** Key the backend REST API expects on the `key` query param. */
-            API_KEY: z.string().min(1),
+            /**
+             * Key sent as `X-API-KEY` on every request. Optional: unset, the
+             * header is left out, for backends that don't require it.
+             */
+            API_KEY: z.string().min(1).optional(),
         },
         runtimeEnv: process.env,
         emptyStringAsUndefined: true,

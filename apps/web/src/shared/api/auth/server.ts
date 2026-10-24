@@ -41,8 +41,9 @@ export const auth = initAuth({
     },
     secret: env.AUTH_SECRET,
     restClient: httpClient,
-    // Lets the Expo app call this auth server over its custom scheme.
-    trustedOrigins: ["te-inscreve://"],
+    // Lets the Expo app call this auth server over its custom scheme, in both
+    // the production and the dev variant (`apps/mobile/app.config.ts`).
+    trustedOrigins: ["te-inscreve://", "te-inscreve-dev://"],
     extraPlugins: [nextCookies()],
     restCredentials: {
         // Translates the Django payload at the boundary, so the rest of the
