@@ -4,9 +4,12 @@ import { opcoesPilha } from "~/utils/opcoes-pilha";
 
 export default function AvaliacoesLayout() {
     return (
-        // O título fica na tela de entrada; as que empilharem aqui dão o seu.
         <Stack screenOptions={opcoesPilha}>
-            <Stack.Screen name="index" options={{ title: "Avaliações" }} />
+            {/* A entrada desenha o próprio título, grande, como Categorias. */}
+            <Stack.Screen
+                name="index"
+                options={{ title: "Minhas Avaliações", headerShown: false }}
+            />
         </Stack>
     );
 }
