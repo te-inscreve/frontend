@@ -1,12 +1,23 @@
+import type { Metadata } from "next";
 import { Suspense, use } from "react";
 import { notFound } from "next/navigation";
 
 import { AcoesEvento } from "~/features/eventos/evento-detail/acoes-evento";
 import { DetalheEvento } from "~/features/eventos/evento-detail/detalhe-evento";
 import { DetalheEventoSkeleton } from "~/features/eventos/evento-detail/detalhe-evento-skeleton";
+import { metadataDoEventoPorSegmento } from "~/features/eventos/shared/metadata-evento";
 import { prefetch, trpc } from "~/shared/api/trpc/server";
 import { GoBackButton } from "~/shared/ui/back-btn";
 import { parseInteger } from "~/shared/utils/parsers";
+
+/** Ver `metadataDoEventoPorSegmento`: as meta tags só seguram os robôs. */
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+    return metadataDoEventoPorSegmento((await params).slug);
+}
 
 /**
  * O evento sem modalidade na rota: abre na primeira aba. Com modalidade, a

@@ -17,6 +17,12 @@ export const env = createEnv({
      * backend is never called straight from the browser, always through tRPC.
      */
     server: {
+        /**
+         * Endereço público do site, base das URLs absolutas que as prévias de
+         * link (Open Graph) exigem. Sem ele, cai no domínio de produção da
+         * Vercel e, fora dela, em `http://localhost:3000`.
+         */
+        SITE_URL: z.url().optional(),
         ALLOWED_ORIGINS: z
             .string()
             .optional()

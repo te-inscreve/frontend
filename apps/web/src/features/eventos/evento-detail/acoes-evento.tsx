@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
 import { MegaphoneIcon } from "@phosphor-icons/react/dist/ssr/Megaphone";
 import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr/PencilSimple";
@@ -51,6 +52,15 @@ export function AcoesEvento({ eventoId }: Props) {
                         <Link href={`/admin/eventos/${eventoId}/editar`}>
                             <PencilSimpleIcon aria-hidden="true" />
                             Editar
+                        </Link>
+                    </DropdownMenuItem>
+
+                    {/* A página pública é a que se compartilha: o link de
+                        lá carrega a prévia com o cartaz. */}
+                    <DropdownMenuItem asChild>
+                        <Link href={`/eventos/${eventoId}`} target="_blank">
+                            <ArrowSquareOutIcon aria-hidden="true" />
+                            Ver página pública
                         </Link>
                     </DropdownMenuItem>
 
