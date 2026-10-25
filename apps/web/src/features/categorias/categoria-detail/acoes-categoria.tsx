@@ -14,7 +14,6 @@ import { XCircleIcon } from "@phosphor-icons/react/dist/ssr/XCircle";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { AcaoSituacaoCategoria, Categoria } from "@te-inscreve/schemas";
-import { acoesPorSituacaoCategoria } from "@te-inscreve/schemas";
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -31,6 +30,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@te-inscreve/components";
+import { acoesPorSituacaoCategoria } from "@te-inscreve/schemas";
 
 import { revalidarCategoria } from "~/shared/api/revalidar";
 import { useTRPC } from "~/shared/api/trpc/client";
@@ -82,8 +82,7 @@ const ACOES: Record<AcaoSituacaoCategoria, DescricaoAcao> = {
         Icone: XCircleIcon,
         confirmacao: {
             titulo: "Cancelar esta categoria?",
-            descricao:
-                "A categoria não acontecerá e não poderá ser reaberta.",
+            descricao: "A categoria não acontecerá e não poderá ser reaberta.",
             botao: "Cancelar categoria",
         },
         destrutiva: true,
