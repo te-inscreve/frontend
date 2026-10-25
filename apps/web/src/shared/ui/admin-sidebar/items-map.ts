@@ -30,6 +30,11 @@ const getItensMap = (): ItensMap[] => [
     {
         itens: [
             {
+                titulo: "Vitrine",
+                href: "/",
+                icone: "storefront",
+            },
+            {
                 titulo: "Eventos",
                 href: "/admin/eventos",
                 icone: "calendar",
