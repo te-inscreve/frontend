@@ -5,6 +5,7 @@ import {
     BuildingsIcon,
     CalendarDotsIcon,
     ClipboardTextIcon,
+    StorefrontIcon,
     TelevisionIcon,
     TextboxIcon,
     TicketIcon,
@@ -23,6 +24,7 @@ const iconsMap = {
     tv: TelevisionIcon,
     ficha: ClipboardTextIcon,
     field: TextboxIcon,
+    storefront: StorefrontIcon,
 };
 
 export type IconName = keyof typeof iconsMap;

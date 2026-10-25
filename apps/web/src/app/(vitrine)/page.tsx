@@ -19,11 +19,13 @@ import { UsersThree } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import { WifiSlash } from "@phosphor-icons/react/dist/ssr/WifiSlash";
 
 import { Button } from "@te-inscreve/components";
+import { Skeleton } from "@te-inscreve/components/skeleton";
 
 import {
     UltimosEventos,
     UltimosEventosSkeleton,
 } from "~/features/eventos/evento-publico/ultimos-eventos";
+import { getSession } from "~/shared/api/auth/server";
 import { prefetch, trpc } from "~/shared/api/trpc/server";
 
 interface Recurso {
@@ -104,8 +106,8 @@ const passos = [
  * A página inicial da vitrine.
  *
  * Síncrona: o texto é o mesmo para todo mundo e é o que precisa aparecer
- * primeiro. Só a lista dos últimos eventos espera a API, atrás do próprio
- * boundary. Quem sabe se há sessão é o botão do cabeçalho, no layout.
+ * primeiro. Esperam a rede só os botões do topo, que dependem da sessão, e a
+ * lista dos últimos eventos — cada um atrás do próprio boundary.
  * Ver `docs/fcp.md`.
  */
 export default function HomePage() {
@@ -127,15 +129,15 @@ export default function HomePage() {
                     </p>
 
                     <div className="flex flex-wrap justify-center gap-3 md:justify-start">
-                        <Button asChild size="lg">
-                            <Link href="/signup">
-                                Criar conta
-                                <ArrowRight />
-                            </Link>
-                        </Button>
-                        <Button asChild size="lg" variant="outline">
-                            <Link href="/signin">Já tenho conta</Link>
-                        </Button>
+                        {/* O esqueleto tem a altura dos botões para o texto
+                            acima não pular quando a sessão chega. */}
+                        <Suspense
+                            fallback={
+                                <Skeleton className="h-10 w-72 rounded-md" />
+                            }
+                        >
+                            <AcoesDaSessao />
+                        </Suspense>
                     </div>
                 </div>
 
@@ -173,6 +175,10 @@ export default function HomePage() {
                 </ul>
             </section>
 
+            <Suspense fallback={<UltimosEventosSkeleton />}>
+                <UltimosEventos />
+            </Suspense>
+
             <section
                 aria-labelledby="como-funciona"
                 className="flex flex-col gap-8"
@@ -198,15 +204,44 @@ export default function HomePage() {
 
             <AppMovel />
 
-            <Suspense fallback={<UltimosEventosSkeleton />}>
-                <UltimosEventos />
-            </Suspense>
-
             <footer className="text-muted-foreground border-t pt-8 text-sm">
                 Te Inscreve — feito para os eventos tradicionalistas do Rio
                 Grande do Sul.
             </footer>
         </div>
+    );
+}
+
+/**
+ * Cadastro e login para quem chega; quem já tem sessão vai direto ao painel.
+ * Separado da página porque é a única peça do topo que depende da rede.
+ */
+async function AcoesDaSessao() {
+    const session = await getSession();
+
+    if (session) {
+        return (
+            <Button asChild size="lg">
+                <Link href="/admin/eventos">
+                    Ir para a administração
+                    <ArrowRight />
+                </Link>
+            </Button>
+        );
+    }
+
+    return (
+        <>
+            <Button asChild size="lg">
+                <Link href="/signup">
+                    Criar conta
+                    <ArrowRight />
+                </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+                <Link href="/signin">Já tenho conta</Link>
+            </Button>
+        </>
     );
 }
 

@@ -9,8 +9,8 @@ import {
     SidebarMenuSubItem,
 } from "@te-inscreve/components/components/sidebar";
 
-import { DynamicIcon } from "./icons-map";
 import type { ItemNavegacao } from "./items-map";
+import { DynamicIcon } from "./icons-map";
 
 interface Props {
     item: ItemNavegacao;
