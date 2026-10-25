@@ -200,19 +200,25 @@ export type { EntradaNota, RespostaNota } from "./nota";
 
 export {
     avaliacaoDaInscricaoSchema,
+    avaliacaoDetalheSchema,
     avaliacaoEnviadaSchema,
+    avaliadorSchema,
     envioAvaliacaoSchema,
     erroDeEnvioLocalizadoSchema,
     errosDeEnvioSchema,
     ocorrenciaEnvioSchema,
+    respostaAvaliacaoSchema,
     respostaEnvioSchema,
 } from "./envio-avaliacao";
 export type {
     AvaliacaoDaInscricao,
+    AvaliacaoDetalhe,
     AvaliacaoEnviada,
+    Avaliador,
     EnvioAvaliacao,
     ErroDeEnvioLocalizado,
     OcorrenciaEnvio,
+    RespostaAvaliacao,
     RespostaEnvio,
 } from "./envio-avaliacao";
 

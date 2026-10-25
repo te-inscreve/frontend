@@ -1,10 +1,10 @@
 import { RankingIcon } from "@phosphor-icons/react/dist/ssr/Ranking";
 
 import type { ResultadoCategoria } from "@te-inscreve/schemas";
-import { cn } from "@te-inscreve/components";
 import { Skeleton } from "@te-inscreve/components/skeleton";
 
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
+import { LinhaClassificacao } from "./linha-classificacao";
 
 interface Props {
     eventoId: number;
@@ -20,6 +20,9 @@ interface Props {
  * reaproveita o `prefetch` da página. A lista vazia não distingue categoria
  * aberta de categoria sem inscrições, então quem decide o aviso é a
  * `situacao` — o resultado só é divulgado depois de encerrada.
+ *
+ * Cada linha se expande nas avaliações da inscrição, e cada avaliação leva à
+ * ficha preenchida.
  */
 export async function ClassificacaoDaCategoria({
     eventoId,
@@ -59,6 +62,9 @@ export async function ClassificacaoDaCategoria({
             {resultados.map((resultado, indice) => (
                 <li key={resultado.id}>
                     <LinhaClassificacao
+                        eventoId={eventoId}
+                        modalidadeId={modalidadeId}
+                        categoriaId={categoriaId}
                         resultado={resultado}
                         posicao={posicoes[indice] ?? null}
                     />
@@ -83,81 +89,6 @@ function posicoesComEmpate(resultados: ResultadoCategoria[]) {
         );
         return primeira + 1;
     });
-}
-
-/**
- * Quem se apresentou: a pessoa na individual; na em grupo, o nome de
- * concorrente ou, sem ele, a própria entidade.
- */
-function nomeDoClassificado(resultado: ResultadoCategoria) {
-    if (resultado.concorrente) {
-        return `${resultado.concorrente.nome} ${resultado.concorrente.sobrenome}`;
-    }
-    if (resultado.nomeConcorrente) return resultado.nomeConcorrente;
-    // `concorrente: null` é a individual sem integrante; sem a chave, é grupo.
-    return resultado.concorrente === null
-        ? "Concorrente não informado"
-        : resultado.nomeEntidade;
-}
-
-/** `"9.3333"` → `"9,3333"`: a nota como veio, truncada, sem arredondar. */
-const formatarNotaFinal = (nota: string) => nota.replace(".", ",");
-
-function LinhaClassificacao({
-    resultado,
-    posicao,
-}: {
-    resultado: ResultadoCategoria;
-    posicao: number | null;
-}) {
-    const nome = nomeDoClassificado(resultado);
-    const mostraEntidade = nome !== resultado.nomeEntidade;
-
-    return (
-        <article className="bg-card flex items-center gap-3 rounded-xl border p-3">
-            <span
-                className={cn(
-                    "grid size-10 shrink-0 place-items-center rounded-lg text-base font-bold tabular-nums",
-                    posicao === 1
-                        ? "bg-primary text-primary-foreground"
-                        : posicao !== null && posicao <= 3
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground",
-                )}
-            >
-                {posicao === null ? (
-                    <>
-                        <span aria-hidden="true">—</span>
-                        <span className="sr-only">Sem posição</span>
-                    </>
-                ) : (
-                    <>
-                        {posicao}º<span className="sr-only"> lugar</span>
-                    </>
-                )}
-            </span>
-
-            <div className="min-w-0 flex-1">
-                <h3 className="truncate font-semibold">{nome}</h3>
-                {mostraEntidade && (
-                    <p className="text-muted-foreground truncate text-sm">
-                        {resultado.nomeEntidade}
-                    </p>
-                )}
-            </div>
-
-            {resultado.notaFinal === null ? (
-                <p className="text-muted-foreground text-sm">Sem avaliação</p>
-            ) : (
-                <p className="flex flex-col items-end">
-                    <span className="text-muted-foreground text-xs">Nota</span>
-                    <span className="text-lg font-bold tabular-nums">
-                        {formatarNotaFinal(resultado.notaFinal)}
-                    </span>
-                </p>
-            )}
-        </article>
-    );
 }
 
 function ClassificacaoVazia({

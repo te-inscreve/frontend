@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 
 import {
     avaliacaoDaInscricaoSchema,
+    avaliacaoDetalheSchema,
     avaliacaoEnviadaSchema,
     categoriasDisponiveisSchema,
     envioAvaliacaoSchema,
@@ -78,6 +79,28 @@ export const avaliacaoRouter = {
             if (!result.ok) throw result.error;
             const lista = avaliacoesDaInscricaoSchema.parse(result.data);
             return Array.isArray(lista) ? lista : lista.items;
+        }),
+
+    /**
+     * Uma avaliação já enviada, com todas as respostas. Só leitura: depois de
+     * enviada, a avaliação não muda — daí o cache, sem tag para derrubar.
+     *
+     * Nulo no 404 — cadeia de ids inválida, ou avaliação de outra inscrição —:
+     * link velho é página inexistente, e quem decide é a página.
+     */
+    getById: authenticatedProcedure
+        .input(caminhoDaInscricao.extend({ avaliacaoId: idSchema }))
+        .query(async ({ ctx, input }) => {
+            const { avaliacaoId, ...caminho } = input;
+            const result = await ctx.restClient.get<unknown>(
+                `${urlDaInscricao(caminho)}/avaliacoes/${avaliacaoId}/`,
+                { next: { revalidate: 300 } },
+            );
+            if (!result.ok) {
+                if (result.status === 404) return null;
+                throw result.error;
+            }
+            return avaliacaoDetalheSchema.parse(result.data);
         }),
 
     /**
