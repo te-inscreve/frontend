@@ -4,6 +4,7 @@ import type { SituacaoCategoria } from "@te-inscreve/schemas";
 
 import { Dado } from "~/components/dado";
 import { formatDate } from "~/utils/format-date";
+import { SeloOffline } from "./selo-offline";
 import { SituacaoCategoriaBadge } from "./situacao-categoria-badge";
 
 /**
@@ -21,6 +22,7 @@ export function CabecalhoCategoria({
     situacao,
     isGrupo,
     modeloFicha,
+    disponivelOffline,
 }: {
     nome: string;
     eventoNome: string;
@@ -36,6 +38,8 @@ export function CabecalhoCategoria({
      * enquanto carrega, e o lugar fica reservado.
      */
     modeloFicha?: string;
+    /** Se as inscrições e o modelo já estão no aparelho (TE-107). */
+    disponivelOffline: boolean;
 }) {
     return (
         <View className="bg-muted border-border gap-4 border-b px-4 pt-6 pb-5">
@@ -51,6 +55,7 @@ export function CabecalhoCategoria({
                         <Text className="text-muted-foreground text-sm">
                             {`Evento: ${eventoNome}`}
                         </Text>
+                        <SeloOffline disponivel={disponivelOffline} />
                     </View>
                     <SituacaoCategoriaBadge
                         situacao={situacao}

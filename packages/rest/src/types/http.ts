@@ -144,11 +144,18 @@ export function toFieldErrors(body: unknown): Record<string, string[]> {
         const walk = (value: ValidationError, prefix: string) => {
             for (const [key, messages] of Object.entries(value)) {
                 const path = prefix ? `${prefix}.${key}` : key;
-                for (const message of messages) {
+                // Only the top level is checked by `isValidationError`: a
+                // nested dict may hold anything, like the `{ "erros": [{
+                // "local": "...", "campoFichaId": 10 }] }` of the evaluation
+                // POST. Iterating a string or a number there would split it
+                // into characters or throw.
+                if (!Array.isArray(messages)) continue;
+                for (const message of messages as unknown[]) {
                     // Nested serializers answer with a dict per item, e.g.
                     // `{ "lotes": [{ "preco": ["..."] }] }`.
                     if (typeof message === "string") push(path, message);
-                    else walk(message, path);
+                    else if (isPlainObject(message))
+                        walk(message as ValidationError, path);
                 }
             }
         };

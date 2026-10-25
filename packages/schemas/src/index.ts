@@ -199,13 +199,26 @@ export { calcularNota, calcularSubtotal } from "./nota";
 export type { EntradaNota, RespostaNota } from "./nota";
 
 export {
+    avaliacaoDaInscricaoSchema,
+    avaliacaoDetalheSchema,
+    avaliacaoEnviadaSchema,
+    avaliadorSchema,
     envioAvaliacaoSchema,
+    erroDeEnvioLocalizadoSchema,
+    errosDeEnvioSchema,
     ocorrenciaEnvioSchema,
+    respostaAvaliacaoSchema,
     respostaEnvioSchema,
 } from "./envio-avaliacao";
 export type {
+    AvaliacaoDaInscricao,
+    AvaliacaoDetalhe,
+    AvaliacaoEnviada,
+    Avaliador,
     EnvioAvaliacao,
+    ErroDeEnvioLocalizado,
     OcorrenciaEnvio,
+    RespostaAvaliacao,
     RespostaEnvio,
 } from "./envio-avaliacao";
 
@@ -234,3 +247,9 @@ export {
     minhasAvaliacoesSchema,
 } from "./minhas-avaliacoes";
 export type { MinhaAvaliacao, MinhasAvaliacoes } from "./minhas-avaliacoes";
+
+export {
+    resultadoCategoriaSchema,
+    resultadosCategoriaSchema,
+} from "./resultado";
+export type { ResultadoCategoria, ResultadosCategoria } from "./resultado";

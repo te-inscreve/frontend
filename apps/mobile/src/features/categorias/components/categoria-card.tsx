@@ -4,6 +4,7 @@ import { Link } from "expo-router";
 import type { CategoriaPronta } from "../lib/listar-categorias-prontas";
 import { formatDate } from "~/utils/format-date";
 import { rotaDetalheCategoria } from "../lib/rota-detalhe-categoria";
+import { SeloOffline } from "./selo-offline";
 import { TipoModalidade } from "./tipo-modalidade";
 
 /**
@@ -14,9 +15,15 @@ import { TipoModalidade } from "./tipo-modalidade";
  * nome e o evento abaixo, porque a lista do mobile mistura eventos. Sem selo
  * de situação: a lista só tem categorias prontas para avaliação. O ícone no
  * canto diz se a modalidade é individual ou em grupo. O toque empilha o detalhe da categoria
- * na aba.
+ * na aba. Abaixo do evento, o selo diz se ela já pode ser avaliada sem rede.
  */
-export function CategoriaCard({ categoria }: { categoria: CategoriaPronta }) {
+export function CategoriaCard({
+    categoria,
+    disponivelOffline,
+}: {
+    categoria: CategoriaPronta;
+    disponivelOffline: boolean;
+}) {
     return (
         <Link href={rotaDetalheCategoria(categoria)} asChild>
             <Pressable className="bg-border flex-row rounded-xl p-px active:opacity-80">
@@ -34,6 +41,7 @@ export function CategoriaCard({ categoria }: { categoria: CategoriaPronta }) {
                             <Text className="text-muted-foreground text-sm">
                                 {categoria.eventoNome}
                             </Text>
+                            <SeloOffline disponivel={disponivelOffline} />
                         </View>
                         <TipoModalidade isGrupo={categoria.isGrupo} />
                     </View>
@@ -106,6 +114,7 @@ export function CategoriaCardSkeleton() {
                 <View className="gap-1">
                     <View className="bg-muted h-5 w-2/3 rounded" />
                     <View className="bg-muted h-4 w-1/2 rounded" />
+                    <View className="bg-muted h-4 w-1/3 rounded" />
                 </View>
 
                 <View className="flex-row gap-2">

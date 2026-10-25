@@ -41,6 +41,9 @@ export const tagInscricoesDaCategoria = (categoriaId: number) =>
 export const tagFichaDaCategoria = (categoriaId: number) =>
     `categoria-${categoriaId}-ficha-avaliativa`;
 
+export const tagResultadosDaCategoria = (categoriaId: number) =>
+    `categoria-${categoriaId}-resultados`;
+
 /**
  * Os conjuntos que cada leitura grava, do geral para o específico — é o que
  * vai no `next: { tags }` de cada `fetch`.
@@ -79,6 +82,15 @@ export const tagsInscricoes = (categoriaId: number) => [
 
 export const tagsFichaDaCategoria = (categoriaId: number) => [
     tagFichaDaCategoria(categoriaId),
+];
+
+/**
+ * A classificação também leva a tag do detalhe da categoria: ela só sai do
+ * vazio quando a categoria é encerrada, e quem encerra já derruba essa tag.
+ */
+export const tagsResultadosDaCategoria = (categoriaId: number) => [
+    tagCategoria(categoriaId),
+    tagResultadosDaCategoria(categoriaId),
 ];
 
 export const tagsEntidades = () => ["entidades"];

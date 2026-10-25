@@ -29,6 +29,10 @@ import { ListaInscricoesSkeleton } from "~/features/inscricoes/lista-inscricoes"
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
 import { AcoesCategoria } from "./acoes-categoria";
 import { BotaoEditarCategoria } from "./botao-editar-categoria";
+import {
+    ClassificacaoDaCategoria,
+    ClassificacaoDaCategoriaSkeleton,
+} from "./classificacao-da-categoria";
 import { InscricoesDaCategoria } from "./inscricoes-da-categoria";
 import { IsGroupBadge } from "./is-group-badge";
 import { PainelNaoImplementado } from "./painel-nao-implementado";
@@ -208,9 +212,18 @@ export async function DetalheCategoria({
                         </PainelNaoImplementado>
                     </TabsContent>
                     <TabsContent value="classificacoes" className="mt-4">
-                        <PainelNaoImplementado>
-                            Classificações da categoria
-                        </PainelNaoImplementado>
+                        <Suspense
+                            fallback={<ClassificacaoDaCategoriaSkeleton />}
+                        >
+                            <ClassificacaoDaCategoria
+                                eventoId={eventoId}
+                                modalidadeId={modalidadeId}
+                                categoriaId={categoriaId}
+                                encerrada={
+                                    categoria.situacao.value === "encerrada"
+                                }
+                            />
+                        </Suspense>
                     </TabsContent>
                 </Tabs>
 

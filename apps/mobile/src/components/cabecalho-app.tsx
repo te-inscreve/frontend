@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 
 import { SaudacaoAvaliador } from "~/features/auth/components/saudacao-avaliador";
 import { Dock } from "~/features/avaliacoes/components/dock";
@@ -22,6 +22,8 @@ export function CabecalhoApp() {
     const avaliacaoAtual = useAvaliacaoAtual(sessao?.user.id ?? "");
     const fila = useFila();
     const router = useRouter();
+    // Aberta da aba Avaliações, a ficha volta para ela.
+    const naAbaAvaliacoes = usePathname().startsWith("/avaliacoes");
 
     return (
         <View
@@ -37,7 +39,12 @@ export function CabecalhoApp() {
                     // `navigate`, e não `push`: já na ficha dela, não empilha
                     // a mesma tela de novo.
                     aoAbrirAvaliacaoAtual={(avaliacao) =>
-                        router.navigate(rotaDaAvaliacaoLocal(avaliacao))
+                        router.navigate(
+                            rotaDaAvaliacaoLocal(
+                                avaliacao,
+                                naAbaAvaliacoes ? "avaliacoes" : undefined,
+                            ),
+                        )
                     }
                     aoAbrirFila={() => router.push("/fila")}
                 />
