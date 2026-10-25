@@ -319,23 +319,27 @@ export type RecusaEdicao = "enviando" | "outra_atual" | "nao_esta_na_fila";
  * mesmo tempo. Quais avaliações com erro se corrigem fica para o ticket
  * delas: a de 409 e a de modelo mudado só se descartam.
  */
-export async function tirarDaFila(
+export function tirarDaFila(
     id: string,
 ): Promise<{ ok: true } | { ok: false; motivo: RecusaEdicao }> {
-    return db.transaction(async (tx) => {
-        const [linha] = await tx
+    // Síncrona de propósito: no expo-sqlite o `transaction` do Drizzle é
+    // síncrono, e com um callback `async` o `commit` sairia no primeiro
+    // `await`, deixando a checagem e a troca fora da mesma transação.
+    const resultado = db.transaction((tx) => {
+        const linha = tx
             .select({
                 estado: avaliacoes.estado,
                 avaliadorId: avaliacoes.avaliadorId,
             })
             .from(avaliacoes)
-            .where(eq(avaliacoes.id, id));
+            .where(eq(avaliacoes.id, id))
+            .get();
         if (linha?.estado === "enviando")
             return { ok: false, motivo: "enviando" } as const;
         if (linha?.estado !== "na_fila")
             return { ok: false, motivo: "nao_esta_na_fila" } as const;
 
-        const [outra] = await tx
+        const outra = tx
             .select({ id: avaliacoes.id })
             .from(avaliacoes)
             .where(
@@ -344,11 +348,10 @@ export async function tirarDaFila(
                     eq(avaliacoes.estado, "atual"),
                 ),
             )
-            .limit(1);
+            .get();
         if (outra) return { ok: false, motivo: "outra_atual" } as const;
 
-        await tx
-            .update(avaliacoes)
+        tx.update(avaliacoes)
             .set({
                 estado: "atual",
                 enfileiradoEm: null,
@@ -357,11 +360,11 @@ export async function tirarDaFila(
                 erro: null,
                 atualizadoEm: new Date(),
             })
-            .where(
-                and(eq(avaliacoes.id, id), eq(avaliacoes.estado, "na_fila")),
-            );
+            .where(and(eq(avaliacoes.id, id), eq(avaliacoes.estado, "na_fila")))
+            .run();
         return { ok: true } as const;
     });
+    return Promise.resolve(resultado);
 }
 
 export type { AvaliacaoLocal };
