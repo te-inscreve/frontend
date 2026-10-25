@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { DetalheCategoria } from "~/features/categorias/categoria-detail/detalhe-categoria";
 import { DetalheCategoriaSkeleton } from "~/features/categorias/categoria-detail/detalhe-categoria-skeleton";
+import { lerAbaCategoria } from "~/features/categorias/categoria-detail/lib/aba-categoria";
 import { TrilhaCategoria } from "~/features/categorias/categoria-detail/trilha-categoria";
 import { prefetch, trpc } from "~/shared/api/trpc/server";
 import { TrilhaEventoSkeleton } from "~/shared/ui/trilha-evento";
@@ -15,14 +16,19 @@ export const metadata = {
 
 export default function CategoriaDetailPage({
     params,
+    searchParams,
 }: {
     params: Promise<{
         slug: string;
         slugModalidade: string;
         slugCategoria: string;
     }>;
+    /** `aba` escolhe a aba do painel principal que abre primeiro. */
+    searchParams: Promise<{ aba?: string | string[] }>;
 }) {
-    const { slug, slugModalidade, slugCategoria } = use(params);
+    const [{ slug, slugModalidade, slugCategoria }, { aba }] = use(
+        Promise.all([params, searchParams]),
+    );
     const eventoId = parseInteger(slug);
     const modalidadeId = parseInteger(slugModalidade);
     const categoriaId = parseInteger(slugCategoria);
@@ -60,6 +66,14 @@ export default function CategoriaDetailPage({
             categoriaId,
         }),
     );
+    // E os avaliadores, para a aba deles.
+    void prefetch(
+        trpc.categoria.getAvaliadores.queryOptions({
+            eventoId,
+            modalidadeId,
+            categoriaId,
+        }),
+    );
     // O evento também: é dele que a trilha tira o nome do evento e o da
     // modalidade.
     void prefetch(trpc.evento.getById.queryOptions({ id: eventoId }));
@@ -83,6 +97,7 @@ export default function CategoriaDetailPage({
                     eventoId={eventoId}
                     modalidadeId={modalidadeId}
                     categoriaId={categoriaId}
+                    abaInicial={lerAbaCategoria(aba)}
                 />
             </Suspense>
         </div>

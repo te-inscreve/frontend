@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import {
@@ -14,6 +15,11 @@ import { IconProvider } from "~/shared/ui/icon-provider";
 // não dá para importar: o módulo é `"use client"`, então em um Server Component
 // ela chega como referência de cliente, e não como string.
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
+
+/** A administração exige login: não há o que um buscador indexar aqui. */
+export const metadata: Metadata = {
+    robots: { index: false, follow: false },
+};
 
 export default async function AdminEntidadesLayout({
     children,

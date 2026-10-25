@@ -72,7 +72,7 @@ export function ListaPosicoes({
     function opcoesEm(indice: number): OpcaoInsercao[] {
         return [
             {
-                rotulo: "Criar campo exclusivo",
+                rotulo: "Criar campo",
                 aoEscolher: () => criarExclusivo(indice),
             },
         ];

@@ -253,3 +253,14 @@ export {
     resultadosCategoriaSchema,
 } from "./resultado";
 export type { ResultadoCategoria, ResultadosCategoria } from "./resultado";
+
+export {
+    avaliadorDaCategoriaSchema,
+    avaliadoresDaCategoriaSchema,
+    inscricaoAvaliadaSchema,
+} from "./avaliadores-categoria";
+export type {
+    AvaliadorDaCategoria,
+    AvaliadoresDaCategoria,
+    InscricaoAvaliada,
+} from "./avaliadores-categoria";

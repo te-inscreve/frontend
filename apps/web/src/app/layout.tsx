@@ -8,10 +8,39 @@ import { cn } from "@te-inscreve/components";
 
 import { IconProvider } from "~/shared/ui/icon-provider";
 import { ThemeProvider } from "~/shared/ui/theme-provider";
+import { siteUrl } from "~/shared/utils/site-url";
 
+const descricao =
+    "Inscrições e avaliações de eventos de danças gaúchas: dos grupos artísticos às notas dos avaliadores.";
+
+/**
+ * O padrão de todas as páginas. Quem define o próprio `openGraph` substitui o
+ * bloco inteiro — o Next não mescla objetos aninhados —, então a página de
+ * evento repete aqui o que precisar.
+ */
 export const metadata: Metadata = {
-    title: "te inscreve",
-    description: "Inscrições e avaliações de eventos",
+    metadataBase: siteUrl,
+    title: "Te Inscreve",
+    description: descricao,
+    applicationName: "Te Inscreve",
+    openGraph: {
+        type: "website",
+        locale: "pt_BR",
+        siteName: "Te Inscreve",
+        title: "Te Inscreve",
+        description: descricao,
+        images: [
+            {
+                url: "/assets/gauchinho.png",
+                width: 500,
+                height: 500,
+                alt: "Gauchinho, o mascote do Te Inscreve",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary",
+    },
     icons: {
         icon: [
             {
