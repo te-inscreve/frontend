@@ -4,8 +4,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 
 import type { OrigemDaFicha } from "./rota-ficha-inscricao";
 import { rotaDetalheCategoria } from "~/features/categorias/lib/rota-detalhe-categoria";
-import { categoriasProntasQuery } from "~/features/categorias/lib/use-categorias-prontas";
-import { queryClient } from "~/utils/api";
+import { categoriaBaixada } from "~/features/categorias/lib/use-categorias-baixadas";
 
 /**
  * As saídas da ficha, que não seguem só a pilha: a ficha vive na pilha de
@@ -24,12 +23,11 @@ export function useSaidasDaFicha(categoriaId: number, origem?: OrigemDaFicha) {
     const router = useRouter();
 
     const concluir = useCallback(async () => {
-        // O detalhe se monta pelos parâmetros, que só a lista de categorias
-        // tem. Fora dela (offline, ou a categoria saiu da lista), a lista.
-        const categoria = await queryClient
-            .ensureQueryData(categoriasProntasQuery)
-            .then((lista) => lista.find(({ id }) => id === categoriaId))
-            .catch(() => undefined);
+        // O detalhe se monta pelos parâmetros, que vêm da lista baixada,
+        // também sem rede. Fora dela (a categoria saiu da lista), a lista.
+        const categoria = await categoriaBaixada(categoriaId).catch(
+            () => undefined,
+        );
         router.dismissTo(
             categoria ? rotaDetalheCategoria(categoria) : "/categorias",
         );

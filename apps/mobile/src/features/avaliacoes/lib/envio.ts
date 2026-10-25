@@ -10,6 +10,7 @@ import type {
 } from "./motor-fila";
 import type { AvaliacaoLocal } from "~/db/schema";
 import { queryClient, trpc, trpcClient } from "~/utils/api";
+import { comTempoMaximo as comTempo } from "~/utils/rede";
 import {
     avaliacoesNaFila,
     devolverAFila,
@@ -149,12 +150,6 @@ function respostaDoErro(erro: unknown): Resposta {
 const STATUS_DO_PROPRIO_NEXT = new Set([400, 401, 403]);
 
 /** Cancela a chamada que passa de {@link TEMPO_MAXIMO_MS}. */
-async function comTempoMaximo<T>(chamada: (signal: AbortSignal) => Promise<T>) {
-    const controle = new AbortController();
-    const relogio = setTimeout(() => controle.abort(), TEMPO_MAXIMO_MS);
-    try {
-        return await chamada(controle.signal);
-    } finally {
-        clearTimeout(relogio);
-    }
+function comTempoMaximo<T>(chamada: (signal: AbortSignal) => Promise<T>) {
+    return comTempo(TEMPO_MAXIMO_MS, chamada);
 }

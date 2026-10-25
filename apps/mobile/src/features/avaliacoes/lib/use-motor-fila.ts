@@ -4,6 +4,7 @@ import * as Network from "expo-network";
 
 import type { EstadoMotor } from "./motor-fila";
 import { signOut, useSession } from "~/utils/auth";
+import { estaOnline } from "~/utils/rede";
 import { portasDoAvaliador } from "./envio";
 import { MotorFila } from "./motor-fila";
 
@@ -37,11 +38,6 @@ const relogio = {
     },
 };
 
-function online(estado: Network.NetworkState) {
-    // `isInternetReachable` chega depois; enquanto não chega, vale a conexão.
-    return !!estado.isConnected && estado.isInternetReachable !== false;
-}
-
 /**
  * Liga o motor enquanto há sessão. Montado uma vez, no layout do app logado:
  * a montagem é a abertura a frio (ou o login), e o `active` refaz a sequência.
@@ -62,12 +58,12 @@ export function useMotorFila() {
         let cancelado = false;
         void Network.getNetworkStateAsync().then((estado) => {
             if (cancelado) return;
-            novo.conexao(online(estado));
+            novo.conexao(estaOnline(estado));
             void novo.disparar("abertura");
         });
 
         const conexao = Network.addNetworkStateListener((estado) =>
-            novo.conexao(online(estado)),
+            novo.conexao(estaOnline(estado)),
         );
         const aplicativo = AppState.addEventListener("change", (estado) => {
             if (estado === "active") void novo.disparar("abertura");

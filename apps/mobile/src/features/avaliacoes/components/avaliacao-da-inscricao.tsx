@@ -28,10 +28,13 @@ import { useSaidasDaFicha } from "../lib/use-saidas-da-ficha";
 import { FolhaFichaSkeleton } from "./folha-ficha";
 import { FormularioFicha } from "./formulario-ficha";
 
-/** O modelo da categoria como a API o devolve agora, se já chegou. */
+/**
+ * O modelo da categoria como o aparelho o baixou (TE-107). Sem download, só
+ * a avaliação já começada abre: ela tem a própria cópia do modelo.
+ */
 export type ModeloAtual =
     | { tipo: "carregando" }
-    | { tipo: "erro"; tentarDeNovo: () => void }
+    | { tipo: "nao-baixado"; baixar: () => void }
     | { tipo: "sem-modelo" }
     | { tipo: "pronto"; modelo: ModeloFichaDetalhe };
 
@@ -213,14 +216,14 @@ function NovaAvaliacaoAtual({
         });
     }, [outro, modelo, alvo, inscricao]);
 
-    if (modeloAtual.tipo === "erro")
+    if (modeloAtual.tipo === "nao-baixado")
         return (
             <Aviso
-                titulo="Não foi possível carregar a ficha"
-                texto="Verifique a conexão e tente de novo."
+                titulo="Categoria ainda não baixada"
+                texto="Conecte-se à internet para baixar o modelo de ficha desta categoria. Depois, ela pode ser avaliada também sem rede."
             >
-                <Button variant="outline" onPress={modeloAtual.tentarDeNovo}>
-                    Tentar de novo
+                <Button variant="outline" onPress={modeloAtual.baixar}>
+                    Baixar agora
                 </Button>
             </Aviso>
         );

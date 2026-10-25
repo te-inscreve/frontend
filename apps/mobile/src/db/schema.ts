@@ -10,10 +10,12 @@ import {
 import type {
     EnvioAvaliacao,
     ErroDeEnvioLocalizado,
+    InscricoesDaCategoria,
     ModeloFichaDetalhe,
 } from "@te-inscreve/schemas";
 
 import type { InscricaoAvaliada } from "~/features/avaliacoes/lib/rota-ficha-inscricao";
+import type { CategoriaPronta } from "~/features/categorias/lib/listar-categorias-prontas";
 
 /**
  * O banco local do app (expo-sqlite + Drizzle; TE-66, TE-74). Mudou algo
@@ -117,3 +119,39 @@ export const avaliacoes = sqliteTable(
 );
 
 export type AvaliacaoLocal = typeof avaliacoes.$inferSelect;
+
+/**
+ * O download offline (TE-107): o que o app precisa para começar uma avaliação
+ * sem rede. Ao contrário de `avaliacoes`, nada aqui é do avaliador — é a
+ * cópia do servidor, que cada download reescreve inteira e que fica no
+ * logout.
+ */
+
+/**
+ * As categorias prontas para avaliação, na ordem em que a API as lista. A
+ * lista inteira se reescreve a cada download.
+ */
+export const categoriasProntas = sqliteTable("categorias_prontas", {
+    id: integer("id").primaryKey(),
+    /** A posição na lista da API. */
+    posicao: integer("posicao").notNull(),
+    categoria: text("categoria", { mode: "json" })
+        .$type<CategoriaPronta>()
+        .notNull(),
+    baixadaEm: instante("baixada_em").notNull(),
+});
+
+/**
+ * As inscrições e o modelo de ficha de uma categoria, numa linha só: trocam
+ * juntos, na mesma transação. Sai quando a categoria sai da lista; as
+ * avaliações dela seguem, com a própria cópia do modelo.
+ */
+export const downloadsCategoria = sqliteTable("downloads_categoria", {
+    categoriaId: integer("categoria_id").primaryKey(),
+    inscricoes: text("inscricoes", { mode: "json" })
+        .$type<InscricoesDaCategoria>()
+        .notNull(),
+    /** `null`: a categoria não tem modelo vinculado. */
+    modelo: text("modelo", { mode: "json" }).$type<ModeloFichaDetalhe | null>(),
+    baixadoEm: instante("baixado_em").notNull(),
+});
