@@ -2,6 +2,7 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import type {
+    AvaliadoresDaCategoria,
     Categoria,
     CategoriaDetalhe,
     ModeloFichaDetalhe,
@@ -13,6 +14,7 @@ import {
 } from "@te-inscreve/schemas";
 
 import {
+    tagsAvaliadoresDaCategoria,
     tagsCategoria,
     tagsCategorias,
     tagsFichaDaCategoria,
@@ -230,6 +232,35 @@ export const categoriaRouter = {
                     next: {
                         revalidate: 30,
                         tags: tagsResultadosDaCategoria(input.categoriaId),
+                    },
+                },
+            );
+            if (!result.ok) throw result.error;
+            return result.data;
+        }),
+
+    /**
+     * Quem já avaliou alguma inscrição da categoria, cada um com as inscrições
+     * que avaliou e a nota que deu a cada uma.
+     *
+     * Ao contrário da classificação, sai em qualquer situação da categoria;
+     * vazia enquanto ninguém avaliou.
+     */
+    getAvaliadores: publicProcedure
+        .input(
+            z.object({
+                eventoId: z.number().int().positive(),
+                modalidadeId: z.number().int().positive(),
+                categoriaId: z.number().int().positive(),
+            }),
+        )
+        .query(async ({ ctx, input }) => {
+            const result = await ctx.restClient.get<AvaliadoresDaCategoria>(
+                `/eventos/${input.eventoId}/modalidades/${input.modalidadeId}/categorias/${input.categoriaId}/avaliadores/`,
+                {
+                    next: {
+                        revalidate: 30,
+                        tags: tagsAvaliadoresDaCategoria(input.categoriaId),
                     },
                 },
             );

@@ -6,7 +6,6 @@ import {
     RankingIcon,
     UserIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr/CalendarDots";
 import { SealCheckIcon } from "@phosphor-icons/react/dist/ssr/SealCheck";
 import { TicketIcon } from "@phosphor-icons/react/dist/ssr/Ticket";
 import { UserCheckIcon } from "@phosphor-icons/react/dist/ssr/UserCheck";
@@ -20,6 +19,7 @@ import {
     TabsTrigger,
 } from "@te-inscreve/components";
 
+import type { AbaCategoria } from "./lib/aba-categoria";
 import {
     FichaAvaliativaDaCategoria,
     FichaAvaliativaDaCategoriaSkeleton,
@@ -27,7 +27,12 @@ import {
 import { SituacaoCategoriaBadge } from "~/features/categorias/situacao-categoria-badge";
 import { ListaInscricoesSkeleton } from "~/features/inscricoes/lista-inscricoes";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
+import { AbasCategoria } from "./abas-categoria";
 import { AcoesCategoria } from "./acoes-categoria";
+import {
+    AvaliadoresDaCategoria,
+    AvaliadoresDaCategoriaSkeleton,
+} from "./avaliadores-da-categoria";
 import { BotaoEditarCategoria } from "./botao-editar-categoria";
 import {
     ClassificacaoDaCategoria,
@@ -35,12 +40,13 @@ import {
 } from "./classificacao-da-categoria";
 import { InscricoesDaCategoria } from "./inscricoes-da-categoria";
 import { IsGroupBadge } from "./is-group-badge";
-import { PainelNaoImplementado } from "./painel-nao-implementado";
 
 interface Props {
     eventoId: number;
     modalidadeId: number;
     categoriaId: number;
+    /** A aba do painel principal que abre primeiro. */
+    abaInicial: AbaCategoria;
 }
 
 /**
@@ -54,6 +60,7 @@ export async function DetalheCategoria({
     eventoId,
     modalidadeId,
     categoriaId,
+    abaInicial,
 }: Props) {
     // O evento já foi disparado pela página (é a mesma requisição da trilha):
     // daqui sai o período que limita o dia da apresentação na edição.
@@ -174,8 +181,8 @@ export async function DetalheCategoria({
                 principal fica à direita e o de avaliação à esquerda, mais
                 estreito; empilhados, o principal vem primeiro. */}
             <div className="grid gap-4 lg:grid-cols-3">
-                <Tabs
-                    defaultValue="inscritos"
+                <AbasCategoria
+                    abaInicial={abaInicial}
                     className="lg:order-1 lg:col-span-2"
                 >
                     <TabsList variant="line" className="w-full justify-start">
@@ -183,10 +190,10 @@ export async function DetalheCategoria({
                             <UsersThreeIcon />
                             Inscritos
                         </TabsTrigger>
-                        <TabsTrigger value="cronograma" className="flex-none">
+                        {/* <TabsTrigger value="cronograma" className="flex-none">
                             <CalendarDotsIcon />
                             Cronograma
-                        </TabsTrigger>
+                        </TabsTrigger> */}
                         <TabsTrigger
                             value="classificacoes"
                             className="flex-none"
@@ -206,11 +213,11 @@ export async function DetalheCategoria({
                             />
                         </Suspense>
                     </TabsContent>
-                    <TabsContent value="cronograma" className="mt-4">
+                    {/* <TabsContent value="cronograma" className="mt-4">
                         <PainelNaoImplementado>
                             Cronograma da categoria
                         </PainelNaoImplementado>
-                    </TabsContent>
+                    </TabsContent> */}
                     <TabsContent value="classificacoes" className="mt-4">
                         <Suspense
                             fallback={<ClassificacaoDaCategoriaSkeleton />}
@@ -225,7 +232,7 @@ export async function DetalheCategoria({
                             />
                         </Suspense>
                     </TabsContent>
-                </Tabs>
+                </AbasCategoria>
 
                 <Tabs defaultValue="ficha" className="lg:order-2">
                     <TabsList variant="line" className="w-full justify-start">
@@ -240,9 +247,13 @@ export async function DetalheCategoria({
                     </TabsList>
 
                     <TabsContent value="avaliadores" className="mt-4">
-                        <PainelNaoImplementado>
-                            Avaliadores da categoria
-                        </PainelNaoImplementado>
+                        <Suspense fallback={<AvaliadoresDaCategoriaSkeleton />}>
+                            <AvaliadoresDaCategoria
+                                eventoId={eventoId}
+                                modalidadeId={modalidadeId}
+                                categoriaId={categoriaId}
+                            />
+                        </Suspense>
                     </TabsContent>
                     <TabsContent value="ficha" className="mt-4">
                         <Suspense
