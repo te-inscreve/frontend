@@ -30,6 +30,11 @@ const getItensMap = (): ItensMap[] => [
     {
         itens: [
             {
+                titulo: "Vitrine",
+                href: "/",
+                icone: "storefront",
+            },
+            {
                 titulo: "Eventos",
                 href: "/admin/eventos",
                 icone: "calendar",
@@ -63,11 +68,6 @@ const getItensMap = (): ItensMap[] => [
                         titulo: "Inscrições",
                         href: "/admin/minha-entidade/inscricoes",
                         icone: "ticket",
-                    },
-                    {
-                        titulo: "Troféus",
-                        href: "/admin/minha-entidade/trofeus",
-                        icone: "trophy",
                     },
                 ],
             },

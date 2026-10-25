@@ -44,6 +44,9 @@ export const tagFichaDaCategoria = (categoriaId: number) =>
 export const tagResultadosDaCategoria = (categoriaId: number) =>
     `categoria-${categoriaId}-resultados`;
 
+export const tagAvaliadoresDaCategoria = (categoriaId: number) =>
+    `categoria-${categoriaId}-avaliadores`;
+
 /**
  * Os conjuntos que cada leitura grava, do geral para o específico — é o que
  * vai no `next: { tags }` de cada `fetch`.
@@ -91,6 +94,11 @@ export const tagsFichaDaCategoria = (categoriaId: number) => [
 export const tagsResultadosDaCategoria = (categoriaId: number) => [
     tagCategoria(categoriaId),
     tagResultadosDaCategoria(categoriaId),
+];
+
+export const tagsAvaliadoresDaCategoria = (categoriaId: number) => [
+    tagCategoria(categoriaId),
+    tagAvaliadoresDaCategoria(categoriaId),
 ];
 
 export const tagsEntidades = () => ["entidades"];

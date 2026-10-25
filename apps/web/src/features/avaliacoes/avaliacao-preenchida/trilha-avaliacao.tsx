@@ -1,4 +1,5 @@
 import type { CaminhoDaInscricao } from "./lib/avaliacoes-da-inscricao";
+import type { AbaCategoria } from "~/features/categorias/categoria-detail/lib/aba-categoria";
 import type { TrilhaPasso } from "~/shared/ui/trilha-builder";
 import { nomeDoClassificado } from "~/features/categorias/categoria-detail/lib/classificado";
 import { getQueryClient, trpc } from "~/shared/api/trpc/server";
@@ -43,9 +44,11 @@ export async function TrilhaAvaliacao({
         });
     }
     if (categoria) {
+        // Volta para a classificação, de onde se chega às fichas.
+        const aba: AbaCategoria = "classificacoes";
         passos.push({
             label: categoria.nome,
-            href: `/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoriaId}`,
+            href: `/admin/eventos/${eventoId}/modalidades/${modalidadeId}/categorias/${categoriaId}?aba=${aba}`,
         });
     }
     passos.push({

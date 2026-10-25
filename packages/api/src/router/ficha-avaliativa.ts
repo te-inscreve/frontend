@@ -12,6 +12,10 @@ import { tagsFichasAvaliativas } from "../cache-tags";
 import { authenticatedProcedure } from "../trpc";
 
 export const fichaAvaliativaRouter = {
+    /**
+     * Sem cache: o editor volta para a lista logo depois de criar o modelo, e
+     * o modelo novo tem de estar nela.
+     */
     getAll: authenticatedProcedure
         .input(
             z.object({
@@ -21,12 +25,6 @@ export const fichaAvaliativaRouter = {
         .query(async ({ ctx }) => {
             const result = await ctx.restClient.get<ModeloFichaResumo[]>(
                 "/fichas-avaliativas/modelos/",
-                {
-                    next: {
-                        revalidate: 30,
-                        tags: tagsFichasAvaliativas(),
-                    },
-                },
             );
             if (!result.ok) throw result.error;
             return result.data;

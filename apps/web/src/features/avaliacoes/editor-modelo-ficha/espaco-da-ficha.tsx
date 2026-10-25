@@ -37,7 +37,7 @@ export function EspacoDaFicha({ indice, descricao, sempreVisivel }: Props) {
 
     const opcoes: OpcaoInsercao[] = [
         {
-            rotulo: "Criar campo exclusivo",
+            rotulo: "Criar campo",
             aoEscolher: () => {
                 const posicao = novaPosicaoExclusiva();
                 composicao.inserirCampoGeral(posicao, indice);

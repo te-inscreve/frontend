@@ -203,7 +203,7 @@ export function novaPosicaoExclusiva(): PosicaoExclusivaForm {
         chave: novaChave(),
         origem: "exclusivo",
         campo: {
-            nome: "Campo sem nome",
+            nome: "--",
             descricao: "",
             tipo: "NUMERICO",
             obrigatorio: true,

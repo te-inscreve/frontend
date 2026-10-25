@@ -65,7 +65,10 @@ export function PainelPropriedadesCampo() {
             className="flex flex-col"
         >
             <header className="flex items-center justify-between gap-2 border-b px-4 py-3">
-                <h2 id="propriedades-titulo" className="text-sm font-bold">
+                <h2
+                    id="propriedades-titulo"
+                    className="text-primary text-base font-bold"
+                >
                     Propriedades do campo
                 </h2>
                 <Button
@@ -85,7 +88,11 @@ export function PainelPropriedadesCampo() {
                 caminho={caminho}
                 campo={aberto.campo}
             />
-            <Button type="button" className="mx-4">
+            <Button
+                type="button"
+                className="mx-4"
+                onClick={() => selecionar(null)}
+            >
                 Aplicar
             </Button>
         </section>
