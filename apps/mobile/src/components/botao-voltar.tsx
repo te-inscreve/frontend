@@ -13,23 +13,15 @@ const IconeVoltar = withUniwind(ArrowLeftIcon);
  * seta `bold` de 20pt tem o traço e a largura da nativa, e o texto começa
  * onde começaria o título, no peso normal.
  *
- * Sem tela atrás na pilha, como ao recarregar o app com ela aberta, o `back`
- * sairia da aba; aí o "Voltar" leva a `semHistorico`, a entrada da aba.
+ * O que ele faz fica com quem o usa: em geral, o da pilha
+ * ({@link opcoesComVoltar}); numa tela que sai para outro lugar,
+ * {@link opcoesComVoltarPara}.
  */
-function BotaoVoltar({
-    podeVoltar,
-    semHistorico,
-}: {
-    podeVoltar: boolean;
-    semHistorico: Href;
-}) {
-    const router = useRouter();
+function BotaoVoltar({ aoVoltar }: { aoVoltar: () => void }) {
     return (
         <Pressable
             role="button"
-            onPress={() =>
-                podeVoltar ? router.back() : router.replace(semHistorico)
-            }
+            onPress={aoVoltar}
             className="h-12 flex-row items-center"
         >
             <IconeVoltar
@@ -46,6 +38,27 @@ function BotaoVoltar({
 }
 
 /**
+ * Volta na pilha. Sem tela atrás, como ao recarregar o app com ela aberta, o
+ * `back` sairia da aba; aí leva a `semHistorico`, a entrada da aba.
+ */
+function VoltarNaPilha({
+    podeVoltar,
+    semHistorico,
+}: {
+    podeVoltar: boolean;
+    semHistorico: Href;
+}) {
+    const router = useRouter();
+    return (
+        <BotaoVoltar
+            aoVoltar={() =>
+                podeVoltar ? router.back() : router.replace(semHistorico)
+            }
+        />
+    );
+}
+
+/**
  * As opções da pilha para uma tela com o {@link BotaoVoltar}. O `title` da
  * tela continua valendo para leitores de tela e o histórico do sistema.
  */
@@ -54,10 +67,19 @@ export function opcoesComVoltar(semHistorico: Href) {
         headerTitle: "",
         headerBackVisible: false,
         headerLeft: ({ canGoBack }: { canGoBack?: boolean }) => (
-            <BotaoVoltar
+            <VoltarNaPilha
                 podeVoltar={canGoBack ?? false}
                 semHistorico={semHistorico}
             />
         ),
+    };
+}
+
+/** Como {@link opcoesComVoltar}, mas o "Voltar" faz `aoVoltar`. */
+export function opcoesComVoltarPara(aoVoltar: () => void) {
+    return {
+        headerTitle: "",
+        headerBackVisible: false,
+        headerLeft: () => <BotaoVoltar aoVoltar={aoVoltar} />,
     };
 }

@@ -3,9 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { ModeloAtual } from "~/features/avaliacoes/components/avaliacao-da-inscricao";
 import type { ParametrosFichaInscricao } from "~/features/avaliacoes/lib/rota-ficha-inscricao";
+import { opcoesComVoltarPara } from "~/components/botao-voltar";
 import { AvaliacaoDaInscricao } from "~/features/avaliacoes/components/avaliacao-da-inscricao";
 import { FolhaFichaSkeleton } from "~/features/avaliacoes/components/folha-ficha";
 import { lerParametrosFichaInscricao } from "~/features/avaliacoes/lib/rota-ficha-inscricao";
+import {
+    useSaidasDaFicha,
+    useVoltarDoSistema,
+} from "~/features/avaliacoes/lib/use-saidas-da-ficha";
 import { trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth";
 
@@ -18,11 +23,19 @@ import { useSession } from "~/utils/auth";
  * uma avaliação nova e diz se a de agora ficou numa versão velha.
  */
 export default function FichaInscricao() {
-    const { inscricaoId, eventoId, modalidadeId, categoriaId, inscricao } =
-        lerParametrosFichaInscricao(
-            useLocalSearchParams<ParametrosFichaInscricao>(),
-        );
+    const {
+        origem,
+        inscricaoId,
+        eventoId,
+        modalidadeId,
+        categoriaId,
+        inscricao,
+    } = lerParametrosFichaInscricao(
+        useLocalSearchParams<ParametrosFichaInscricao>(),
+    );
     const { data: sessao } = useSession();
+    const { voltar } = useSaidasDaFicha(categoriaId, origem);
+    useVoltarDoSistema(voltar);
     const { data, isPending, isError, refetch } = useQuery(
         trpc.categoria.getFichaAvaliativa.queryOptions({
             eventoId,
@@ -42,9 +55,13 @@ export default function FichaInscricao() {
     return (
         <>
             {/* O nome do modelo vai para o topo da ficha; na barra, só o
-                "Voltar". O `title` segue para leitores de tela. */}
+                "Voltar", que leva para onde a ficha foi aberta. O `title` segue
+                para leitores de tela. */}
             <Stack.Screen
-                options={{ title: `Avaliar ${inscricao.concorrente}` }}
+                options={{
+                    title: `Avaliar ${inscricao.concorrente}`,
+                    ...opcoesComVoltarPara(voltar),
+                }}
             />
 
             {/* A rota só existe com sessão (o guard do layout raiz); a
@@ -60,6 +77,7 @@ export default function FichaInscricao() {
                     }}
                     inscricao={inscricao}
                     modeloAtual={modeloAtual}
+                    origem={origem}
                 />
             ) : (
                 <FolhaFichaSkeleton />

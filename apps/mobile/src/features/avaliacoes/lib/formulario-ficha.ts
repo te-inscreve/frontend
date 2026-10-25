@@ -20,7 +20,7 @@ import {
 
 /*
  * O que a ficha do app monta sobre o builder de `packages/schemas`
- * (`montarFormularioFicha`, `itensDoTopo`): trechos, abas, resumo e prévia da
+ * (`montarFormularioFicha`, `itensDoTopo`): trechos, seções, resumo e prévia da
  * nota. As chaves dos valores são as do builder (TE-98).
  */
 
@@ -144,21 +144,30 @@ export function resumoDoValor(campo: CampoFicha, valor: ValorCampo) {
     return texto;
 }
 
-/** A aba de um trecho: a dos campos gerais ou a do agrupamento dele. */
-export function abaDoTrecho(trecho: TrechoFicha) {
-    return trecho.ocorrencia
-        ? `agrupamento-${trecho.ocorrencia.agrupamento.id}`
-        : "gerais";
+/**
+ * Quantos campos da ficha já têm resposta, e de quantos: o progresso que o
+ * rodapé do formulário e o card da avaliação atual mostram.
+ */
+export function progressoDaFicha(
+    trechos: TrechoFicha[],
+    valores: ValoresFicha,
+) {
+    const campos = trechos.flatMap((trecho) => trecho.campos);
+    const preenchidos = campos.filter(
+        ({ chave, campo }) =>
+            resumoDoValor(campo, valores[chave] ?? null) !== null,
+    ).length;
+    return { preenchidos, total: campos.length };
 }
 
-/** Uma aba da ficha, com o índice do trecho que cada linha abre. */
-export type AbaDaFicha =
+/** Uma seção da ficha, com o índice do trecho que cada parte abre. */
+export type SecaoDaFicha =
     | {
           chave: string;
-          tipo: "campos";
-          titulo: string;
-          /** Uma linha por campo geral, cada um o seu trecho. */
-          linhas: { trecho: number; chave: string; campo: CampoFicha }[];
+          tipo: "campo";
+          /** O campo geral, que é o seu próprio trecho. */
+          trecho: number;
+          campo: CampoFicha;
       }
     | {
           chave: string;
@@ -174,28 +183,19 @@ export type AbaDaFicha =
       };
 
 /**
- * As abas da ficha: uma com todos os campos gerais, primeiro, e uma por
- * agrupamento, na ordem em que aparecem no modelo. Os campos gerais vêm
- * misturados aos agrupamentos na ordem do topo; numa aba só, ficam juntos.
+ * As seções da ficha na ordem do topo do modelo: cada campo geral onde ele
+ * está, e as ocorrências seguidas de um agrupamento juntas numa seção.
  */
-export function abasDaFicha(trechos: TrechoFicha[]): AbaDaFicha[] {
-    const gerais: Extract<AbaDaFicha, { tipo: "campos" }> = {
-        chave: "gerais",
-        tipo: "campos",
-        titulo: "Campos gerais",
-        linhas: [],
-    };
-    const agrupamentos = new Map<
-        number,
-        Extract<AbaDaFicha, { tipo: "agrupamento" }>
-    >();
+export function secoesDaFicha(trechos: TrechoFicha[]): SecaoDaFicha[] {
+    const secoes: SecaoDaFicha[] = [];
 
     trechos.forEach((trecho, indice) => {
         if (!trecho.ocorrencia) {
-            gerais.linhas.push(
+            secoes.push(
                 ...trecho.campos.map(({ chave, campo }) => ({
-                    trecho: indice,
                     chave,
+                    tipo: "campo" as const,
+                    trecho: indice,
                     campo,
                 })),
             );
@@ -203,33 +203,45 @@ export function abasDaFicha(trechos: TrechoFicha[]): AbaDaFicha[] {
         }
 
         const { agrupamento, ordem } = trecho.ocorrencia;
-        const aba = agrupamentos.get(agrupamento.id) ?? {
-            chave: abaDoTrecho(trecho),
-            tipo: "agrupamento" as const,
+        const ultima = secoes.at(-1);
+        const secao =
+            ultima?.tipo === "agrupamento" &&
+            ultima.agrupamento.id === agrupamento.id
+                ? ultima
+                : null;
+        const linha = { trecho: indice, ordem, campos: trecho.campos };
+        if (secao) {
+            secao.linhas.push(linha);
+            return;
+        }
+        secoes.push({
+            chave: `agrupamento-${agrupamento.id}`,
+            tipo: "agrupamento",
             titulo: agrupamento.nome,
             agrupamento,
-            linhas: [],
-        };
-        aba.linhas.push({ trecho: indice, ordem, campos: trecho.campos });
-        agrupamentos.set(agrupamento.id, aba);
+            linhas: [linha],
+        });
     });
 
-    // Dois agrupamentos com o mesmo nome dariam duas abas iguais: levam o
+    // Dois agrupamentos com o mesmo nome dariam dois títulos iguais: levam o
     // número da vez, entre parênteses para não confundir com a ocorrência.
-    const doAgrupamento = [...agrupamentos.values()];
+    const doAgrupamento = secoes.filter(
+        (secao): secao is Extract<SecaoDaFicha, { tipo: "agrupamento" }> =>
+            secao.tipo === "agrupamento",
+    );
     const repeticoes = new Map<string, number>();
     doAgrupamento.forEach(({ titulo }) =>
         repeticoes.set(titulo, (repeticoes.get(titulo) ?? 0) + 1),
     );
     const vistos = new Map<string, number>();
-    doAgrupamento.forEach((aba) => {
-        if ((repeticoes.get(aba.titulo) ?? 0) < 2) return;
-        const vez = (vistos.get(aba.titulo) ?? 0) + 1;
-        vistos.set(aba.titulo, vez);
-        aba.titulo = `${aba.titulo} (${vez})`;
+    doAgrupamento.forEach((secao) => {
+        if ((repeticoes.get(secao.titulo) ?? 0) < 2) return;
+        const vez = (vistos.get(secao.titulo) ?? 0) + 1;
+        vistos.set(secao.titulo, vez);
+        secao.titulo = `${secao.titulo} (${vez})`;
     });
 
-    return [...(gerais.linhas.length ? [gerais] : []), ...doAgrupamento];
+    return secoes;
 }
 
 /** As respostas numéricas de uns campos, na forma que a nota recebe. */

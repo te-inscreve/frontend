@@ -71,17 +71,28 @@ export function rotaFichaInscricao(
 }
 
 /**
- * A ficha de uma avaliação já guardada no aparelho, para voltar a ela de
- * outra tela (o "continuar a avaliação de X", a dock do cabeçalho).
+ * De onde a ficha foi aberta, quando não foi das inscrições da categoria:
+ * o "Voltar" leva de volta para lá.
  */
-export function rotaDaAvaliacaoLocal(avaliacao: {
-    eventoId: number;
-    modalidadeId: number;
-    categoriaId: number;
-    inscricaoId: number;
-    inscricao: InscricaoAvaliada;
-}): Href {
-    const params: ParametrosFichaInscricao = {
+export type OrigemDaFicha = "avaliacoes";
+
+/**
+ * A ficha de uma avaliação já guardada no aparelho, para voltar a ela de
+ * outra tela (o "continuar a avaliação de X", a dock do cabeçalho, a lista
+ * de avaliações).
+ */
+export function rotaDaAvaliacaoLocal(
+    avaliacao: {
+        eventoId: number;
+        modalidadeId: number;
+        categoriaId: number;
+        inscricaoId: number;
+        inscricao: InscricaoAvaliada;
+    },
+    origem?: OrigemDaFicha,
+): Href {
+    const params: ParametrosFichaInscricao & { origem?: OrigemDaFicha } = {
+        ...(origem && { origem }),
         inscricaoId: String(avaliacao.inscricaoId),
         eventoId: String(avaliacao.eventoId),
         modalidadeId: String(avaliacao.modalidadeId),
@@ -99,8 +110,14 @@ export type InscricaoAvaliada = ReturnType<
 >["inscricao"];
 
 /** O caminho de volta de {@link rotaFichaInscricao}, na tela da ficha. */
-export function lerParametrosFichaInscricao(params: ParametrosFichaInscricao) {
+export function lerParametrosFichaInscricao(
+    params: ParametrosFichaInscricao & { origem?: string },
+) {
     return {
+        origem:
+            params.origem === "avaliacoes"
+                ? ("avaliacoes" as const satisfies OrigemDaFicha)
+                : undefined,
         inscricaoId: Number(params.inscricaoId),
         eventoId: Number(params.eventoId),
         modalidadeId: Number(params.modalidadeId),

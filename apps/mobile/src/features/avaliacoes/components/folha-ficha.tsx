@@ -1,21 +1,7 @@
+import type { Ref } from "react";
 import type { Control } from "react-hook-form";
-import type { ScrollViewInstance } from "react-native";
-import { useEffect, useRef, useState } from "react";
-import {
-    Pressable,
-    ScrollView,
-    Text,
-    useWindowDimensions,
-    View,
-} from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-    Easing,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
-} from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import { useImperativeHandle, useRef, useState } from "react";
+import { Pressable, Text, View } from "react-native";
 import { PencilSimpleIcon } from "phosphor-react-native/src/icons/PencilSimple";
 import { WarningCircleIcon } from "phosphor-react-native/src/icons/WarningCircle";
 import { withUniwind } from "uniwind";
@@ -28,15 +14,15 @@ import type {
 } from "@te-inscreve/schemas";
 import { formatarDecimal, tetoDoCampo } from "@te-inscreve/schemas";
 
-import type { AbaDaFicha, TrechoFicha } from "../lib/formulario-ficha";
+import type { SecaoDaFicha, TrechoFicha } from "../lib/formulario-ficha";
 import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
 import { Badge } from "~/components/ui/badge";
 import { cn } from "~/utils/cn";
 import {
-    abasDaFicha,
     nomeDaOcorrencia,
     posicaoDaOcorrencia,
     resumoDoValor,
+    secoesDaFicha,
     subtotalDaOcorrencia,
 } from "../lib/formulario-ficha";
 import { CampoFichaControlado } from "./campo-ficha";
@@ -49,9 +35,10 @@ import { SeloModificador } from "./selo-modificador";
 /*
  * A ficha inteira, a partir do modelo de ficha do web
  * (`apps/web/.../ficha-avaliativa/folha-modelo-ficha.tsx`), preenchida com as
- * respostas e dividida em abas: uma com os campos gerais, que se preenchem ali
- * mesmo, e uma por agrupamento, com um cartão por ocorrência que abre o seu
- * trecho na folha. Os agrupamentos saem da grade do web para os cartões.
+ * respostas, numa página só e na ordem do topo do modelo: os campos gerais se
+ * preenchem ali mesmo, e cada agrupamento é uma seção com um cartão por
+ * ocorrência que abre o seu trecho na folha. Os agrupamentos saem da grade do
+ * web para os cartões.
  *
  * Três níveis de texto: o título de seção (`text-lg`), o nome do campo ou do
  * cartão (`text-base`) e o apoio — ajuda, valores no cartão — em `text-sm`.
@@ -60,18 +47,6 @@ import { SeloModificador } from "./selo-modificador";
 
 const Aviso = withUniwind(WarningCircleIcon);
 const Lapis = withUniwind(PencilSimpleIcon);
-
-// A troca de aba é o eixo X compartilhado do Material: a aba de antes
-// acelera para fora, a nova desacelera para dentro, cada uma em metade do
-// tempo. Com "reduzir movimento" no sistema, o `withTiming` vai direto ao fim.
-const DURACAO_ABA = 150;
-const SAIDA = Easing.bezier(0.3, 0, 1, 1);
-const ENTRADA = Easing.bezier(0, 0, 0, 1);
-// Soltar depois de um quarto da tela, ou com um puxão, troca de aba. Na
-// primeira e na última, o conteúdo resiste ao arrastar para onde não há aba.
-const FRACAO_PARA_TROCAR = 1 / 4;
-const VELOCIDADE_PARA_TROCAR = 800;
-const RESISTENCIA = 0.2;
 
 /**
  * A maior parte dos campos é obrigatória: marcar a exceção é menos ruído do
@@ -164,18 +139,18 @@ function RespostaDoCartao({
 }
 
 /**
- * Uma ocorrência como cartão: o título e o total em faixas `muted`, os campos
- * no meio. Tocar no cartão abre o trecho na folha.
+ * Uma ocorrência como cartão: o título e o total numa faixa `muted` em cima,
+ * os campos embaixo. Tocar no cartão abre o trecho na folha.
  */
 function CartaoOcorrencia({
-    aba,
+    secao,
     linha,
     valores,
     erro,
     aoTocar,
 }: {
-    aba: Extract<AbaDaFicha, { tipo: "agrupamento" }>;
-    linha: Extract<AbaDaFicha, { tipo: "agrupamento" }>["linhas"][number];
+    secao: Extract<SecaoDaFicha, { tipo: "agrupamento" }>;
+    linha: Extract<SecaoDaFicha, { tipo: "agrupamento" }>["linhas"][number];
     valores: ValoresFicha;
     erro: boolean;
     aoTocar: () => void;
@@ -185,8 +160,8 @@ function CartaoOcorrencia({
         ({ campo }) => campo.tipo === "NUMERICO",
     );
     const total = subtotalDaOcorrencia(linha.campos, valores);
-    const nome = nomeDaOcorrencia(aba.agrupamento, linha.ordem, valores);
-    const posicao = posicaoDaOcorrencia(aba.agrupamento, linha.ordem);
+    const nome = nomeDaOcorrencia(secao.agrupamento, linha.ordem, valores);
+    const posicao = posicaoDaOcorrencia(secao.agrupamento, linha.ordem);
     const vazia = linha.campos.every(
         ({ chave, campo }) =>
             resumoDoValor(campo, valores[chave] ?? null) === null,
@@ -195,12 +170,14 @@ function CartaoOcorrencia({
     return (
         <Pressable
             role="button"
-            aria-label={`Preencher ${nome}, ${posicao}${erro ? ", com erro" : ""}`}
+            aria-label={`Preencher ${nome}, ${posicao}${temTotal ? `, total ${total === null ? "sem nota" : formatarDecimal(total)}` : ""}${erro ? ", com erro" : ""}`}
             onPress={aoTocar}
             className="border-border bg-card overflow-hidden rounded-lg border"
         >
-            {/* O erro do cartão é só o selo. */}
-            <View className="bg-muted flex-row items-center gap-2 px-4 py-2.5">
+            {/* O erro do cartão é só o selo. O total fica no canto, numa
+                caixa clara sobre a faixa `muted`, que a borda e a sombra
+                levantam: é o número que o avaliador procura no cartão. */}
+            <View className="bg-muted border-border flex-row items-center gap-2 border-b px-4 py-2.5">
                 <View className="shrink gap-0.5">
                     <Text className="text-foreground text-base font-semibold">
                         {nome}
@@ -209,15 +186,33 @@ function CartaoOcorrencia({
                         {posicao}
                     </Text>
                 </View>
-                {erro && (
-                    <Badge
-                        variant="destructive"
-                        icone={Aviso}
-                        className="ml-auto self-center"
-                    >
-                        Com erro
-                    </Badge>
-                )}
+                <View className="ml-auto flex-row items-center gap-2">
+                    {erro && (
+                        <Badge variant="destructive" icone={Aviso}>
+                            Com erro
+                        </Badge>
+                    )}
+                    {temTotal && (
+                        <View
+                            aria-hidden
+                            className="bg-card border-border min-w-14 items-center rounded-md border px-2.5 py-1 shadow-sm"
+                        >
+                            <Text
+                                className={cn(
+                                    "text-lg font-bold",
+                                    total === null
+                                        ? "text-muted-foreground"
+                                        : "text-foreground",
+                                )}
+                            >
+                                {total === null ? "—" : formatarDecimal(total)}
+                            </Text>
+                            <Text className="text-muted-foreground text-xs">
+                                total
+                            </Text>
+                        </View>
+                    )}
+                </View>
             </View>
 
             {/* Em branco, o cartão só convida a preencher: uma lista de
@@ -234,264 +229,81 @@ function CartaoOcorrencia({
                     </Text>
                 </View>
             ) : (
-                <>
-                    <View className="gap-3 p-4">
-                        {linha.campos.map(({ chave, campo }) => (
-                            <RespostaDoCartao
-                                key={chave}
-                                campo={campo}
-                                valor={valores[chave] ?? null}
-                            />
-                        ))}
-                    </View>
-                    {temTotal && (
-                        <View className="bg-muted flex-row items-center px-4 py-2.5">
-                            <Text className="text-foreground text-sm font-semibold">
-                                Total
-                            </Text>
-                            {total === null ? (
-                                <Text className="text-muted-foreground ml-auto text-sm font-bold">
-                                    —
-                                </Text>
-                            ) : (
-                                <Text className="text-foreground ml-auto text-sm font-bold">
-                                    {formatarDecimal(total)}
-                                </Text>
-                            )}
-                        </View>
-                    )}
-                </>
+                <View className="gap-3 p-4">
+                    {linha.campos.map(({ chave, campo }) => (
+                        <RespostaDoCartao
+                            key={chave}
+                            campo={campo}
+                            valor={valores[chave] ?? null}
+                        />
+                    ))}
+                </View>
             )}
         </Pressable>
     );
 }
 
-/**
- * As abas no topo da ficha: rolam de lado quando não cabem, e um ponto
- * vermelho marca a que tem erro, para o avaliador achar sem abrir uma a uma.
- * O sublinhado verde desliza até a aba escolhida, e a barra rola para mantê-la
- * à vista.
- */
-function BarraDeAbas({
-    abas,
-    atual,
-    comErro,
-    aoTrocar,
-}: {
-    abas: AbaDaFicha[];
-    atual: string;
-    comErro: (aba: AbaDaFicha) => boolean;
-    aoTrocar: (chave: string) => void;
-}) {
-    const rolagem = useRef<ScrollViewInstance>(null);
-    const [medidas, setMedidas] = useState<
-        Record<string, { x: number; largura: number }>
-    >({});
-    const x = useSharedValue(0);
-    const largura = useSharedValue(0);
-
-    useEffect(() => {
-        const medida = medidas[atual];
-        if (!medida) return;
-        // Na primeira medida o sublinhado já nasce no lugar.
-        if (largura.get() === 0) {
-            x.set(medida.x);
-            largura.set(medida.largura);
-        } else {
-            const config = { duration: DURACAO_ABA * 2, easing: ENTRADA };
-            x.set(withTiming(medida.x, config));
-            largura.set(withTiming(medida.largura, config));
-        }
-        rolagem.current?.scrollTo({
-            x: Math.max(0, medida.x - 16),
-            animated: true,
-        });
-    }, [atual, medidas, x, largura]);
-
-    const estiloSublinhado = useAnimatedStyle(() => ({
-        opacity: largura.get() === 0 ? 0 : 1,
-        transform: [{ translateX: x.get() }],
-        width: largura.get(),
-    }));
-
-    return (
-        <View>
-            <ScrollView
-                ref={rolagem}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                role="tablist"
-            >
-                {abas.map((aba) => {
-                    const selecionada = aba.chave === atual;
-                    const erro = comErro(aba);
-                    return (
-                        <Pressable
-                            key={aba.chave}
-                            role="tab"
-                            aria-selected={selecionada}
-                            aria-label={`${aba.titulo}${erro ? ", com erro" : ""}`}
-                            onPress={() => aoTrocar(aba.chave)}
-                            onLayout={({ nativeEvent: { layout } }) =>
-                                setMedidas((antes) => ({
-                                    ...antes,
-                                    [aba.chave]: {
-                                        x: layout.x,
-                                        largura: layout.width,
-                                    },
-                                }))
-                            }
-                            // A borda transparente guarda o lugar do
-                            // sublinhado, que desce 1pt para cobrir a da barra.
-                            className="-mb-px flex-row items-center gap-1.5 border-b-2 border-transparent px-4 py-3"
-                        >
-                            <Text
-                                className={cn(
-                                    "text-base",
-                                    selecionada
-                                        ? "text-primary font-semibold"
-                                        : "text-muted-foreground",
-                                )}
-                            >
-                                {aba.titulo}
-                            </Text>
-                            {erro && (
-                                <View
-                                    aria-hidden
-                                    className="bg-destructive size-2 rounded-full"
-                                />
-                            )}
-                        </Pressable>
-                    );
-                })}
-                <Animated.View
-                    aria-hidden
-                    pointerEvents="none"
-                    style={[
-                        {
-                            position: "absolute",
-                            left: 0,
-                            bottom: -1,
-                            height: 2,
-                        },
-                        estiloSublinhado,
-                    ]}
-                >
-                    <View className="bg-primary flex-1" />
-                </Animated.View>
-            </ScrollView>
-        </View>
-    );
+/** O que a ficha responde a quem a rola. */
+export interface FolhaFichaHandle {
+    /**
+     * Onde o trecho começa, em pontos a partir do topo da ficha, ou nulo
+     * antes de ele ser medido.
+     */
+    topoDoTrecho: (trecho: number) => number | null;
 }
 
 export function FolhaFicha({
+    ref,
     modelo,
     inscricao,
     trechos,
     valores,
     comErro,
     aoTocar,
-    aba,
-    aoTrocarAba,
     control,
     revalidar,
 }: {
+    ref?: Ref<FolhaFichaHandle>;
     modelo: ModeloFichaDetalhe;
     inscricao: InscricaoAvaliada;
     trechos: TrechoFicha[];
     valores: ValoresFicha;
     comErro: (trecho: number) => boolean;
     aoTocar: (trecho: number) => void;
-    /** A chave da aba aberta (`abaDoTrecho`). */
-    aba: string;
-    aoTrocarAba: (chave: string) => void;
     control: Control<ValoresFicha>;
     revalidar: (chave: string) => Promise<boolean>;
 }) {
-    const abas = abasDaFicha(trechos);
-    const aberta = abas.find(({ chave }) => chave === aba) ?? abas[0];
-    const abaComErro = (alvo: AbaDaFicha) =>
-        alvo.linhas.some(({ trecho }) => comErro(trecho));
-    const { width: larguraJanela } = useWindowDimensions();
-    const chaves = abas.map(({ chave }) => chave);
-    const atual = aberta?.chave ?? "";
-    const indiceAtual = chaves.indexOf(atual);
-    // A aba na tela fica para trás da escolhida enquanto sai: toque na barra,
-    // deslize ou o "Salvar" que leva ao erro, todos trocam por aqui.
-    const [exibida, setExibida] = useState(atual);
+    const secoes = secoesDaFicha(trechos);
     const [dadosAbertos, setDadosAbertos] = useState(false);
-    const indiceExibida = chaves.indexOf(exibida);
-    const naTela = abas[indiceExibida] ?? aberta;
-    // Quanto o conteúdo está fora do lugar, na horizontal.
-    const deslocamento = useSharedValue(0);
+    // Cada `onLayout` dá a posição no pai: o topo da lista na ficha, o da
+    // seção na lista e o do cartão na seção. O trecho soma os três.
+    const medidas = useRef({
+        lista: 0,
+        secoes: new Map<string, number>(),
+        cartoes: new Map<number, number>(),
+    });
 
-    useEffect(() => {
-        if (indiceAtual === indiceExibida) return;
-        // Avançar empurra a aba de antes para a esquerda; voltar, para a
-        // direita. A nova vem do lado oposto.
-        const direcao = indiceAtual > indiceExibida ? 1 : -1;
-        deslocamento.set(
-            withTiming(
-                -direcao * larguraJanela,
-                { duration: DURACAO_ABA, easing: SAIDA },
-                (terminou) => {
-                    if (!terminou) return;
-                    deslocamento.set(direcao * larguraJanela);
-                    scheduleOnRN(setExibida, atual);
-                },
-            ),
-        );
-    }, [atual, indiceAtual, indiceExibida, larguraJanela, deslocamento]);
-
-    useEffect(() => {
-        deslocamento.set(
-            withTiming(0, { duration: DURACAO_ABA, easing: ENTRADA }),
-        );
-    }, [exibida, deslocamento]);
-
-    const anterior = chaves[indiceAtual - 1];
-    const proxima = chaves[indiceAtual + 1];
-    // Só o arrasto de lado é da aba: o vertical continua rolando a ficha.
-    const deslizar = Gesture.Pan()
-        .enabled(abas.length > 1)
-        .activeOffsetX([-20, 20])
-        .failOffsetY([-12, 12])
-        .onUpdate(({ translationX }) => {
-            const vizinha = translationX < 0 ? proxima : anterior;
-            deslocamento.set(
-                vizinha ? translationX : translationX * RESISTENCIA,
+    useImperativeHandle(ref, () => ({
+        topoDoTrecho(trecho) {
+            const secao = secoes.find((alvo) =>
+                alvo.tipo === "campo"
+                    ? alvo.trecho === trecho
+                    : alvo.linhas.some((linha) => linha.trecho === trecho),
             );
-        })
-        .onEnd(({ translationX, velocityX }) => {
-            const vizinha = translationX < 0 ? proxima : anterior;
-            const passou =
-                Math.abs(translationX) > larguraJanela * FRACAO_PARA_TROCAR ||
-                (Math.abs(velocityX) > VELOCIDADE_PARA_TROCAR &&
-                    Math.sign(velocityX) === Math.sign(translationX));
-            if (vizinha && passou) {
-                scheduleOnRN(aoTrocarAba, vizinha);
-            } else {
-                deslocamento.set(
-                    withTiming(0, { duration: DURACAO_ABA, easing: ENTRADA }),
-                );
-            }
-        });
-
-    const estiloConteudo = useAnimatedStyle(() => ({
-        transform: [{ translateX: deslocamento.get() }],
+            if (!secao) return null;
+            const { lista, secoes: topos, cartoes } = medidas.current;
+            const topoSecao = topos.get(secao.chave);
+            const topoCartao = secao.tipo === "campo" ? 0 : cartoes.get(trecho);
+            if (topoSecao === undefined || topoCartao === undefined)
+                return null;
+            return lista + topoSecao + topoCartao;
+        },
     }));
 
     return (
         <View className="grow">
-            {/* O título e as abas numa faixa `muted` de lado a lado. A borda
-                de baixo dela é a da barra de abas, onde o sublinhado verde
-                assenta. */}
-            <View
-                className={cn(
-                    "bg-muted border-border border-b px-4 pt-4",
-                    abas.length > 1 ? "" : "pb-6",
-                )}
-            >
+            {/* O título numa faixa `muted` de lado a lado. */}
+            <View className="bg-muted border-border border-b px-4 pt-4 pb-6">
                 {/* Sem a prancheta do web. No tablet, a ficha não passa de
                     720pt e fica no meio: na largura toda, o olho anda demais
                     de um lado ao outro. */}
@@ -520,89 +332,97 @@ export function FolhaFicha({
                     </Pressable>
 
                     {dadosAbertos && <DadosDaInscricao inscricao={inscricao} />}
-
-                    {abas.length > 1 && aberta && (
-                        <BarraDeAbas
-                            abas={abas}
-                            atual={aberta.chave}
-                            comErro={abaComErro}
-                            aoTrocar={aoTrocarAba}
-                        />
-                    )}
                 </View>
             </View>
 
-            {/* O arrasto vale na área toda abaixo das abas, até onde a ficha
-                acaba, não só sobre os cartões. */}
-            <GestureDetector gesture={deslizar}>
-                <Animated.View style={[{ flexGrow: 1 }, estiloConteudo]}>
-                    <View className="grow px-4 pt-6 pb-4">
-                        <View className="w-full max-w-[720px] self-center">
-                            {naTela?.tipo === "campos" && (
-                                <View className="gap-8">
-                                    {naTela.linhas.map(({ chave, campo }) => (
-                                        <CampoFichaControlado
-                                            key={chave}
-                                            chave={chave}
-                                            campo={campo}
-                                            control={control}
-                                            revalidar={revalidar}
-                                            naFicha
-                                        />
-                                    ))}
-                                </View>
-                            )}
-
-                            {naTela?.tipo === "agrupamento" && (
+            {/* O respiro de cima fica na lista, não aqui: assim o topo de
+                cada seção já o inclui. */}
+            <View
+                className="grow px-4 pb-4"
+                onLayout={({ nativeEvent: { layout } }) => {
+                    medidas.current.lista = layout.y;
+                }}
+            >
+                <View className="w-full max-w-[720px] gap-8 self-center pt-6">
+                    {secoes.map((secao) => (
+                        <View
+                            key={secao.chave}
+                            onLayout={({ nativeEvent: { layout } }) => {
+                                medidas.current.secoes.set(
+                                    secao.chave,
+                                    layout.y,
+                                );
+                            }}
+                        >
+                            {secao.tipo === "campo" ? (
+                                <CampoFichaControlado
+                                    chave={secao.chave}
+                                    campo={secao.campo}
+                                    control={control}
+                                    revalidar={revalidar}
+                                    naFicha
+                                />
+                            ) : (
                                 <View className="gap-3">
-                                    <Text className="text-muted-foreground text-sm">
-                                        {naTela.agrupamento.quantidade === 1
-                                            ? "1 ocorrência"
-                                            : `${naTela.agrupamento.quantidade} ocorrências`}
-                                    </Text>
-                                    {naTela.linhas.map((linha) => (
-                                        <CartaoOcorrencia
+                                    <View className="gap-0.5">
+                                        <Text
+                                            role="heading"
+                                            className="text-foreground text-lg font-semibold"
+                                        >
+                                            {secao.titulo}
+                                        </Text>
+                                        <Text className="text-muted-foreground text-sm">
+                                            {secao.agrupamento.quantidade === 1
+                                                ? "1 ocorrência"
+                                                : `${secao.agrupamento.quantidade} ocorrências`}
+                                        </Text>
+                                    </View>
+                                    {secao.linhas.map((linha) => (
+                                        <View
                                             key={linha.trecho}
-                                            aba={naTela}
-                                            linha={linha}
-                                            valores={valores}
-                                            erro={comErro(linha.trecho)}
-                                            aoTocar={() =>
-                                                aoTocar(linha.trecho)
-                                            }
-                                        />
+                                            onLayout={({
+                                                nativeEvent: { layout },
+                                            }) => {
+                                                medidas.current.cartoes.set(
+                                                    linha.trecho,
+                                                    layout.y,
+                                                );
+                                            }}
+                                        >
+                                            <CartaoOcorrencia
+                                                secao={secao}
+                                                linha={linha}
+                                                valores={valores}
+                                                erro={comErro(linha.trecho)}
+                                                aoTocar={() =>
+                                                    aoTocar(linha.trecho)
+                                                }
+                                            />
+                                        </View>
                                     ))}
                                 </View>
                             )}
                         </View>
-                    </View>
-                </Animated.View>
-            </GestureDetector>
+                    ))}
+                </View>
+            </View>
         </View>
     );
 }
 
 /**
  * A ficha enquanto o modelo não chega, com a geometria da {@link FolhaFicha}
- * e do rodapé do formulário: título e abas na faixa `muted`, campos abaixo,
+ * e do rodapé do formulário: título na faixa `muted`, campos abaixo,
  * nota e "Salvar" embaixo.
  */
 export function FolhaFichaSkeleton() {
     return (
         <View aria-hidden className="flex-1">
-            <View className="bg-muted border-border border-b px-4 pt-4">
+            <View className="bg-muted border-border border-b px-4 pt-4 pb-6">
                 <View className="w-full max-w-[720px] gap-6 self-center">
                     <View className="mt-2 gap-2">
                         <View className="bg-background h-7 w-2/3 rounded" />
                         <View className="bg-background h-4 w-1/2 rounded" />
-                    </View>
-                    <View className="flex-row gap-2 pb-3">
-                        {[0, 1, 2].map((posicao) => (
-                            <View
-                                key={posicao}
-                                className="bg-background h-6 w-24 rounded"
-                            />
-                        ))}
                     </View>
                 </View>
             </View>

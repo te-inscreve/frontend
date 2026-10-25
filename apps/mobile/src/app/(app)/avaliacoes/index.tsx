@@ -3,12 +3,16 @@ import { RefreshControl, SectionList, Text, View } from "react-native";
 
 import { Button } from "~/components/ui/button";
 import {
+    AvaliacaoAtual,
     AvaliacaoDoAparelho,
     CabecalhoSecaoMinhasAvaliacoes,
     MinhaAvaliacao,
     MinhaAvaliacaoSkeleton,
 } from "~/features/avaliacoes/components/minha-avaliacao";
-import { useAvaliacoesSalvas } from "~/features/avaliacoes/lib/avaliacoes-locais";
+import {
+    useAvaliacaoAtual,
+    useAvaliacoesSalvas,
+} from "~/features/avaliacoes/lib/avaliacoes-locais";
 import {
     secoesComPendentes,
     useMinhasAvaliacoes,
@@ -45,13 +49,15 @@ function rotuloQuantidade(enviadas: number, pendentes: number) {
  * As avaliações do avaliador, por categoria: as que o servidor já aceitou e,
  * em cards tracejados no topo de cada categoria, as que ainda estão só no
  * aparelho (na fila, enviando ou com erro). Sem as pendentes, quem acabou de
- * salvar abriria a lista e não acharia a avaliação.
+ * salvar abriria a lista e não acharia a avaliação. Acima de todas, a
+ * avaliação atual, a que ainda está sendo preenchida.
  */
 export default function Avaliacoes() {
     const { data, isPending, isError, isRefetching, refetch } =
         useMinhasAvaliacoes();
     const { data: sessao } = useSession();
     const locais = useAvaliacoesSalvas(sessao?.user.id ?? "");
+    const atual = useAvaliacaoAtual(sessao?.user.id ?? "");
     // Sem o servidor (offline na abertura), as pendentes aparecem sozinhas.
     const secoes = useMemo(
         () => secoesComPendentes(data ?? [], locais ?? []),
@@ -81,6 +87,7 @@ export default function Avaliacoes() {
         return (
             <View className="flex-1 gap-4 p-4">
                 <Titulo />
+                {atual && <AvaliacaoAtual avaliacao={atual} />}
                 <View className="flex-1 items-center justify-center gap-4">
                     <Mensagem>
                         Não foi possível carregar suas avaliações. Verifique a
@@ -170,6 +177,11 @@ export default function Avaliacoes() {
                             >
                                 Tentar de novo
                             </Button>
+                        </View>
+                    )}
+                    {atual && (
+                        <View className="pt-4">
+                            <AvaliacaoAtual avaliacao={atual} />
                         </View>
                     )}
                 </View>

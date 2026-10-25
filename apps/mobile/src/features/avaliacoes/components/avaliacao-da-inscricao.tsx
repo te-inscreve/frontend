@@ -6,7 +6,10 @@ import type { EnvioAvaliacao, ModeloFichaDetalhe } from "@te-inscreve/schemas";
 import { formatarDecimal, formularioDoPayload } from "@te-inscreve/schemas";
 
 import type { AlvoDaAvaliacao, AvaliacaoLocal } from "../lib/avaliacoes-locais";
-import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
+import type {
+    InscricaoAvaliada,
+    OrigemDaFicha,
+} from "../lib/rota-ficha-inscricao";
 import { Button } from "~/components/ui/button";
 import {
     avaliacaoAtualDoAvaliador,
@@ -21,6 +24,7 @@ import {
 import { notaDaFicha, trechosDaFicha } from "../lib/formulario-ficha";
 import { rotaDaAvaliacaoLocal } from "../lib/rota-ficha-inscricao";
 import { avisarQueSalvou } from "../lib/use-motor-fila";
+import { useSaidasDaFicha } from "../lib/use-saidas-da-ficha";
 import { FolhaFichaSkeleton } from "./folha-ficha";
 import { FormularioFicha } from "./formulario-ficha";
 
@@ -45,10 +49,13 @@ export function AvaliacaoDaInscricao({
     alvo,
     inscricao,
     modeloAtual,
+    origem,
 }: {
     alvo: AlvoDaAvaliacao;
     inscricao: InscricaoAvaliada;
     modeloAtual: ModeloAtual;
+    /** De onde a ficha foi aberta, para o "Voltar" (`useSaidasDaFicha`). */
+    origem?: OrigemDaFicha;
 }) {
     const { data, updatedAt } = useAvaliacaoLocal(
         alvo.avaliadorId,
@@ -62,6 +69,7 @@ export function AvaliacaoDaInscricao({
     // uma avaliação nova durante a animação de volta.
     const [cancelada, setCancelada] = useState(false);
     const router = useRouter();
+    const { voltar, concluir } = useSaidasDaFicha(alvo.categoriaId, origem);
 
     // Pelo id, não pela linha: cada gravação devolve uma linha nova da
     // consulta, e um `aoMudar` novo gravaria de novo, sem fim.
@@ -118,11 +126,12 @@ export function AvaliacaoDaInscricao({
                     }
                     router.back();
                 }}
+                aoConcluir={() => void concluir()}
             />
         );
     }
 
-    if (local) return <EstadoDaAvaliacao avaliacao={local} />;
+    if (local) return <EstadoDaAvaliacao avaliacao={local} aoVoltar={voltar} />;
 
     return (
         <NovaAvaliacaoAtual
@@ -139,12 +148,14 @@ function FormularioDaAvaliacaoAtual({
     aoMudar,
     aoSalvar,
     aoCancelar,
+    aoConcluir,
 }: {
     avaliacao: AvaliacaoLocal;
     inscricao: InscricaoAvaliada;
     aoMudar: (payload: EnvioAvaliacao) => void;
     aoSalvar: (payload: EnvioAvaliacao) => Promise<void>;
     aoCancelar: () => Promise<void>;
+    aoConcluir: () => void;
 }) {
     // Só na montagem: depois, quem manda é o formulário. A linha que volta
     // do banco a cada gravação traz objetos novos, que não podem reiniciá-lo.
@@ -161,6 +172,7 @@ function FormularioDaAvaliacaoAtual({
             aoMudar={aoMudar}
             aoSalvar={aoSalvar}
             aoCancelar={aoCancelar}
+            aoConcluir={aoConcluir}
         />
     );
 }
@@ -310,8 +322,13 @@ const TEXTO_DO_ESTADO: Record<
 };
 
 /** A avaliação que já foi salva: o estado e a nota. */
-function EstadoDaAvaliacao({ avaliacao }: { avaliacao: AvaliacaoLocal }) {
-    const router = useRouter();
+function EstadoDaAvaliacao({
+    avaliacao,
+    aoVoltar,
+}: {
+    avaliacao: AvaliacaoLocal;
+    aoVoltar: () => void;
+}) {
     const nota = useMemo(() => {
         // A sincronizada mostra a nota do servidor; as outras, a prévia.
         if (avaliacao.nota) return Number(avaliacao.nota);
@@ -337,7 +354,7 @@ function EstadoDaAvaliacao({ avaliacao }: { avaliacao: AvaliacaoLocal }) {
                 avaliacao.estado === "enviando") && (
                 <Button onPress={() => editar(avaliacao)}>Editar</Button>
             )}
-            <Button variant="outline" onPress={() => router.back()}>
+            <Button variant="outline" onPress={aoVoltar}>
                 Voltar
             </Button>
         </Aviso>

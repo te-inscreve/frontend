@@ -1,23 +1,29 @@
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { CaretRightIcon } from "phosphor-react-native/src/icons/CaretRight";
+import { ClipboardTextIcon } from "phosphor-react-native/src/icons/ClipboardText";
 import { CloudArrowUpIcon } from "phosphor-react-native/src/icons/CloudArrowUp";
 import { CloudCheckIcon } from "phosphor-react-native/src/icons/CloudCheck";
 import { WarningIcon } from "phosphor-react-native/src/icons/Warning";
 import { withUniwind } from "uniwind";
 
 import type { MinhaAvaliacao as MinhaAvaliacaoDados } from "@te-inscreve/schemas";
+import { formularioDoPayload } from "@te-inscreve/schemas";
 
 import type { SecaoMinhasAvaliacoes } from "../lib/minhas-avaliacoes";
 import type { AvaliacaoLocal } from "~/db/schema";
 import { cn } from "~/utils/cn";
 import { formatDate, formatHora } from "~/utils/format-date";
 import { notaPrevia } from "../lib/fila";
+import { progressoDaFicha, trechosDaFicha } from "../lib/formulario-ficha";
 import { formatarNota, nomeDoAvaliado } from "../lib/minhas-avaliacoes";
 import { rotaDaAvaliacaoLocal } from "../lib/rota-ficha-inscricao";
 
 const IconeNaFila = withUniwind(CloudArrowUpIcon);
 const IconeComErro = withUniwind(WarningIcon);
 const IconeEnviada = withUniwind(CloudCheckIcon);
+const IconeAtual = withUniwind(ClipboardTextIcon);
+const Seta = withUniwind(CaretRightIcon);
 
 /** O título da categoria sobre as avaliações dela, com o evento embaixo. */
 export function CabecalhoSecaoMinhasAvaliacoes({
@@ -120,7 +126,9 @@ export function AvaliacaoDoAparelho({
                     : `${inscricao.concorrente}, ${inscricao.entidade}, ainda não enviada: ${situacao}. Nota prévia ${nota} de 10`
             }
             aria-hint="Abre a ficha da avaliação"
-            onPress={() => router.push(rotaDaAvaliacaoLocal(avaliacao))}
+            onPress={() =>
+                router.push(rotaDaAvaliacaoLocal(avaliacao, "avaliacoes"))
+            }
             className={cn(
                 "flex-row items-center gap-3 rounded-xl p-3 active:opacity-70",
                 enviada
@@ -191,6 +199,131 @@ export function AvaliacaoDoAparelho({
                     {enviada ? "de 10" : "prévia"}
                 </Text>
             </View>
+        </Pressable>
+    );
+}
+
+/**
+ * A avaliação atual, no topo da lista: a que o avaliador começou e ainda não
+ * salvou. Ela não está na fila nem no servidor, então nenhuma seção a mostra;
+ * sem o card, quem abre a lista não sabe que deixou uma ficha pela metade.
+ * A borda primária a separa das salvas, e o progresso diz quanto falta.
+ * Tocar volta à ficha, como a dock do cabeçalho.
+ *
+ * A congelada (modelo mudou, categoria encerrou) não se preenche mais: o
+ * card diz por quê, e a ficha só oferece descartar.
+ */
+export function AvaliacaoAtual({ avaliacao }: { avaliacao: AvaliacaoLocal }) {
+    const router = useRouter();
+    const { inscricao } = avaliacao;
+    const { preenchidos, total } = progressoDaFicha(
+        trechosDaFicha(avaliacao.modelo),
+        formularioDoPayload(avaliacao.modelo, avaliacao.payload),
+    );
+    const nota = notaPrevia(avaliacao);
+    const congelada = !!avaliacao.motivoCongelado;
+    const progresso = `${preenchidos} de ${total} campos preenchidos`;
+    const origem = [inscricao.entidade, inscricao.categoria]
+        .filter(Boolean)
+        .join(" · ");
+
+    return (
+        <Pressable
+            role="button"
+            aria-label={
+                congelada
+                    ? `Avaliação em andamento: ${inscricao.concorrente}, ${origem}. Não pode mais ser preenchida: ${avaliacao.motivoCongelado}`
+                    : `Avaliação em andamento: ${inscricao.concorrente}, ${origem}. ${progresso}. Nota prévia ${nota} de 10`
+            }
+            aria-hint="Abre a ficha da avaliação"
+            // `navigate`, como a dock: a ficha dela já aberta não empilha.
+            onPress={() =>
+                router.navigate(rotaDaAvaliacaoLocal(avaliacao, "avaliacoes"))
+            }
+            className={cn(
+                "bg-card gap-3 rounded-xl border-2 p-3 active:opacity-70",
+                congelada ? "border-destructive/60" : "border-primary",
+            )}
+        >
+            <View className="flex-row items-center gap-1.5">
+                <IconeAtual
+                    size={16}
+                    weight="bold"
+                    colorClassName={
+                        congelada ? "accent-destructive" : "accent-primary"
+                    }
+                />
+                <Text
+                    className={cn(
+                        "text-sm font-semibold",
+                        congelada ? "text-destructive" : "text-primary",
+                    )}
+                >
+                    Avaliação em andamento
+                </Text>
+            </View>
+
+            <View className="flex-row items-center gap-3">
+                <View className="flex-1 gap-0.5">
+                    <Text
+                        numberOfLines={1}
+                        className="text-foreground text-base font-semibold"
+                    >
+                        {inscricao.concorrente}
+                    </Text>
+                    <Text
+                        numberOfLines={1}
+                        className="text-muted-foreground text-sm"
+                    >
+                        {origem}
+                    </Text>
+                </View>
+                {!congelada && (
+                    <View className="bg-muted min-w-16 items-center rounded-lg px-3 py-2">
+                        <Text className="text-foreground text-xl font-bold">
+                            {nota}
+                        </Text>
+                        <Text className="text-muted-foreground text-xs">
+                            prévia
+                        </Text>
+                    </View>
+                )}
+                <Seta
+                    size={20}
+                    colorClassName="accent-muted-foreground"
+                    aria-hidden
+                />
+            </View>
+
+            {congelada ? (
+                <View className="flex-row items-center gap-1.5">
+                    <IconeComErro
+                        size={16}
+                        weight="bold"
+                        colorClassName="accent-destructive"
+                    />
+                    <Text className="text-destructive shrink text-sm">
+                        {avaliacao.motivoCongelado}
+                    </Text>
+                </View>
+            ) : (
+                <View className="gap-1.5">
+                    <View
+                        aria-hidden
+                        className="bg-muted h-1.5 overflow-hidden rounded-full"
+                    >
+                        <View
+                            className="bg-primary h-full rounded-full"
+                            style={{
+                                width: `${total ? (preenchidos / total) * 100 : 0}%`,
+                            }}
+                        />
+                    </View>
+                    <Text className="text-muted-foreground text-sm">
+                        {progresso}
+                    </Text>
+                </View>
+            )}
         </Pressable>
     );
 }

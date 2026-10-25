@@ -1,6 +1,6 @@
+import type { ScrollViewInstance } from "react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Keyboard, ScrollView, Text, View } from "react-native";
-import { useRouter } from "expo-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 
@@ -16,12 +16,12 @@ import {
 } from "@te-inscreve/schemas";
 
 import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
+import type { FolhaFichaHandle } from "./folha-ficha";
 import { Button } from "~/components/ui/button";
 import {
-    abaDoTrecho,
     chavesDoTrecho,
     notaDaFicha,
-    resumoDoValor,
+    progressoDaFicha,
     trechosDaFicha,
 } from "../lib/formulario-ficha";
 import { EdicaoTrecho } from "./edicao-trecho";
@@ -31,18 +31,19 @@ import { SucessoAvaliacao } from "./sucesso-avaliacao";
 /**
  * O formulário de avaliação como a ficha inteira, em branco, de
  * entrada. O avaliador vê tudo antes e preenche aos poucos, na ordem que
- * quiser, uma aba por vez: os campos gerais se preenchem na própria ficha, e
+ * quiser, numa página só: os campos gerais se preenchem na própria ficha, e
  * cada ocorrência de um agrupamento abre o seu trecho numa folha inferior.
  * "Aplicar" valida o trecho e só fecha a folha sem erros; arrastar, o fundo e
  * o voltar fecham sempre, validando sem barrar, e a ficha marca o que ficou
- * com erro. "Salvar" valida tudo e vai à aba do primeiro trecho com pendência.
+ * com erro. "Salvar" valida tudo e rola até o primeiro trecho com pendência.
  * O nome de cada ocorrência se edita no título da folha.
  *
  * O formulário é o da avaliação atual (TE-74): abre com `valoresIniciais`, o
  * payload guardado convertido, e devolve o payload a `aoMudar` a cada
  * mudança, agrupadas em meio segundo, e ao sair da tela. O "Salvar"
  * confirmado entrega o payload final a `aoSalvar`, que põe a avaliação na
- * fila; o "Cancelar" confirmado chama `aoCancelar`, que a descarta.
+ * fila; o "Cancelar" confirmado chama `aoCancelar`, que a descarta. O
+ * "Concluir" da tela de sucesso chama `aoConcluir`, que sai da ficha.
  *
  * `inscricao` é quem a tela de sucesso mostra como avaliado.
  */
@@ -53,6 +54,7 @@ export function FormularioFicha({
     aoMudar,
     aoSalvar,
     aoCancelar,
+    aoConcluir,
 }: {
     modelo: ModeloFichaDetalhe;
     inscricao: InscricaoAvaliada;
@@ -60,6 +62,7 @@ export function FormularioFicha({
     aoMudar: (payload: EnvioAvaliacao) => void;
     aoSalvar: (payload: EnvioAvaliacao) => Promise<void>;
     aoCancelar: () => Promise<void>;
+    aoConcluir: () => void;
 }) {
     const { schema } = useMemo(() => montarFormularioFicha(modelo), [modelo]);
     const trechos = useMemo(() => trechosDaFicha(modelo), [modelo]);
@@ -74,10 +77,9 @@ export function FormularioFicha({
     // enquanto desliza para baixo.
     const [aberto, setAberto] = useState(0);
     const [visivel, setVisivel] = useState(false);
-    // Sem aba de campos gerais, a ficha cai na primeira que houver.
-    const [aba, setAba] = useState("gerais");
+    const rolagem = useRef<ScrollViewInstance>(null);
+    const folha = useRef<FolhaFichaHandle>(null);
     const [salva, setSalva] = useState(false);
-    const router = useRouter();
     // As respostas do trecho como estavam ao abrir a folha, para o
     // "Cancelar" desfazer o que foi mexido nele.
     const [antes, setAntes] = useState<{
@@ -90,12 +92,8 @@ export function FormularioFicha({
     const notaFormatada = formatarDecimal(Number(nota.toFixed(2)));
 
     // Quantos campos já têm resposta, para o rodapé dizer onde o avaliador
-    // está sem precisar rolar a ficha nem trocar de aba.
-    const campos = trechos.flatMap((trecho) => trecho.campos);
-    const preenchidos = campos.filter(
-        ({ chave, campo }) =>
-            resumoDoValor(campo, valores[chave] ?? null) !== null,
-    ).length;
+    // está sem precisar rolar a ficha.
+    const { preenchidos, total } = progressoDaFicha(trechos, valores);
 
     const erros = form.formState.errors;
     function comErro(indice: number) {
@@ -171,57 +169,67 @@ export function FormularioFicha({
         );
     }
 
-    const salvar = form.handleSubmit(
-        // Válida, a avaliação ainda pede confirmação: na fila ela não se
-        // edita mais (ADR 0001 usa o `Alert` para confirmar). O sucesso só
-        // aparece depois de ela estar na fila.
-        (validos) => {
-            Keyboard.dismiss();
-            Alert.alert(
-                "Salvar avaliação?",
-                "Ela vai para a fila de envio e não poderá mais ser editada lá.",
-                [
-                    { text: "Cancelar", style: "cancel" },
-                    {
-                        text: "Salvar",
-                        onPress: () =>
-                            void aoSalvar(payloadDoFormulario(modelo, validos))
-                                .then(() => setSalva(true))
-                                .catch(() =>
-                                    Alert.alert(
-                                        "Não foi possível salvar",
-                                        "Suas respostas continuam guardadas no aparelho. Tente de novo.",
+    // O `handleSubmit` monta no toque, não no render: o caminho do erro lê
+    // as refs da rolagem.
+    const salvar = () =>
+        form.handleSubmit(
+            // Válida, a avaliação ainda pede confirmação: na fila ela não se
+            // edita mais (ADR 0001 usa o `Alert` para confirmar). O sucesso só
+            // aparece depois de ela estar na fila.
+            (validos) => {
+                Keyboard.dismiss();
+                Alert.alert(
+                    "Salvar avaliação?",
+                    "Ela vai para a fila de envio e não poderá mais ser editada lá.",
+                    [
+                        { text: "Cancelar", style: "cancel" },
+                        {
+                            text: "Salvar",
+                            onPress: () =>
+                                void aoSalvar(
+                                    payloadDoFormulario(modelo, validos),
+                                )
+                                    .then(() => setSalva(true))
+                                    .catch(() =>
+                                        Alert.alert(
+                                            "Não foi possível salvar",
+                                            "Suas respostas continuam guardadas no aparelho. Tente de novo.",
+                                        ),
                                     ),
-                                ),
-                    },
-                ],
-            );
-        },
-        (falhas) => {
-            // Vai à aba do primeiro erro. Os campos gerais mostram o erro na
-            // própria ficha; só a ocorrência precisa da folha para isso.
-            const primeiro = trechos.findIndex((trecho) =>
-                chavesDoTrecho(trecho).some((chave) => falhas[chave]),
-            );
-            const trecho = trechos[primeiro];
-            if (!trecho) return;
-            setAba(abaDoTrecho(trecho));
-            if (trecho.ocorrencia) abrir(primeiro);
-        },
-    );
+                        },
+                    ],
+                );
+            },
+            (falhas) => {
+                // Rola até o primeiro erro, com um respiro acima dele. Os campos
+                // gerais mostram o erro na própria ficha; só a ocorrência precisa
+                // da folha para isso.
+                const primeiro = trechos.findIndex((trecho) =>
+                    chavesDoTrecho(trecho).some((chave) => falhas[chave]),
+                );
+                const trecho = trechos[primeiro];
+                if (!trecho) return;
+                const topo = folha.current?.topoDoTrecho(primeiro);
+                if (topo != null)
+                    rolagem.current?.scrollTo({
+                        y: Math.max(0, topo - 16),
+                        animated: true,
+                    });
+                if (trecho.ocorrencia) abrir(primeiro);
+            },
+        )();
 
     return (
         <View className="flex-1">
-            <ScrollView contentContainerClassName="grow">
+            <ScrollView ref={rolagem} contentContainerClassName="grow">
                 <FolhaFicha
+                    ref={folha}
                     modelo={modelo}
                     inscricao={inscricao}
                     trechos={trechos}
                     valores={valores}
                     comErro={comErro}
                     aoTocar={abrir}
-                    aba={aba}
-                    aoTrocarAba={setAba}
                     control={form.control}
                     revalidar={form.trigger}
                 />
@@ -229,8 +237,8 @@ export function FormularioFicha({
 
             <View className="bg-card border-border border-t p-4">
                 {/* A nota final mora no rodapé fixo, ao lado do "Salvar":
-                    vale para a ficha inteira, não para uma aba, e fica à
-                    vista enquanto o avaliador preenche. É a prévia do que
+                    vale para a ficha inteira e fica à vista enquanto o
+                    avaliador rola e preenche. É a prévia do que
                     já foi preenchido (TE-95). */}
                 <View className="w-full max-w-[720px] flex-row items-center gap-4 self-center">
                     <View className="flex-1 gap-0.5">
@@ -248,7 +256,7 @@ export function FormularioFicha({
                             </Text>
                         </View>
                         <Text className="text-muted-foreground text-sm">
-                            {preenchidos} de {campos.length} preenchidos
+                            {preenchidos} de {total} preenchidos
                         </Text>
                     </View>
                     <Button variant="outline" onPress={cancelarAvaliacao}>
@@ -274,7 +282,7 @@ export function FormularioFicha({
                 inscricao={inscricao}
                 aoConcluir={() => {
                     setSalva(false);
-                    router.back();
+                    aoConcluir();
                 }}
             />
         </View>
