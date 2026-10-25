@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
     Platform,
     ScrollView,
@@ -9,9 +10,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XIcon } from "phosphor-react-native/src/icons/X";
 import { withUniwind } from "uniwind";
 
-import type { AvaliacaoComErro, AvaliacaoNaFila, Fila } from "../lib/fila";
+import type {
+    AvaliacaoComErro,
+    AvaliacaoNaFila,
+    Fila,
+    SituacaoNaFila,
+} from "../lib/fila";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/utils/cn";
+import { formatFalta, formatHora } from "~/utils/format-date";
 import { descreverEstadoFila, explicarEstadoFila } from "../lib/estado-fila";
 import { IconeEstadoFila } from "./icone-estado-fila";
 
@@ -142,6 +149,12 @@ function Secao({
     );
 }
 
+/**
+ * O card de uma avaliação: quem, de onde, a nota prévia à direita — sem
+ * rótulo, porque a fórmula é a do backend e vale a que ele gravar — e, no
+ * rodapé, onde ela está na fila ou por que o servidor a recusou. Tudo da
+ * linha local, sem rede.
+ */
 function ItemFila({
     avaliacao,
     className,
@@ -149,19 +162,62 @@ function ItemFila({
     avaliacao: AvaliacaoNaFila | AvaliacaoComErro;
     className: string;
 }) {
+    const agora = useAgora();
+    const rodape =
+        "motivo" in avaliacao
+            ? avaliacao.motivo
+            : descreverSituacao(avaliacao.situacao, agora);
+
     return (
-        <View accessible className={cn("gap-0.5 px-4 py-3", className)}>
-            <Text className="text-foreground text-base font-medium">
-                {avaliacao.concorrente}
-            </Text>
-            <Text className="text-muted-foreground text-sm">
-                {avaliacao.categoria}
-            </Text>
-            {"motivo" in avaliacao && (
-                <Text className="text-destructive text-sm">
-                    {avaliacao.motivo}
+        <View
+            accessible
+            aria-label={`${avaliacao.concorrente}, ${avaliacao.origem}, nota ${avaliacao.nota}. ${rodape}`}
+            className={cn("flex-row items-center gap-3 px-4 py-3", className)}
+        >
+            <View className="shrink grow gap-0.5">
+                <Text className="text-foreground text-base font-medium">
+                    {avaliacao.concorrente}
                 </Text>
-            )}
+                <Text className="text-muted-foreground text-sm">
+                    {avaliacao.origem}
+                </Text>
+                <Text
+                    className={cn(
+                        "text-sm",
+                        "motivo" in avaliacao
+                            ? "text-destructive"
+                            : "text-muted-foreground",
+                    )}
+                >
+                    {rodape}
+                </Text>
+            </View>
+            <Text className="text-foreground text-2xl font-bold tabular-nums">
+                {avaliacao.nota}
+            </Text>
         </View>
     );
+}
+
+function descreverSituacao(situacao: SituacaoNaFila, agora: number) {
+    switch (situacao.tipo) {
+        case "salva":
+            return `salva às ${formatHora(situacao.em)}`;
+        case "enviando":
+            return "enviando…";
+        case "espera_conexao":
+            return "espera a conexão";
+        case "nova_tentativa":
+            return `tentativa ${situacao.tentativa} · tenta de novo ${formatFalta(situacao.em, agora)}`;
+    }
+}
+
+/** O relógio do rodapé: "tenta de novo em 2 min" anda com a folha aberta. */
+function useAgora() {
+    const [agora, setAgora] = useState(() => Date.now());
+    useEffect(() => {
+        const id = setInterval(() => setAgora(Date.now()), 15_000);
+        return () => clearInterval(id);
+    }, []);
+    return agora;
 }

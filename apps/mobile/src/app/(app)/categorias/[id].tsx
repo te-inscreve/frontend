@@ -1,6 +1,5 @@
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
 
 import type { InscricaoGrupo, InscricaoIndividual } from "@te-inscreve/schemas";
 
@@ -19,8 +18,8 @@ import {
 } from "~/features/categorias/components/bilhete-inscricao";
 import { CabecalhoCategoria } from "~/features/categorias/components/cabecalho-categoria";
 import { lerParametrosDetalheCategoria } from "~/features/categorias/lib/rota-detalhe-categoria";
-import { useInscricoesDaCategoria } from "~/features/categorias/lib/use-inscricoes-da-categoria";
-import { trpc } from "~/utils/api";
+import { useSituacaoDaCategoria } from "~/features/categorias/lib/use-categorias-baixadas";
+import { usePuxarDownload } from "~/features/categorias/lib/use-download";
 import { useSession } from "~/utils/auth";
 
 function Mensagem({ children }: { children: string }) {
@@ -33,25 +32,28 @@ export default function DetalheCategoria() {
     const categoria = lerParametrosDetalheCategoria(
         useLocalSearchParams<ParametrosDetalheCategoria>(),
     );
-    const { categoriaId, eventoId, modalidadeId, isGrupo, nome, ...cabecalho } =
-        categoria;
-    const { data, isPending, isError, isRefetching, refetch } =
-        useInscricoesDaCategoria({ eventoId, modalidadeId, categoriaId });
-
-    // A mesma consulta da ficha: o nome do modelo vai ao cabeçalho, e a ficha
-    // de qualquer inscrição já abre com o modelo em cache.
-    const modelo = useQuery(
-        trpc.categoria.getFichaAvaliativa.queryOptions({
-            eventoId,
-            modalidadeId,
-            categoriaId,
-        }),
-    );
-    const modeloFicha = modelo.isPending
-        ? undefined
-        : modelo.isError && modelo.data === undefined
-          ? "Não foi possível carregar"
-          : (modelo.data?.nome ?? "Nenhum vinculado");
+    // As chaves da rota ficam fora do cabeçalho, que só mostra o resto.
+    const {
+        categoriaId,
+        eventoId: _eventoId,
+        modalidadeId: _modalidadeId,
+        isGrupo,
+        nome,
+        ...cabecalho
+    } = categoria;
+    // O que o aparelho baixou (TE-107): abre sem rede.
+    const situacao = useSituacaoDaCategoria(categoriaId);
+    const { puxando, puxar } = usePuxarDownload();
+    const inscricoes =
+        situacao.tipo === "baixada"
+            ? ordenarPorOrdem(situacao.download.inscricoes)
+            : undefined;
+    const modeloFicha =
+        situacao.tipo === "baixada"
+            ? (situacao.download.modelo?.nome ?? "Nenhum vinculado")
+            : situacao.tipo === "nao-baixada"
+              ? "Não baixado"
+              : undefined;
 
     // A inscrição da avaliação atual ganha o "Continuar" no bilhete.
     const { data: sessao } = useSession();
@@ -69,29 +71,32 @@ export default function DetalheCategoria() {
                 {...cabecalho}
                 isGrupo={isGrupo}
                 modeloFicha={modeloFicha}
+                disponivelOffline={situacao.tipo === "baixada"}
             />
 
-            {isPending ? (
+            {situacao.tipo === "carregando" ? (
                 <View className="gap-3 p-4">
                     <View className="bg-muted h-5 w-24 rounded" />
                     {[0, 1, 2, 3].map((posicao) => (
                         <Skeleton key={posicao} />
                     ))}
                 </View>
-            ) : isError && !data ? (
-                // Sem dados em cache e a rede falhou: o erro ocupa o lugar da lista.
+            ) : !inscricoes ? (
+                // Sem download não há o que avaliar: as inscrições e o modelo
+                // ainda não estão no aparelho.
                 <View className="flex-1 items-center justify-center gap-4 p-4">
                     <Mensagem>
-                        Não foi possível carregar as inscrições. Verifique a
-                        conexão e tente de novo.
+                        {situacao.tipo === "nao-baixada" && situacao.falhou
+                            ? "Não foi possível baixar esta categoria. Tente de novo; depois de baixada, ela abre também sem rede."
+                            : "Esta categoria ainda não foi baixada. Conecte-se à internet para baixar as inscrições e o modelo de ficha; depois ela abre também sem rede."}
                     </Mensagem>
-                    <Button variant="outline" onPress={() => void refetch()}>
-                        Tentar de novo
+                    <Button variant="outline" onPress={puxar}>
+                        Baixar agora
                     </Button>
                 </View>
             ) : (
                 <FlatList<InscricaoGrupo | InscricaoIndividual>
-                    data={data}
+                    data={inscricoes}
                     keyExtractor={(inscricao) => String(inscricao.id)}
                     renderItem={({ item }) => {
                         const atual = avaliacaoAtual?.inscricaoId === item.id;
@@ -125,16 +130,16 @@ export default function DetalheCategoria() {
                     contentContainerClassName="grow gap-3 p-4"
                     refreshControl={
                         <RefreshControl
-                            refreshing={isRefetching}
-                            onRefresh={() => void refetch()}
+                            refreshing={puxando}
+                            onRefresh={puxar}
                         />
                     }
                     ListHeaderComponent={
-                        data.length > 0 ? (
+                        inscricoes.length > 0 ? (
                             <Text className="text-muted-foreground text-sm">
-                                {data.length === 1
+                                {inscricoes.length === 1
                                     ? "1 inscrição"
-                                    : `${data.length} inscrições`}
+                                    : `${inscricoes.length} inscrições`}
                             </Text>
                         ) : undefined
                     }
@@ -149,4 +154,12 @@ export default function DetalheCategoria() {
             )}
         </>
     );
+}
+
+/**
+ * As inscrições na ordem de apresentação (`ordem`), que é a ordem em que o
+ * avaliador as encontra.
+ */
+function ordenarPorOrdem(inscricoes: (InscricaoGrupo | InscricaoIndividual)[]) {
+    return [...inscricoes].sort((a, b) => a.ordem - b.ordem);
 }

@@ -5,6 +5,7 @@ import type {
     Categoria,
     CategoriaDetalhe,
     ModeloFichaDetalhe,
+    ResultadosCategoria,
 } from "@te-inscreve/schemas";
 import {
     acaoSituacaoCategoriaSchema,
@@ -15,6 +16,7 @@ import {
     tagsCategoria,
     tagsCategorias,
     tagsFichaDaCategoria,
+    tagsResultadosDaCategoria,
 } from "../cache-tags";
 import { authenticatedProcedure, publicProcedure } from "../trpc";
 
@@ -205,6 +207,34 @@ export const categoriaRouter = {
                 throw result.error;
             }
             return result.data ?? null;
+        }),
+
+    /**
+     * A classificação pública da categoria, já ordenada pela nota.
+     *
+     * Antes de a categoria ser encerrada o backend devolve a lista vazia, e não
+     * um erro: é a `situacao` dela que diz se o resultado foi divulgado.
+     */
+    getResultados: publicProcedure
+        .input(
+            z.object({
+                eventoId: z.number().int().positive(),
+                modalidadeId: z.number().int().positive(),
+                categoriaId: z.number().int().positive(),
+            }),
+        )
+        .query(async ({ ctx, input }) => {
+            const result = await ctx.restClient.get<ResultadosCategoria>(
+                `/eventos/${input.eventoId}/modalidades/${input.modalidadeId}/categorias/${input.categoriaId}/resultados/`,
+                {
+                    next: {
+                        revalidate: 30,
+                        tags: tagsResultadosDaCategoria(input.categoriaId),
+                    },
+                },
+            );
+            if (!result.ok) throw result.error;
+            return result.data;
         }),
 
     /**

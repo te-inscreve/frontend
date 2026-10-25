@@ -25,3 +25,20 @@ const MESES = [
 export function formatDate(date: Date) {
     return `${date.getDate()} de ${MESES[date.getMonth()]}`;
 }
+
+/** Hora e minuto no fuso do aparelho, como "14:32". */
+export function formatHora(date: Date) {
+    const doisDigitos = (n: number) => String(n).padStart(2, "0");
+    return `${doisDigitos(date.getHours())}:${doisDigitos(date.getMinutes())}`;
+}
+
+/**
+ * Quanto falta até `date`, arredondado para cima, como "em 2 min" ou "em
+ * 30 s". O que já passou é "agora".
+ */
+export function formatFalta(date: Date, agora: number) {
+    const segundos = Math.ceil((date.getTime() - agora) / 1000);
+    if (segundos <= 0) return "agora";
+    if (segundos < 60) return `em ${segundos} s`;
+    return `em ${Math.ceil(segundos / 60)} min`;
+}

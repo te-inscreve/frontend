@@ -339,7 +339,7 @@ function NotaComTeto({
     );
 }
 
-function SeloModificador({
+export function SeloModificador({
     modificador,
 }: {
     modificador: NonNullable<CampoExibido["modificadorNota"]>;

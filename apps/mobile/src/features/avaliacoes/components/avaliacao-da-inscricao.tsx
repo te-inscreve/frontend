@@ -6,7 +6,10 @@ import type { EnvioAvaliacao, ModeloFichaDetalhe } from "@te-inscreve/schemas";
 import { formatarDecimal, formularioDoPayload } from "@te-inscreve/schemas";
 
 import type { AlvoDaAvaliacao, AvaliacaoLocal } from "../lib/avaliacoes-locais";
-import type { InscricaoAvaliada } from "../lib/rota-ficha-inscricao";
+import type {
+    InscricaoAvaliada,
+    OrigemDaFicha,
+} from "../lib/rota-ficha-inscricao";
 import { Button } from "~/components/ui/button";
 import {
     avaliacaoAtualDoAvaliador,
@@ -15,17 +18,23 @@ import {
     descartar,
     enfileirar,
     guardarAvaliacaoAtual,
+    tirarDaFila,
     useAvaliacaoLocal,
 } from "../lib/avaliacoes-locais";
 import { notaDaFicha, trechosDaFicha } from "../lib/formulario-ficha";
 import { rotaDaAvaliacaoLocal } from "../lib/rota-ficha-inscricao";
+import { avisarQueSalvou } from "../lib/use-motor-fila";
+import { useSaidasDaFicha } from "../lib/use-saidas-da-ficha";
 import { FolhaFichaSkeleton } from "./folha-ficha";
 import { FormularioFicha } from "./formulario-ficha";
 
-/** O modelo da categoria como a API o devolve agora, se já chegou. */
+/**
+ * O modelo da categoria como o aparelho o baixou (TE-107). Sem download, só
+ * a avaliação já começada abre: ela tem a própria cópia do modelo.
+ */
 export type ModeloAtual =
     | { tipo: "carregando" }
-    | { tipo: "erro"; tentarDeNovo: () => void }
+    | { tipo: "nao-baixado"; baixar: () => void }
     | { tipo: "sem-modelo" }
     | { tipo: "pronto"; modelo: ModeloFichaDetalhe };
 
@@ -43,10 +52,13 @@ export function AvaliacaoDaInscricao({
     alvo,
     inscricao,
     modeloAtual,
+    origem,
 }: {
     alvo: AlvoDaAvaliacao;
     inscricao: InscricaoAvaliada;
     modeloAtual: ModeloAtual;
+    /** De onde a ficha foi aberta, para o "Voltar" (`useSaidasDaFicha`). */
+    origem?: OrigemDaFicha;
 }) {
     const { data, updatedAt } = useAvaliacaoLocal(
         alvo.avaliadorId,
@@ -60,6 +72,7 @@ export function AvaliacaoDaInscricao({
     // uma avaliação nova durante a animação de volta.
     const [cancelada, setCancelada] = useState(false);
     const router = useRouter();
+    const { voltar, concluir } = useSaidasDaFicha(alvo.categoriaId, origem);
 
     // Pelo id, não pela linha: cada gravação devolve uma linha nova da
     // consulta, e um `aoMudar` novo gravaria de novo, sem fim.
@@ -104,6 +117,7 @@ export function AvaliacaoDaInscricao({
                         setAcabouDeSalvar(false);
                         throw erro;
                     }
+                    avisarQueSalvou();
                 }}
                 aoCancelar={async () => {
                     setCancelada(true);
@@ -115,11 +129,12 @@ export function AvaliacaoDaInscricao({
                     }
                     router.back();
                 }}
+                aoConcluir={() => void concluir()}
             />
         );
     }
 
-    if (local) return <EstadoDaAvaliacao avaliacao={local} />;
+    if (local) return <EstadoDaAvaliacao avaliacao={local} aoVoltar={voltar} />;
 
     return (
         <NovaAvaliacaoAtual
@@ -136,12 +151,14 @@ function FormularioDaAvaliacaoAtual({
     aoMudar,
     aoSalvar,
     aoCancelar,
+    aoConcluir,
 }: {
     avaliacao: AvaliacaoLocal;
     inscricao: InscricaoAvaliada;
     aoMudar: (payload: EnvioAvaliacao) => void;
     aoSalvar: (payload: EnvioAvaliacao) => Promise<void>;
     aoCancelar: () => Promise<void>;
+    aoConcluir: () => void;
 }) {
     // Só na montagem: depois, quem manda é o formulário. A linha que volta
     // do banco a cada gravação traz objetos novos, que não podem reiniciá-lo.
@@ -158,6 +175,7 @@ function FormularioDaAvaliacaoAtual({
             aoMudar={aoMudar}
             aoSalvar={aoSalvar}
             aoCancelar={aoCancelar}
+            aoConcluir={aoConcluir}
         />
     );
 }
@@ -198,14 +216,14 @@ function NovaAvaliacaoAtual({
         });
     }, [outro, modelo, alvo, inscricao]);
 
-    if (modeloAtual.tipo === "erro")
+    if (modeloAtual.tipo === "nao-baixado")
         return (
             <Aviso
-                titulo="Não foi possível carregar a ficha"
-                texto="Verifique a conexão e tente de novo."
+                titulo="Categoria ainda não baixada"
+                texto="Conecte-se à internet para baixar o modelo de ficha desta categoria. Depois, ela pode ser avaliada também sem rede."
             >
-                <Button variant="outline" onPress={modeloAtual.tentarDeNovo}>
-                    Tentar de novo
+                <Button variant="outline" onPress={modeloAtual.baixar}>
+                    Baixar agora
                 </Button>
             </Aviso>
         );
@@ -290,7 +308,7 @@ const TEXTO_DO_ESTADO: Record<
 > = {
     na_fila: {
         titulo: "Na fila de envio",
-        texto: "Esta avaliação foi salva e segue para o servidor quando houver conexão. Na fila, ela não se edita.",
+        texto: "Esta avaliação foi salva e segue para o servidor quando houver conexão. Para editá-la, ela sai da fila.",
     },
     enviando: {
         titulo: "Enviando",
@@ -307,8 +325,13 @@ const TEXTO_DO_ESTADO: Record<
 };
 
 /** A avaliação que já foi salva: o estado e a nota. */
-function EstadoDaAvaliacao({ avaliacao }: { avaliacao: AvaliacaoLocal }) {
-    const router = useRouter();
+function EstadoDaAvaliacao({
+    avaliacao,
+    aoVoltar,
+}: {
+    avaliacao: AvaliacaoLocal;
+    aoVoltar: () => void;
+}) {
     const nota = useMemo(() => {
         // A sincronizada mostra a nota do servidor; as outras, a prévia.
         if (avaliacao.nota) return Number(avaliacao.nota);
@@ -330,10 +353,53 @@ function EstadoDaAvaliacao({ avaliacao }: { avaliacao: AvaliacaoLocal }) {
             <Text className="text-foreground text-center text-lg">
                 {`Nota ${formatarDecimal(Number(nota.toFixed(2)))} / 10`}
             </Text>
-            <Button variant="outline" onPress={() => router.back()}>
+            {(avaliacao.estado === "na_fila" ||
+                avaliacao.estado === "enviando") && (
+                <Button onPress={() => editar(avaliacao)}>Editar</Button>
+            )}
+            <Button variant="outline" onPress={aoVoltar}>
                 Voltar
             </Button>
         </Aviso>
+    );
+}
+
+/**
+ * O "Editar" de uma avaliação na fila: ela sai da fila e volta a ser a
+ * avaliação atual, e o app diz isso antes. Em `enviando`, não há o que tirar:
+ * o app avisa e espera o resultado.
+ */
+function editar(avaliacao: AvaliacaoLocal) {
+    if (avaliacao.estado === "enviando") {
+        avisarEnviando();
+        return;
+    }
+    Alert.alert(
+        "Tirar da fila para editar?",
+        "A avaliação sai da fila de envio e só volta ao ser salva de novo, no fim da fila.",
+        [
+            { text: "Cancelar", style: "cancel" },
+            {
+                text: "Editar",
+                onPress: () =>
+                    void tirarDaFila(avaliacao.id).then((resultado) => {
+                        if (resultado.ok) return;
+                        if (resultado.motivo === "enviando") avisarEnviando();
+                        else if (resultado.motivo === "outra_atual")
+                            Alert.alert(
+                                "Você já tem uma avaliação atual",
+                                "Salve ou descarte a avaliação atual antes de editar esta. Só uma avaliação atual fica no aparelho por vez.",
+                            );
+                    }),
+            },
+        ],
+    );
+}
+
+function avisarEnviando() {
+    Alert.alert(
+        "Já está sendo enviada",
+        "Esta avaliação está a caminho do servidor. Espere o resultado do envio.",
     );
 }
 

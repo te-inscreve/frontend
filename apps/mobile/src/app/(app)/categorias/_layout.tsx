@@ -22,14 +22,10 @@ export default function CategoriasLayout() {
                 name="[id]"
                 options={opcoesComVoltar("/categorias")}
             />
-            {/* Na pilha de Categorias, acima do detalhe: o "Voltar" da ficha
-                retorna à categoria de onde ela foi aberta. Sem histórico,
-                cai na lista: a rota da ficha não traz o que o detalhe
-                precisa para se montar. */}
-            <Stack.Screen
-                name="ficha/[inscricaoId]"
-                options={opcoesComVoltar("/categorias")}
-            />
+            {/* Na pilha de Categorias, acima do detalhe. O "Voltar" da ficha
+                não segue a pilha: a própria tela o define
+                (`useSaidasDaFicha`). */}
+            <Stack.Screen name="ficha/[inscricaoId]" />
         </Stack>
     );
 }

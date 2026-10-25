@@ -5228,6 +5228,8 @@ __metadata:
     tailwindcss: "npm:^4.3.3"
     typescript: "npm:~6.0.3"
     uniwind: "npm:1.13.0"
+    vite: "npm:^8.3.5"
+    vitest: "npm:^5.0.5"
     zod: "npm:^4.4.3"
   languageName: unknown
   linkType: soft

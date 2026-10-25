@@ -1,6 +1,6 @@
 import type { SituacaoCategoria } from "@te-inscreve/schemas";
 
-import { queryClient, trpc } from "~/utils/api";
+import { trpcClient } from "~/utils/api";
 
 /** A categoria `pronta_avaliacao` com o contexto que o cartão mostra. */
 export interface CategoriaPronta {
@@ -32,9 +32,7 @@ export interface CategoriaPronta {
  * quem chama só conhece `CategoriaPronta`.
  */
 export async function listarCategoriasProntas(): Promise<CategoriaPronta[]> {
-    const eventos = await queryClient.fetchQuery(
-        trpc.avaliacao.getCategoriasDisponiveis.queryOptions(),
-    );
+    const eventos = await trpcClient.avaliacao.getCategoriasDisponiveis.query();
 
     return eventos.flatMap((evento) =>
         evento.modalidades.flatMap((modalidade) =>

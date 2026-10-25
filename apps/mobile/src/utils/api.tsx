@@ -11,36 +11,42 @@ import { getBaseUrl } from "./base-url";
 export const queryClient = new QueryClient();
 
 /**
+ * The plain tRPC client, for calls outside React Query — the evaluation queue
+ * sends with it, deciding retries itself.
+ */
+export const trpcClient = createTRPCClient<AppRouter>({
+    links: [
+        loggerLink({
+            enabled: (opts) =>
+                process.env.NODE_ENV === "development" ||
+                (opts.direction === "down" && opts.result instanceof Error),
+            colorMode: "ansi",
+        }),
+        httpBatchLink({
+            transformer: superjson,
+            url: `${getBaseUrl()}/api/trpc`,
+            headers() {
+                const headers = new Map<string, string>();
+                headers.set("x-trpc-source", "expo-react");
+
+                const cookies = authClient.getCookie();
+                if (cookies) {
+                    headers.set("Cookie", cookies);
+                }
+                return Object.fromEntries(headers);
+            },
+        }),
+    ],
+});
+
+/**
  * A set of typesafe hooks for consuming the API.
  *
  * `@te-inscreve/api` is a *dev* dependency here: the mobile bundle only ever
  * pulls in its types, never its server code.
  */
 export const trpc = createTRPCOptionsProxy<AppRouter>({
-    client: createTRPCClient<AppRouter>({
-        links: [
-            loggerLink({
-                enabled: (opts) =>
-                    process.env.NODE_ENV === "development" ||
-                    (opts.direction === "down" && opts.result instanceof Error),
-                colorMode: "ansi",
-            }),
-            httpBatchLink({
-                transformer: superjson,
-                url: `${getBaseUrl()}/api/trpc`,
-                headers() {
-                    const headers = new Map<string, string>();
-                    headers.set("x-trpc-source", "expo-react");
-
-                    const cookies = authClient.getCookie();
-                    if (cookies) {
-                        headers.set("Cookie", cookies);
-                    }
-                    return Object.fromEntries(headers);
-                },
-            }),
-        ],
-    }),
+    client: trpcClient,
     queryClient,
 });
 

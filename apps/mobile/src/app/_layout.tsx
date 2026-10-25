@@ -6,7 +6,6 @@ import { StatusBar } from "expo-status-bar";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { useBancoLocal } from "~/db/cliente";
-import { retomarEnviosInterrompidos } from "~/features/avaliacoes/lib/avaliacoes-locais";
 import { queryClient } from "~/utils/api";
 import { useSession } from "~/utils/auth";
 import { aplicarTemaSalvo } from "~/utils/tema";
@@ -28,10 +27,6 @@ export default function RootLayout() {
     const { data: session, isPending } = useSession();
     const banco = useBancoLocal();
     const bancoResolvido = banco.success || !!banco.error;
-
-    useEffect(() => {
-        if (banco.success) void retomarEnviosInterrompidos();
-    }, [banco.success]);
 
     useEffect(() => {
         if (!isPending && bancoResolvido) void SplashScreen.hideAsync();

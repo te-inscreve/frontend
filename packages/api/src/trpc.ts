@@ -13,7 +13,7 @@ import { z, ZodError } from "zod/v4";
 import type { Auth } from "@te-inscreve/auth";
 import type { HttpClient } from "@te-inscreve/rest";
 
-import { ApiValidationError, toTRPCError } from "./rest-error";
+import { ApiValidationError, toTRPCError, upstreamOf } from "./rest-error";
 
 /**
  * 1. CONTEXT
@@ -58,23 +58,36 @@ type TRPCContext = Awaited<ReturnType<typeof createTRPCServerContext>>;
  */
 const t = initTRPC.context<typeof createTRPCServerContext>().create({
     transformer: superjson,
-    errorFormatter: ({ shape, error }) => ({
-        ...shape,
-        data: {
-            ...shape.data,
-            zodError:
-                error.cause instanceof ZodError
-                    ? z.flattenError(
-                          error.cause as ZodError<Record<string, unknown>>,
-                      )
-                    : null,
-            /** Django per-field validation errors, ready to bind to a form. */
-            fieldErrors:
-                error.cause instanceof ApiValidationError
-                    ? error.cause.fieldErrors
-                    : null,
-        },
-    }),
+    errorFormatter: ({ shape, error }) => {
+        const upstream = upstreamOf(error.cause);
+        return {
+            ...shape,
+            data: {
+                ...shape.data,
+                zodError:
+                    error.cause instanceof ZodError
+                        ? z.flattenError(
+                              error.cause as ZodError<Record<string, unknown>>,
+                          )
+                        : null,
+                /** Django per-field validation errors, ready to bind to a form. */
+                fieldErrors:
+                    error.cause instanceof ApiValidationError
+                        ? error.cause.fieldErrors
+                        : null,
+                /**
+                 * The backend's own status, so a 4xx outside the tRPC code map
+                 * is not mistaken for a 500. `null` when the API never answered;
+                 * absent when the error did not come from it.
+                 */
+                upstreamStatus: upstream ? upstream.status : undefined,
+                /** Seconds from a 429's `Retry-After`. */
+                retryAfter: upstream?.retryAfter ?? null,
+                /** The backend's body on a 4xx, e.g. the evaluation POST's `erros[]`. */
+                upstreamBody: upstream?.body ?? null,
+            },
+        };
+    },
 });
 
 /**
