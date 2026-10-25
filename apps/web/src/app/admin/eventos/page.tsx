@@ -28,7 +28,7 @@ export default function EventosPage({
                 <div>
                     <h1 className="shimmer shimmer-once shimmer-color-primary-foreground text-primary flex items-center gap-2 text-3xl font-bold tracking-tight md:text-4xl">
                         <ConfettiIcon size={32} weight="duotone" />
-                        Meus Eventos
+                        Eventos
                     </h1>
                     <p className="text-muted-foreground mt-1 text-sm md:text-base">
                         Gerencie e acompanhe os eventos da sua entidade.

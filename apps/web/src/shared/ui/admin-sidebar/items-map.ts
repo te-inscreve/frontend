@@ -64,11 +64,6 @@ const getItensMap = (): ItensMap[] => [
                         href: "/admin/minha-entidade/inscricoes",
                         icone: "ticket",
                     },
-                    {
-                        titulo: "Troféus",
-                        href: "/admin/minha-entidade/trofeus",
-                        icone: "trophy",
-                    },
                 ],
             },
             {
